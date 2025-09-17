@@ -14,7 +14,7 @@ pub fn orgs_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/organization")
         .route("/registration", web::post().to(org_registration))
-        .route("/login", web::post(get_org_via_code))
+        .route("/login", web::post().to(get_org_via_code))
         .route("/list", web::get().to(org_list))
         .route("/update/{org_id}", web::post().to(org_update))
         .route("/contact/{org_id}", web::post().to(add_contact))

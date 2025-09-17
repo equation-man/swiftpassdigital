@@ -16,13 +16,8 @@ const NavBar = () => {
                 </div>
                 <div className="flex flex-row items-center gap-x-1">
                         <button className="rounded-sm text-white bg-emerald-800 text-xs px-4 py-2">
-                            <Link href="/login">
-                                Sign in
-                            </Link>
-                        </button>
-                        <button className="rounded-sm text-white bg-green-600 text-xs px-4 py-2">
-                            <Link href="/register">
-                                Sign up
+                            <Link href="/organizations">
+                                Create Event
                             </Link>
                         </button>
                 </div>

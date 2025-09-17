@@ -15,23 +15,30 @@ use uuid::Uuid;
 pub async fn add_new_org(db_pool: &PgPool, new_org: CreateOrg) -> Organization {
     let n_org = sqlx::query!(r#"
         INSERT INTO ticket_market.organizations
-            (organization_name, organization_username, country, description)
+            (organization_name, org_email, org_pwd, country)
         VALUES
             ($1, $2, $3, $4)
         RETURNING
             organization_id, organization_name, organization_username,
-            country, description
+            org_email, country, description
     "#,
-    new_org.organization_name, new_org.organization_username,
-    new_org.country, new_org.description
+    new_org.organization_name, new_org.org_email,
+    new_org.org_pwd, new_org.country
     ).fetch_one(db_pool).await.unwrap();
 
     Organization {
         organization_id: n_org.organization_id,
         organization_name: n_org.organization_name,
-        organization_username: n_org.organization_username.unwrap(),
+        organization_username: match n_org.organization_username {
+            Some(u_name) => u_name,
+            None => "USERNAME_NOT_SET".to_string()
+        },
+        org_email: n_org.org_email,
         country: n_org.country,
-        description: n_org.description.unwrap(),
+        description: match n_org.description {
+            Some(val) => val,
+            None => "DESCRIPTION_NOT_SET".to_string()
+        },
     }
 }
 
@@ -51,6 +58,7 @@ pub async fn get_orgs(db_pool: &PgPool, filters: OrgPayload) -> Vec<Organization
         organization_id: org.get("organization_id"),
         organization_name: org.get("organization_name"),
         organization_username: org.get("organization_username"),
+        org_email: org.get("org_email"),
         country: org.get("country"),
         description: org.get("description")
     }).collect()
@@ -74,6 +82,7 @@ pub async fn update_org(db_pool: &PgPool, org_id: Uuid, payload: OrgPayload) -> 
         organization_id: update_org.get("organization_id"),
         organization_name: update_org.get("organization_name"),
         organization_username: update_org.get("organization_username"),
+        org_email: update_org.get("org_email"),
         country: update_org.get("country"),
         description: update_org.get("description")
     }
@@ -209,6 +218,7 @@ pub async fn org_access(db_pool: &PgPool, access: AccessCodesPayload) -> Organiz
         organization_id: org.get("organization_id"),
         organization_name: org.get("organization_name"),
         organization_username: org.get("organization_username"),
+        org_email: org.get("org_email"),
         country: org.get("country"),
         description: org.get("description"),
     }).collect::<Vec<Organization>>()[0].clone()

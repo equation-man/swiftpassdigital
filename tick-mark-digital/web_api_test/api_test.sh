@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+#
+# SwiftPass Digital Test script.
+
+color="\033[95m"
+reset="\033[0m"
+width=100
+# cols=$(tput cols)
+
+API_PORT=$1
+API_URL="http://localhost:$API_PORT"
+
+# User registration.
+userReg() {
+    curl -X POST \
+        "$API_URL/users/register" \
+        -H 'Content-Type: application/json' \
+        -d '{
+            "first_name": "Charles",
+            "last_name": "Schwab",
+            "user_name": "charlesschwab",
+            "email": "charlesschwab@example.com",
+            "telephone": "0789438901",
+            "password": "123456789"
+        }'
+}
+
+userLogin() {
+    curl -X POST \
+        "$API_URL/users/login" \
+        -H 'Content-Type: application/json' \
+        -d '{
+            "email": "charlesschwab@example.com",
+            "password": "123456789"
+        }'
+}
+
+orgRegistration() {
+    curl -X POST \
+        "$API_URL/organization/registration" \
+        -H 'Content-Type: application/json' \
+        -d '{
+            "organization_name": "KCAA",
+            "org_email": "kcaa@example.com",
+            "org_pwd": "123456789",
+            "country": "Kenya"
+        }'
+}
+
+orgLogin() {
+    curl -X POST \
+        "$API_URL/organization/login" \
+        -H 'Content-Type: application/json' \
+        -d '{
+            "organization_name": "KCAA",
+            "organization_username": "kcaa@example.com",
+            "country": "Kenya",
+            "description": "Aquatics Association"
+        }'
+
+}
+
+printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
+echo "Testing SwiftPassDigital Software"
+result=$(orgRegistration)
+echo "$result" | jq
+printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
+

@@ -1,5 +1,6 @@
 // Organization Header component
 import React from "react";
+import Link from "next/link";
 
 const OrgHeader = () => {
     return (
@@ -9,7 +10,9 @@ const OrgHeader = () => {
                 <p>Kiambu County Aquatics Association</p>
                 <div className="flex flex-row gap-x-2">
                     <button className="text-emerald-700 hover:cursor-pointer font-medium rounded-xs border border-emerald-600 text-xs p-1">
-                        Manage Account
+                        <Link href="/organizations/profile">
+                            Manage Account
+                        </Link>
                     </button>
                     <button className="bg-emerald-700 text-white font-medium text-xs p-1 rounded-xs">
                         Create New Event

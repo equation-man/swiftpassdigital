@@ -11,7 +11,7 @@ use nanoid::nanoid;
 
 #[path="../state.rs"]
 mod state;
-use state::AppState;
+use crate::state::AppState;
 
 /// Organization registration handler
 pub async fn org_registration(new_org: web::Json<CreateOrg>, app_state: web::Data<AppState>) -> HttpResponse {
@@ -117,10 +117,10 @@ mod tests {
     // ================= FIXTURES ================
     fn register_org_info() -> CreateOrg {
         CreateOrg {
-            organization_name: "Genesis Swimming Club".to_string(),
-            organization_username: "genesisswimclub".to_string(),
+            organization_name: "KCAA".to_string(),
+            org_email: "kcaa@example.com".to_string(),
+            org_pwd: "1234556789".to_string(),
             country: "Kenya".to_string(),
-            description: "Kiambu county swimming federation".to_string(),
         }
     }
 
@@ -129,6 +129,7 @@ mod tests {
             organization_id: None,
             organization_name: None,
             organization_username: None,
+            org_email: None,
             country: None,
             description: Some("Kiambu county swimming federation".to_string()),//None,
         }

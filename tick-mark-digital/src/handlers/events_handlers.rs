@@ -12,7 +12,7 @@ use nanoid::nanoid;
 
 #[path="../state.rs"]
 mod state;
-use state::AppState;
+use crate::state::AppState;
 
 /// Adding an event.
 pub async fn create_event(new_event: web::Json<CreateEvent>, app_state: web::Data<AppState>) -> HttpResponse {

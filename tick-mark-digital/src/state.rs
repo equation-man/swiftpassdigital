@@ -3,7 +3,7 @@ use std::env;
 use dotenvy::dotenv;
 use sqlx::postgres::PgPool;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AppState {
     // Postgres sqlx connection pool
     pub db: PgPool,
@@ -19,6 +19,6 @@ impl AppState {
         };
         // Creating a new sqlx connection pool.
         let db_pool = PgPool::connect(&db_url).await.unwrap();
-        AppState { db: db_pool }
+        Self { db: db_pool }
     }
 }

@@ -9,6 +9,7 @@ pub struct Organization {
     pub organization_id: Uuid,
     pub organization_name: String,
     pub organization_username: String,
+    pub org_email: String,
     pub country: String,
     pub description: String,
 }
@@ -19,6 +20,7 @@ impl From<web::Json<Organization>> for Organization {
             organization_id: org.organization_id.clone(),
             organization_name: org.organization_name.clone(),
             organization_username: org.organization_username.clone(),
+            org_email: org.org_email.clone(),
             country: org.country.clone(),
             description: org.description.clone(),
         }
@@ -28,18 +30,18 @@ impl From<web::Json<Organization>> for Organization {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CreateOrg {
     pub organization_name: String,
-    pub organization_username: String,
+    pub org_email: String,
+    pub org_pwd: String,
     pub country: String,
-    pub description: String,
 }
 
 impl From<web::Json<CreateOrg>> for CreateOrg {
     fn from(create_org: web::Json<CreateOrg>) -> Self {
         CreateOrg {
             organization_name: create_org.organization_name.clone(),
-            organization_username: create_org.organization_username.clone(),
+            org_email: create_org.org_email.clone(),
+            org_pwd: create_org.org_pwd.clone(),
             country: create_org.country.clone(),
-            description: create_org.description.clone(),
         }
     }
 }
@@ -49,6 +51,7 @@ pub struct OrgPayload {
     pub organization_id: Option<Uuid>,
     pub organization_name: Option<String>,
     pub organization_username: Option<String>,
+    pub org_email: Option<String>,
     pub country: Option<String>,
     pub description: Option<String>,
 }
@@ -59,6 +62,7 @@ impl From<web::Json<OrgPayload>> for OrgPayload {
             organization_id: payload.organization_id.clone(),
             organization_name: payload.organization_name.clone(),
             organization_username: payload.organization_username.clone(),
+            org_email: payload.org_email.clone(),
             country: payload.country.clone(),
             description: payload.description.clone(),
         }

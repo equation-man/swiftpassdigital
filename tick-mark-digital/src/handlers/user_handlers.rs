@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 #[path="../state.rs"]
 mod state;
-use state::AppState;
+use crate::state::AppState;
 
 /// User registration or sign up handler
 pub async fn user_registration(new_user: web::Json<CreateUser>, app_state: web::Data<AppState>) -> HttpResponse {
