@@ -73,9 +73,13 @@ createEvent() {
         }'
 }
 
+listEvents() {
+    curl -X GET "$API_URL/events/list" 
+}
+
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 echo "Testing SwiftPassDigital Software"
-result=$(createEvent)
+result=$(listEvents)
 echo "$result" | jq
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 

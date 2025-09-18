@@ -32,7 +32,6 @@ pub async fn add_event(db_pool: &PgPool, new_event: CreateEvent) -> Event {
     let start_time_iso_str = n_event.start_time.to_rfc3339();
     let finish_time_iso_str = n_event.finish_time.to_rfc3339();
     let added_at_str = n_event.added_at.to_rfc3339();
-    println!("The times are {}, {}, {}", &start_time_iso_str, &finish_time_iso_str, &added_at_str);
 
     Event {
         event_id: n_event.event_id,
@@ -49,6 +48,15 @@ pub async fn add_event(db_pool: &PgPool, new_event: CreateEvent) -> Event {
 }
 
 pub async fn get_events(db_pool: &PgPool, filters: EventPayload) -> Vec<Event> {
+    let start_date = match filters.start_date {
+        Some(s_date) => Some(s_date.parse::<DateTime<Utc>>().unwrap()),
+        None => None
+    };
+    let finish_date = match filters.finish_date {
+        Some(f_date) => Some(f_date.parse::<DateTime<Utc>>().unwrap()),
+        None => None
+    };
+
     let event_list = sqlx::query(r#"
         SELECT * FROM ticket_market.events
         WHERE ($1 IS NULL OR event_id=$1)
@@ -60,7 +68,7 @@ pub async fn get_events(db_pool: &PgPool, filters: EventPayload) -> Vec<Event> {
             AND ($7 IS NULL OR event_tag=$7)
     "#).bind(Some(filters.event_id)).bind(Some(filters.owner_id))
         .bind(Some(filters.title)).bind(Some(filters.venue))
-        .bind(Some(filters.start_date)).bind(Some(filters.finish_date))
+        .bind(Some(start_date)).bind(Some(finish_date))
         .bind(Some(filters.event_tag))
     .fetch_all(db_pool).await.expect("Events fetch failed");
 
