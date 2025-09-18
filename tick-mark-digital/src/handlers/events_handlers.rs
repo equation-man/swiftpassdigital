@@ -73,6 +73,13 @@ pub async fn tickets_display(event_id: web::Path<String>, app_state: web::Data<A
     HttpResponse::Ok().json(ticket_list)
 }
 
+/// Getting a ticket.
+pub async fn ticket_info(ticket_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
+    let t_id: Uuid = Uuid::parse_str(&ticket_id.into_inner()).unwrap();
+    let ticket = get_single_ticket(&app_state.db, t_id).await;
+    HttpResponse::Ok().json(ticket)
+}
+
 // ============================== ORDER TICKETS =========================
 /// Ordering a ticket.
 pub async fn create_order(payload: web::Json<CreateOrder>, app_state: web::Data<AppState>) -> HttpResponse {

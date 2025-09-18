@@ -197,8 +197,6 @@ pub async fn add_ticket(db_pool: &PgPool, new_ticket: AddTicket) -> Ticket {
 }
 
 pub async fn get_tickets(db_pool: &PgPool, event_id: Uuid) -> Vec<Ticket> {
-
-
     let tickets = sqlx::query(r#"
         SELECT * FROM ticket_market.tickets
         WHERE event_id=$1
@@ -225,6 +223,33 @@ pub async fn get_tickets(db_pool: &PgPool, event_id: Uuid) -> Vec<Ticket> {
             description: ticket.get("description"),
         }
     }).collect()
+}
+
+pub async fn get_single_ticket(db_pool: &PgPool, ticket_id: Uuid) -> Ticket {
+    let ticket = sqlx::query(r#"
+        SELECT * FROM ticket_market.tickets
+        WHERE ticket_id=$1
+    "#).bind(ticket_id)
+    .fetch_one(db_pool).await.expect("Tickets fetch failed");
+
+    let start_time_str = ticket.get::<DateTime<Utc>, &str>("start_time").to_rfc3339();
+    let finish_time_str = ticket.get::<DateTime<Utc>, &str>("finish_time").to_rfc3339();
+    let added_at_str = ticket.get::<DateTime<Utc>, &str>("added_at").to_rfc3339();
+    let t_price = ticket.get::<Decimal, &str>("base_price").to_string();
+
+    Ticket {
+        ticket_id: ticket.get("ticket_id"),
+        event_id: ticket.get("event_id"),
+        base_price: t_price,
+        capacity: ticket.get("capacity"),
+        ticket_type: ticket.get("ticket_type"),
+        ticket_class: ticket.get("ticket_class"),
+        discount_time: pg_interval_to_seconds(ticket.get("discount_time")),
+        start_time: start_time_str,
+        finish_time: finish_time_str,
+        added_at: added_at_str,
+        description: ticket.get("description"),
+    }
 }
 
 // ==================== TICKET ORDERS =====================
