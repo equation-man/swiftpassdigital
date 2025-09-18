@@ -22,9 +22,9 @@ pub struct Event {
     pub title: String,
     pub description: String,
     pub venue: String,
-    pub start_date: DateTime<Utc>,
-    pub finish_date: DateTime<Utc>,
-    pub added_at: DateTime<Utc>,
+    pub start_date: String, //DateTime<Utc>,
+    pub finish_date: String, //DateTime<Utc>,
+    pub added_at: String, //DateTime<Utc>,
     pub edited: bool,
     pub event_tag: String
 }
@@ -52,8 +52,8 @@ pub struct CreateEvent {
     pub title: String,
     pub description: String,
     pub venue: String,
-    pub start_date: DateTime<Utc>,
-    pub finish_date: DateTime<Utc>,
+    pub start_date: String, //DateTime<Utc>,
+    pub finish_date: String, //DateTime<Utc>,
     pub event_tag: String,
 }
 
@@ -77,8 +77,8 @@ pub struct EventPayload {
     pub owner_id: Option<Uuid>,
     pub title: Option<String>,
     pub venue: Option<String>,
-    pub start_date: Option<DateTime<Utc>>,
-    pub finish_date: Option<DateTime<Utc>>,
+    pub start_date: Option<String>,
+    pub finish_date: Option<String>,
     pub event_tag: Option<String>,
     pub search_query: Option<String>,
 }

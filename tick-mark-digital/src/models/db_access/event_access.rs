@@ -7,11 +7,13 @@ use crate::models::{
     pg_interval_to_chrono_duration,
 };
 use sqlx::postgres::PgPool;
-use chrono::Duration;
+use chrono::{Duration, DateTime, Utc};
 use sqlx::Row;
 use uuid::Uuid;
 
 pub async fn add_event(db_pool: &PgPool, new_event: CreateEvent) -> Event {
+    let start_date: DateTime<Utc> = new_event.start_date.parse().unwrap();
+    let finish_date: DateTime<Utc> = new_event.finish_date.parse().unwrap();
     let n_event = sqlx::query!(r#"
         INSERT INTO ticket_market.events
             (owner_id, title, description, venue, start_time, finish_time, event_tag)
@@ -23,9 +25,14 @@ pub async fn add_event(db_pool: &PgPool, new_event: CreateEvent) -> Event {
             edited, event_tag
     "#, new_event.owner_id, new_event.title,
     new_event.description, new_event.venue,
-    new_event.start_date, new_event.finish_date,
+    start_date, finish_date,
     new_event.event_tag
     ).fetch_one(db_pool).await.unwrap();
+
+    let start_time_iso_str = n_event.start_time.to_rfc3339();
+    let finish_time_iso_str = n_event.finish_time.to_rfc3339();
+    let added_at_str = n_event.added_at.to_rfc3339();
+    println!("The times are {}, {}, {}", &start_time_iso_str, &finish_time_iso_str, &added_at_str);
 
     Event {
         event_id: n_event.event_id,
@@ -33,9 +40,9 @@ pub async fn add_event(db_pool: &PgPool, new_event: CreateEvent) -> Event {
         title: n_event.title,
         description: n_event.description,
         venue: n_event.venue,
-        start_date: n_event.start_time,
-        finish_date: n_event.finish_time,
-        added_at: n_event.added_at,
+        start_date: start_time_iso_str,
+        finish_date: finish_time_iso_str,
+        added_at: added_at_str,
         edited: n_event.edited.unwrap(),
         event_tag: n_event.event_tag.unwrap(),
     }
@@ -57,17 +64,22 @@ pub async fn get_events(db_pool: &PgPool, filters: EventPayload) -> Vec<Event> {
         .bind(Some(filters.event_tag))
     .fetch_all(db_pool).await.expect("Events fetch failed");
 
-    event_list.iter().map(|event| Event {
-        event_id: event.get("event_id"),
-        owner_id: event.get("owner_id"),
-        title: event.get("title"),
-        description: event.get("description"),
-        venue: event.get("venue"),
-        start_date: event.get("start_time"),
-        finish_date: event.get("finish_time"),
-        added_at: event.get("added_at"),
-        edited: event.get("edited"),
-        event_tag: event.get("event_tag"),
+    event_list.iter().map(|event| {
+        let start_time_str = event.get::<DateTime<Utc>, &str>("start_time").to_rfc3339();
+        let finish_time_str = event.get::<DateTime<Utc>, &str>("finish_time").to_rfc3339();
+        let added_at_str = event.get::<DateTime<Utc>, &str>("added_at").to_rfc3339();
+        Event {
+            event_id: event.get("event_id"),
+            owner_id: event.get("owner_id"),
+            title: event.get("title"),
+            description: event.get("description"),
+            venue: event.get("venue"),
+            start_date: start_time_str,
+            finish_date: finish_time_str,
+            added_at: added_at_str,
+            edited: event.get("edited"),
+            event_tag: event.get("event_tag"),
+        }
     }).collect()
 }
 
@@ -88,15 +100,19 @@ pub async fn update_event(db_pool: &PgPool, event_id: Uuid, payload: EventPayloa
     .bind(Some(payload.event_tag)).bind(event_id)
     .fetch_one(db_pool).await.expect("Failed updateing event");
 
+    let start_time_str = upd_event.get::<DateTime<Utc>, &str>("start_time").to_rfc3339();
+    let finish_time_str = upd_event.get::<DateTime<Utc>, &str>("finish_time").to_rfc3339();
+    let added_at_str = upd_event.get::<DateTime<Utc>, &str>("added_at").to_rfc3339();
+
     Event {
         event_id: upd_event.get("event_id"),
         owner_id: upd_event.get("owner_id"),
         title: upd_event.get("title"),
         description: upd_event.get("description"),
         venue: upd_event.get("venue"),
-        start_date: upd_event.get("start_time"),
-        finish_date: upd_event.get("finish_time"),
-        added_at: upd_event.get("added_at"),
+        start_date: start_time_str,
+        finish_date: finish_time_str,
+        added_at: added_at_str, 
         edited: upd_event.get("edited"),
         event_tag: upd_event.get("event_tag")
     }
@@ -110,15 +126,19 @@ pub async fn delete_event(db_pool: &PgPool, event_id: Uuid) -> Event {
             start_time, finish_time, added_at, edited, event_tag
     "#, event_id).fetch_one(db_pool).await.unwrap();
 
+    let start_time_iso_str = del_event.start_time.to_rfc3339();
+    let finish_time_iso_str = del_event.finish_time.to_rfc3339();
+    let added_at_str = del_event.added_at.to_rfc3339();
+
     Event {
         event_id: del_event.event_id,
         owner_id: del_event.owner_id,
         title: del_event.title,
         description: del_event.description,
         venue: del_event.venue,
-        start_date: del_event.start_time,
-        finish_date: del_event.finish_time,
-        added_at: del_event.added_at,
+        start_date: start_time_iso_str,
+        finish_date: finish_time_iso_str,
+        added_at: added_at_str,
         edited: del_event.edited.unwrap(),
         event_tag: del_event.event_tag.unwrap(),
     }

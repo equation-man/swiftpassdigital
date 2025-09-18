@@ -58,9 +58,24 @@ orgLogin() {
 
 }
 
+createEvent() {
+    curl -X POST \
+        "$API_URL/events/create" \
+        -H 'Content-Type: application/json' \
+        -d '{
+            "owner_id": "aaed0607-4dc6-488a-bcc7-12c377bc08ce",
+            "title": "Athletics competition",
+            "description": "Developmental athletics championships",
+            "venue": "Kasarani Sports Center",
+            "start_date": "2025-09-18T10:15:30Z",
+            "finish_date": "2025-09-19T10:15:30Z",
+            "event_tag": "Athletics"
+        }'
+}
+
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 echo "Testing SwiftPassDigital Software"
-result=$(orgLogin)
+result=$(createEvent)
 echo "$result" | jq
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 
