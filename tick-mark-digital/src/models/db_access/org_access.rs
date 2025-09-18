@@ -42,6 +42,29 @@ pub async fn add_new_org(db_pool: &PgPool, new_org: CreateOrg) -> Organization {
     }
 }
 
+pub async fn get_org_by_pwd(db_pool: &PgPool, filters: OrgPayload) -> Organization {
+    let org = sqlx::query(r#"
+        SELECT * FROM ticket_market.organizations
+        WHERE org_pwd=$1 AND org_email=$2
+    "#).bind(filters.org_pwd).bind(filters.org_email)
+    .fetch_one(db_pool).await.expect("Organizations can't be retrieved.");
+
+    Organization {
+        organization_id: org.get("organization_id"),
+        organization_name: org.get("organization_name"),
+        organization_username: match org.get("organization_username") {
+            Some(uname) => uname,
+            None => "USERNAME_NOT_SET".to_string()
+        },
+        org_email: org.get("org_email"),
+        country: org.get("country"),
+        description: match org.get("description") {
+            Some(des) => des,
+            None => "DESCRIPTION_NOT_SET".to_string()
+        }
+    }
+}
+
 pub async fn get_orgs(db_pool: &PgPool, filters: OrgPayload) -> Vec<Organization> {
     let orgs_lst = sqlx::query(r#"
         SELECT * FROM ticket_market.organizations

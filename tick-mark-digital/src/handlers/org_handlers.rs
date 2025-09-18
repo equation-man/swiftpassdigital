@@ -20,6 +20,12 @@ pub async fn org_registration(new_org: web::Json<CreateOrg>, app_state: web::Dat
 }
 
 /// Organization login handler
+pub async fn org_login(org_payload: web::Json<OrgPayload>, app_state: web::Data<AppState>) -> HttpResponse {
+    let org = get_org_by_pwd(&app_state.db, org_payload.into()).await;
+    HttpResponse::Ok().json(org)
+}
+
+/// Organization listing handler
 pub async fn org_list(org_cred: web::Json<OrgPayload>, app_state: web::Data<AppState>) -> HttpResponse {
     let lst_orgs = get_orgs(&app_state.db, org_cred.into()).await;
     HttpResponse::Ok().json(lst_orgs)
@@ -130,6 +136,7 @@ mod tests {
             organization_name: None,
             organization_username: None,
             org_email: None,
+            org_pwd: None,
             country: None,
             description: Some("Kiambu county swimming federation".to_string()),//None,
         }

@@ -49,20 +49,18 @@ orgRegistration() {
 
 orgLogin() {
     curl -X POST \
-        "$API_URL/organization/login" \
+        "$API_URL/organization/admin" \
         -H 'Content-Type: application/json' \
         -d '{
-            "organization_name": "KCAA",
-            "organization_username": "kcaa@example.com",
-            "country": "Kenya",
-            "description": "Aquatics Association"
+            "org_email": "kcaa@example.com",
+            "org_pwd": "123456789"
         }'
 
 }
 
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 echo "Testing SwiftPassDigital Software"
-result=$(orgRegistration)
+result=$(orgLogin)
 echo "$result" | jq
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 

@@ -52,6 +52,7 @@ pub struct OrgPayload {
     pub organization_name: Option<String>,
     pub organization_username: Option<String>,
     pub org_email: Option<String>,
+    pub org_pwd: Option<String>,
     pub country: Option<String>,
     pub description: Option<String>,
 }
@@ -63,6 +64,7 @@ impl From<web::Json<OrgPayload>> for OrgPayload {
             organization_name: payload.organization_name.clone(),
             organization_username: payload.organization_username.clone(),
             org_email: payload.org_email.clone(),
+            org_pwd: payload.org_pwd.clone(),
             country: payload.country.clone(),
             description: payload.description.clone(),
         }
