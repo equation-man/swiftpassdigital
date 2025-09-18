@@ -283,6 +283,14 @@ pub async fn add_order(db_pool: &PgPool, entrance_code: String, new_order: Order
     }
 }
 
+//pub async fn get_order(db_pool: &PgPool, filters: OrderPayload) -> Order {
+    //let order = sqlx::query(r#"
+        //SELECT * FROM ticket_market.orders
+        //WHERE entrance_code=$1
+    //"#).bind(Some(filters.entrance_code))
+    //.find_one(db_pool).await.expect("Can't fetch single order");
+//}
+
 pub async fn get_orders(db_pool: &PgPool, ticket_id: Uuid, filters: OrderPayload) -> Vec<Order> {
     let orders = sqlx::query(r#"
         SELECT * FROM ticket_market.orders

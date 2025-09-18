@@ -11,6 +11,7 @@ use crate::models::{
 use nanoid::nanoid;
 use rust_decimal::Decimal;
 use std::str::FromStr;
+use serde::Deserialize;
 use uuid::Uuid;
 
 #[path="../state.rs"]
@@ -106,10 +107,28 @@ pub async fn create_order(payload: web::Json<CreateOrder>, token_id: web::Path<S
     HttpResponse::Ok().json(new_order)
 }
 
+#[derive(Debug, Deserialize)]
+pub struct OrderQuery {
+    pub entrance_code: Option<String>,
+}
+
 /// Listing ordered tickets.
-pub async fn orders_list(filters: web::Json<OrderPayload>, params: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
+pub async fn orders_list(params: web::Path<String>, query: web::Query<OrderQuery>, app_state: web::Data<AppState>) -> HttpResponse {
+    let q = query.into_inner();
     let ticket_id = Uuid::parse_str(&params.into_inner()).unwrap();
-    let orders_list = get_orders(&app_state.db, ticket_id, filters.into()).await;
+    let filters: OrderPayload = OrderPayload {
+        order_id: None,
+        ticket_id: None,
+        user_id: None,
+        user_email: None,
+        user_contact: None,
+        ticket_price: None,
+        promo_code: None,
+        ticket_status: None,
+        entrance_code: q.entrance_code,
+        order_limit: None,
+    };
+    let orders_list = get_orders(&app_state.db, ticket_id, filters).await;
     HttpResponse::Ok().json(orders_list)
 }
 
