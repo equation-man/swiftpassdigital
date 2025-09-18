@@ -19,7 +19,7 @@ pub fn events_routes(cfg: &mut web::ServiceConfig) {
         .route("/ticket/create", web::post().to(create_ticket))
         .route("/ticket/{ticket_id}", web::get().to(ticket_info))
         .route("/ticket/list/{event_id}", web::get().to(tickets_display))
-        .route("/ticket/order/purchase", web::post().to(create_order))
+        .route("/ticket/order/purchase/{ticket_id}", web::post().to(create_order))
         .route("/ticket/order/list/{ticket_id}", web::get().to(orders_list))
     );
 }

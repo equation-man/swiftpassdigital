@@ -4,11 +4,14 @@ use crate::models::{
     Event, CreateEvent, EventPayload,
     Order, CreateOrder, OrderPayload,
     Discount, AddDiscount, DiscountPayload,
-    Ticket, AddTicket, TicketPayload,
+    Ticket, AddTicket, TicketPayload, TickStatus,
+    OrderDetails,
     db_access::*,
 };
-use uuid::Uuid;
 use nanoid::nanoid;
+use rust_decimal::Decimal;
+use std::str::FromStr;
+use uuid::Uuid;
 
 #[path="../state.rs"]
 mod state;
@@ -82,14 +85,24 @@ pub async fn ticket_info(ticket_id: web::Path<String>, app_state: web::Data<AppS
 
 // ============================== ORDER TICKETS =========================
 /// Ordering a ticket.
-pub async fn create_order(payload: web::Json<CreateOrder>, app_state: web::Data<AppState>) -> HttpResponse {
+pub async fn create_order(payload: web::Json<CreateOrder>, token_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
+    let order_payload: CreateOrder = payload.into();
     let alphabet: [char; 32] = [
         'A','B','C','D','E','F','G','H','J','K','L','M',
         'N','P','Q','R','S','T','U','V','W','X','Y','Z',
         '2', '3', '4', '5', '6', '7', '8', '9'
     ];
     let entrance_code_gen = nanoid!(8, &alphabet);
-    let new_order = add_order(&app_state.db, entrance_code_gen, payload.into()).await;
+    let t_id: Uuid = Uuid::parse_str(&token_id.into_inner()).unwrap();
+    let ticket_det = get_single_ticket(&app_state.db, t_id).await;
+    let order_details = OrderDetails {
+        ticket_id: ticket_det.ticket_id.clone(),
+        user_contact: order_payload.user_contact,
+        ticket_status: TickStatus::Pending,
+        order_limit: ticket_det.capacity,
+        ticket_price: Decimal::from_str(&ticket_det.base_price).unwrap(),
+    };
+    let new_order = add_order(&app_state.db, entrance_code_gen, order_details).await;
     HttpResponse::Ok().json(new_order)
 }
 

@@ -2,7 +2,7 @@
 use crate::models::{
     Event, CreateEvent, EventPayload,
     TickType, Ticket, AddTicket, TicketPayload, TickStatus, TickClass,
-    Order, CreateOrder, OrderPayload,
+    Order, CreateOrder, OrderPayload, OrderDetails,
     DiscType, Discount, AddDiscount, DiscountPayload,
     pg_interval_to_chrono_duration,
     pg_interval_to_seconds,
@@ -253,31 +253,30 @@ pub async fn get_single_ticket(db_pool: &PgPool, ticket_id: Uuid) -> Ticket {
 }
 
 // ==================== TICKET ORDERS =====================
-pub async fn add_order(db_pool: &PgPool, entrance_code: String, new_order: CreateOrder) -> Order {
+pub async fn add_order(db_pool: &PgPool, entrance_code: String, new_order: OrderDetails) -> Order {
     let n_order = sqlx::query!(r#"
         INSERT INTO ticket_market.orders
-            (ticket_id, user_id, user_email, user_contact, ticket_price,
-            promo_code, ticket_status,
+            (ticket_id, user_contact, ticket_price, ticket_status,
             entrance_code, order_limit)
         VALUES
-            ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            ($1, $2, $3, $4, $5, $6)
         RETURNING order_id, ticket_id, user_id, user_email,
             user_contact, ticket_price, added_at, promo_code,
             ticket_status as "tick_status: TickStatus", entrance_code, order_limit
-    "#, new_order.ticket_id, new_order.user_id, new_order.user_email,
-    new_order.user_contact, new_order.ticket_price, new_order.promo_code,
+    "#, new_order.ticket_id, new_order.user_contact, new_order.ticket_price,
     new_order.ticket_status as TickStatus, entrance_code, new_order.order_limit
     ).fetch_one(db_pool).await.unwrap();
 
+    let order_price = n_order.ticket_price.unwrap().to_string();
     Order {
         order_id: n_order.order_id,
         ticket_id: n_order.ticket_id.unwrap(),
-        user_id: n_order.user_id.unwrap(),
-        user_email: n_order.user_email.unwrap(),
+        //user_id: n_order.user_id.unwrap(),
+        //user_email: n_order.user_email.unwrap(),
         user_contact: n_order.user_contact.unwrap(),
-        ticket_price: n_order.ticket_price.unwrap(),
+        ticket_price: order_price,
         added_at: n_order.added_at,
-        promo_code: n_order.promo_code.unwrap(),
+        //promo_code: n_order.promo_code.unwrap(),
         ticket_status: n_order.tick_status.unwrap(),
         entrance_code: n_order.entrance_code.unwrap(),
         order_limit: n_order.order_limit.unwrap(),
@@ -304,18 +303,22 @@ pub async fn get_orders(db_pool: &PgPool, ticket_id: Uuid, filters: OrderPayload
     .bind(Some(filters.entrance_code)).bind(Some(filters.order_limit))
     .fetch_all(db_pool).await.expect("Failed fetching orders");
 
-    orders.iter().map(|order| Order {
-        order_id: order.get("order_id"),
-        ticket_id: order.get("ticket_id"),
-        user_id: order.get("user_id"),
-        user_email: order.get("user_email"),
-        user_contact: order.get("user_contact"),
-        ticket_price: order.get("ticket_price"),
-        added_at: order.get("added_at"),
-        promo_code: order.get("promo_code"),
-        ticket_status: order.get("ticket_status"),
-        entrance_code: order.get("entrance_code"),
-        order_limit: order.get("order_limit")
+
+    orders.iter().map(|order| {
+        let o_price = order.get::<Decimal, &str>("ticket_price").to_string();
+        Order {
+            order_id: order.get("order_id"),
+            ticket_id: order.get("ticket_id"),
+            //user_id: order.get("user_id"),
+            //user_email: order.get("user_email"),
+            user_contact: order.get("user_contact"),
+            ticket_price: o_price,
+            added_at: order.get("added_at"),
+            //promo_code: order.get("promo_code"),
+            ticket_status: order.get("ticket_status"),
+            entrance_code: order.get("entrance_code"),
+            order_limit: order.get("order_limit")
+        }
     }).collect()
 }
 

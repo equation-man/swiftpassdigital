@@ -103,26 +103,18 @@ singleTicket() {
     curl -X GET "$API_URL/events/ticket/8bc51b2b-62d8-45ff-89ee-6191d702093f"
 }
 
-#createOrder() {
-    #curl -X POST \
-        #"$API_URL/purchase" \
-        #-H 'Content-Type: applicatoin/json' \
-        #-d '{
-            #"ticket_id": ,
-            #"user_id": ,
-            #"user_email": ,
-            #"user_contact": ,
-            #"ticket_price": ,
-            #"promo_code": ,
-            #"ticket_code": ,
-            #"ticket_status": ,
-            #"order_limit": ,
-        #}'
-#}
+purchaseTicket() {
+    curl -X POST \
+        "$API_URL/events/ticket/order/purchase/8bc51b2b-62d8-45ff-89ee-6191d702093f" \
+        -H 'Content-Type: applicatoin/json' \
+        -d '{
+            "user_contact": "0757894326"
+        }'
+}
 
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 echo "Testing SwiftPassDigital Software"
-result=$(singleTicket)
+result=$(purchaseTicket)
 echo "$result" | jq
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 
