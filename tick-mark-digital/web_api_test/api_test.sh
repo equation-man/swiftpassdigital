@@ -77,9 +77,30 @@ listEvents() {
     curl -X GET "$API_URL/events/list" 
 }
 
+createTicket() {
+    curl -X POST \
+        "$API_URL/events/ticket/create" \
+        -H 'Content-Type: application/json' \
+        -d '{
+            "event_id": "5f51badb-acfe-4b0f-8b9d-6a2d96a5fd1e",
+            "base_price": "1000",
+            "capacity": 300,
+            "ticket_type": "Regular",
+            "ticket_class": "Individual",
+            "discount_time": 3,
+            "start_time": "2025-09-18T10:15:30Z",
+            "finish_time": "2025-09-18T10:15:30Z",
+            "description": "Athletics event at Kasarani"
+        }'
+}
+
+
+listTickets() {
+    curl -X GET "$API_URL/events/ticket/list/5f51badb-acfe-4b0f-8b9d-6a2d96a5fd1e"
+}
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 echo "Testing SwiftPassDigital Software"
-result=$(listEvents)
+result=$(listTickets)
 echo "$result" | jq
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 

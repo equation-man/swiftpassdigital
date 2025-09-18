@@ -67,8 +67,9 @@ pub async fn create_ticket(payload: web::Json<AddTicket>, app_state: web::Data<A
 }
 
 /// Getting list of tickets.
-pub async fn tickets_list(filters: web::Json<TicketPayload>, app_state: web::Data<AppState>) -> HttpResponse {
-    let ticket_list = get_tickets(&app_state.db, filters.into()).await;
+pub async fn tickets_display(event_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
+    let ev_id: Uuid = Uuid::parse_str(&event_id.into_inner()).unwrap();
+    let ticket_list = get_tickets(&app_state.db, ev_id).await;
     HttpResponse::Ok().json(ticket_list)
 }
 

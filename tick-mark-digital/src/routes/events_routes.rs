@@ -3,7 +3,7 @@ use actix_web::web;
 use crate::{
     handlers::{
         create_event, list_events, event_update, event_delete,
-        create_ticket, tickets_list, create_order, orders_list
+        create_ticket, tickets_display, create_order, orders_list
     },
 };
 
@@ -16,7 +16,7 @@ pub fn events_routes(cfg: &mut web::ServiceConfig) {
         .route("/update/{event_id}", web::patch().to(event_update))
         .route("/delete/{event_id}", web::delete().to(event_delete))
         .route("/ticket/create", web::post().to(create_ticket))
-        .route("/ticket/list", web::post().to(tickets_list))
+        .route("/ticket/list/{event_id}", web::get().to(tickets_display))
         .route("/ticket/order/create", web::post().to(create_order))
         .route("/ticket/order/{ticket_id}/list", web::get().to(orders_list))
     );

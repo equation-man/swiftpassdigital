@@ -15,6 +15,18 @@ pub fn pg_interval_to_chrono_duration(interval: PgInterval) -> Duration {
     Duration::microseconds(total_micros)
 }
 
+// Converting PgInterval to i64.
+pub fn pg_interval_to_seconds(intv: PgInterval) -> i64 {
+    // Assume 1 month is 30 days
+    let days_from_months = (intv.months as i64) * 30;
+    let total_days = days_from_months + intv.days as i64;
+
+    let secs_from_days = total_days * 86_400; // 24*60*60
+    let secs_from_micros = intv.microseconds / 1_000_000;
+
+    secs_from_days + secs_from_micros
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Event {
     pub event_id: Uuid,
@@ -139,14 +151,14 @@ impl From<web::Json<&str>> for TickClass {
 pub struct Ticket {
     pub ticket_id: Uuid,
     pub event_id: Uuid,
-    pub base_price: Decimal,
+    pub base_price: String, //Decimal,
     pub capacity: i64,
     pub ticket_type: TickType, 
     pub ticket_class: TickClass,
-    pub start_time: DateTime<Utc>,
-    pub finish_time: DateTime<Utc>,
-    pub discount_time: Duration,
-    pub added_at: DateTime<Utc>,
+    pub start_time: String, //DateTime<Utc>,
+    pub finish_time: String, //DateTime<Utc>,
+    pub discount_time: i64, //Duration,
+    pub added_at: String, //DateTime<Utc>,
     pub description: String,
 }
 
@@ -171,13 +183,13 @@ impl From<web::Json<Ticket>> for Ticket {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct AddTicket {
     pub event_id: Uuid,
-    pub base_price: Decimal,
+    pub base_price: String, //Decimal,
     pub capacity: i64,
     pub ticket_type: TickType,
     pub ticket_class: TickClass,
-    pub discount_time: Duration,
-    pub start_time: DateTime<Utc>,
-    pub finish_time: DateTime<Utc>,
+    pub discount_time: i64, //Duration,
+    pub start_time: String, //DateTime<Utc>,
+    pub finish_time: String, //DateTime<Utc>,
     pub description: String,
 }
 
@@ -201,13 +213,13 @@ impl From<web::Json<AddTicket>> for AddTicket {
 pub struct TicketPayload {
     pub ticket_id: Option<Uuid>,
     pub event_id: Option<Uuid>,
-    pub base_price: Option<Decimal>,
+    pub base_price: Option<String>,
     pub capacity: Option<i64>,
     pub ticket_type: Option<TickType>,
     pub ticket_class: Option<TickClass>,
-    pub discount_time: Option<Duration>,
-    pub start_time: Option<DateTime<Utc>>,
-    pub finish_time: Option<DateTime<Utc>>,
+    pub discount_time: Option<i64>,
+    pub start_time: Option<String>,
+    pub finish_time: Option<String>,
 }
 
 impl From<web::Json<TicketPayload>> for TicketPayload {

@@ -5,9 +5,12 @@ use crate::models::{
     Order, CreateOrder, OrderPayload,
     DiscType, Discount, AddDiscount, DiscountPayload,
     pg_interval_to_chrono_duration,
+    pg_interval_to_seconds,
 };
-use sqlx::postgres::PgPool;
 use chrono::{Duration, DateTime, Utc};
+use sqlx::postgres::PgPool;
+use rust_decimal::Decimal;
+use std::str::FromStr;
 use sqlx::Row;
 use uuid::Uuid;
 
@@ -154,6 +157,11 @@ pub async fn delete_event(db_pool: &PgPool, event_id: Uuid) -> Event {
 
 // =================== TICKET ACTIONS ===========================
 pub async fn add_ticket(db_pool: &PgPool, new_ticket: AddTicket) -> Ticket {
+    let start_time: DateTime<Utc> = new_ticket.start_time.parse().unwrap();
+    let finish_time: DateTime<Utc> = new_ticket.finish_time.parse().unwrap();
+    let price = Decimal::from_str(&new_ticket.base_price).unwrap();
+    let ticket_duration = Duration::days(new_ticket.discount_time);
+
     let ticket = sqlx::query!(r#"
         INSERT INTO ticket_market.tickets
             (event_id, base_price, capacity, ticket_type, start_time, finish_time, description, ticket_class, discount_time)
@@ -162,58 +170,60 @@ pub async fn add_ticket(db_pool: &PgPool, new_ticket: AddTicket) -> Ticket {
         RETURNING ticket_id, event_id, base_price,
             capacity, ticket_type as "tick_type: TickType", start_time, finish_time,
             added_at, description, ticket_class as "tick_class: TickClass", discount_time
-    "#,new_ticket.event_id, new_ticket.base_price,
-    new_ticket.capacity, new_ticket.ticket_type as TickType, new_ticket.start_time,
-    new_ticket.finish_time, new_ticket.description,
-    new_ticket.ticket_class as TickClass, new_ticket.discount_time as Duration
+    "#,new_ticket.event_id, price,
+    new_ticket.capacity, new_ticket.ticket_type as TickType, start_time,
+    finish_time, new_ticket.description,
+    new_ticket.ticket_class as TickClass, ticket_duration as Duration
     ).fetch_one(db_pool).await.unwrap();
+
+    let start_time_iso_str = ticket.start_time.to_rfc3339();
+    let finish_time_iso_str = ticket.finish_time.to_rfc3339();
+    let added_at_str = ticket.added_at.to_rfc3339();
+    let ticket_price = ticket.base_price.unwrap().to_string();
 
     Ticket {
         ticket_id: ticket.ticket_id,
         event_id: ticket.event_id,
-        base_price: ticket.base_price.unwrap(),
+        base_price: ticket_price,
         capacity: ticket.capacity.unwrap(),
         ticket_type: ticket.tick_type.unwrap(),
         ticket_class: ticket.tick_class.unwrap(),
-        discount_time: pg_interval_to_chrono_duration(ticket.discount_time.unwrap()),
-        start_time: ticket.start_time,
-        finish_time: ticket.finish_time,
-        added_at: ticket.added_at,
+        discount_time: pg_interval_to_seconds(ticket.discount_time.unwrap()),
+        start_time: start_time_iso_str, 
+        finish_time: finish_time_iso_str, 
+        added_at: added_at_str,
         description: ticket.description.unwrap(),
     }
 }
 
-pub async fn get_tickets(db_pool: &PgPool, filters: TicketPayload) -> Vec<Ticket> {
+pub async fn get_tickets(db_pool: &PgPool, event_id: Uuid) -> Vec<Ticket> {
+
+
     let tickets = sqlx::query(r#"
         SELECT * FROM ticket_market.tickets
-        WHERE ($1 IS NULL OR ticket_id=$1)
-            AND ($2 IS NULL OR event_id=$2)
-            AND ($3 IS NULL OR base_price=$3)
-            AND ($4 IS NULL OR capacity=$4)
-            AND ($5 IS NULL OR ticket_type=$5)
-            AND ($6 IS NULL OR start_time=$6)
-            AND ($7 IS NULL OR finish_time=$7)
-            AND ($8 IS NULL OR ticket_class=$8)
-            AND ($9 IS NULL OR discount_time=$9)
-    "#).bind(Some(filters.ticket_id)).bind(Some(filters.event_id))
-    .bind(Some(filters.base_price)).bind(Some(filters.capacity))
-    .bind(Some(filters.ticket_type)).bind(Some(filters.start_time))
-    .bind(Some(filters.finish_time)).bind(Some(filters.ticket_class))
-    .bind(Some(filters.discount_time))
+        WHERE event_id=$1
+    "#).bind(event_id)
     .fetch_all(db_pool).await.expect("Tickets fetch failed");
 
-    tickets.iter().map(|ticket| Ticket {
-        ticket_id: ticket.get("ticket_id"),
-        event_id: ticket.get("event_id"),
-        base_price: ticket.get("base_price"),
-        capacity: ticket.get("capacity"),
-        ticket_type: ticket.get("ticket_type"),
-        ticket_class: ticket.get("ticket_class"),
-        discount_time: pg_interval_to_chrono_duration(ticket.get("discount_time")),
-        start_time: ticket.get("start_time"),
-        finish_time: ticket.get("finish_time"),
-        added_at: ticket.get("added_at"),
-        description: ticket.get("description"),
+    tickets.iter().map(|ticket| {
+        let start_time_str = ticket.get::<DateTime<Utc>, &str>("start_time").to_rfc3339();
+        let finish_time_str = ticket.get::<DateTime<Utc>, &str>("finish_time").to_rfc3339();
+        let added_at_str = ticket.get::<DateTime<Utc>, &str>("added_at").to_rfc3339();
+        let t_price = ticket.get::<Decimal, &str>("base_price").to_string();
+
+        Ticket {
+            ticket_id: ticket.get("ticket_id"),
+            event_id: ticket.get("event_id"),
+            base_price: t_price,
+            capacity: ticket.get("capacity"),
+            ticket_type: ticket.get("ticket_type"),
+            ticket_class: ticket.get("ticket_class"),
+            discount_time: pg_interval_to_seconds(ticket.get("discount_time")),
+            start_time: start_time_str,
+            finish_time: finish_time_str,
+            added_at: added_at_str,
+            description: ticket.get("description"),
+        }
     }).collect()
 }
 
