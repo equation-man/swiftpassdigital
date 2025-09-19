@@ -33,6 +33,5 @@ async fn main() -> io::Result<()> {
             .configure(orgs_routes)
             .configure(events_routes)
     };
-    HttpServer::new(app)
-        .bind("127.0.0.1:3000")?.run().await
+    HttpServer::new(app).bind("127.0.0.1:5000")?.run().await
 }
