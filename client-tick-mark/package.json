@@ -13,6 +13,8 @@
     "@reduxjs/toolkit": "^2.9.0",
     "daisyui": "^5.1.6",
     "next": "15.5.2",
+    "next-auth": "5.0.0-beta.29",
+    "pnpm": "^10.17.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-redux": "^9.2.0"

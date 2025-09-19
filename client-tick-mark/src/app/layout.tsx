@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
 import NavBar from "@/components/Navigation/NavBar";
+import {ReduxProvider} from "@/redux/ReduxProvider";
 
 const outfit = Outfit({
     subset: ["latin"],
@@ -23,8 +24,10 @@ export default function RootLayout({
       <body
         className={`${outfit.className}`}
       >
-        <NavBar />
-        {children}
+          <ReduxProvider>
+            <NavBar />
+            {children}
+          </ReduxProvider>
       </body>
     </html>
   );
