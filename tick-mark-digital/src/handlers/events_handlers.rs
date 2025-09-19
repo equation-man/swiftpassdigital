@@ -2,10 +2,9 @@
 use actix_web::{web, HttpResponse};
 use crate::models::{
     Event, CreateEvent, EventPayload,
-    Order, CreateOrder, OrderPayload,
     Discount, AddDiscount, DiscountPayload,
+    Order, CreateOrder, OrderPayload, OrderDetails,
     Ticket, AddTicket, TicketPayload, TickStatus,
-    OrderDetails,
     db_access::*,
 };
 use nanoid::nanoid;
@@ -105,6 +104,15 @@ pub async fn create_order(payload: web::Json<CreateOrder>, token_id: web::Path<S
     };
     let new_order = add_order(&app_state.db, entrance_code_gen, order_details).await;
     HttpResponse::Ok().json(new_order)
+}
+
+/// Verify order purchase.
+pub async fn verify_order(upd_pld: web::Json<OrderPayload>, path: web::Path<(String, String)>, app_state: web::Data<AppState>) -> HttpResponse {
+    let (own_id, od_id) = path.into_inner();
+    let owner_id: Uuid = Uuid::parse_str(&own_id).unwrap();
+    let order_id: Uuid = Uuid::parse_str(&od_id).unwrap();
+    let order_upd = update_order(&app_state.db, owner_id, order_id, upd_pld.into()).await;
+    HttpResponse::Ok().json(order_upd)
 }
 
 #[derive(Debug, Deserialize)]

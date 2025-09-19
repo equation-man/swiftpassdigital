@@ -330,6 +330,40 @@ pub async fn get_orders(db_pool: &PgPool, ticket_id: Uuid, filters: OrderPayload
     }).collect()
 }
 
+pub async fn update_order(db_pool: &PgPool, owner_id: Uuid, order_id: Uuid, payload: OrderPayload) -> Order {
+    let upd_order = sqlx::query(r#"
+        UPDATE ticket_market.orders o
+        SET ticket_status = COALESCE($1, ticket_status)
+        FROM ticket_market.tickets t
+        JOIN ticket_market.events e ON e.event_id=t.event_id
+        WHERE o.ticket_id = t.ticket_id
+            AND e.owner_id=$2
+            AND o.order_id=$3
+        RETURNING o.order_id, o.ticket_id, o.user_id, o.user_email,
+            o.user_contact, o.ticket_price, o.added_at, o.promo_code,
+            o.ticket_status, o.entrance_code, o.order_limit
+
+    "#).bind(Some(payload.ticket_status)).bind(owner_id)
+    .bind(order_id)
+    .fetch_one(db_pool).await.expect("Failed updateing event");
+
+    let o_price = upd_order.get::<Decimal, &str>("ticket_price").to_string();
+    Order {
+        order_id: upd_order.get("order_id"),
+        ticket_id: upd_order.get("ticket_id"),
+        //user_id: order.get("user_id"),
+        //user_email: order.get("user_email"),
+        user_contact: upd_order.get("user_contact"),
+        ticket_price: o_price,
+        added_at: upd_order.get("added_at"),
+        //promo_code: order.get("promo_code"),
+        ticket_status: upd_order.get("ticket_status"),
+        entrance_code: upd_order.get("entrance_code"),
+        order_limit: upd_order.get("order_limit")
+    }
+}
+
+
 // ======================== DISCOUNT =====================
 pub async fn add_discount(db_pool: &PgPool, new_discount: AddDiscount) -> Discount {
     let n_discount = sqlx::query!(r#"

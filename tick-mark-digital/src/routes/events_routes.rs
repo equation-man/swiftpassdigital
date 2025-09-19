@@ -4,7 +4,7 @@ use crate::{
     handlers::{
         create_event, list_events, event_update, event_delete,
         create_ticket, tickets_display, ticket_info, create_order,
-        orders_list,
+        orders_list, verify_order,
     },
 };
 
@@ -21,5 +21,6 @@ pub fn events_routes(cfg: &mut web::ServiceConfig) {
         .route("/ticket/list/{event_id}", web::get().to(tickets_display))
         .route("/ticket/order/purchase/{ticket_id}", web::post().to(create_order))
         .route("/ticket/order/{ticket_id}", web::get().to(orders_list))
+        .route("/ticket/order/verify/{owner_id}/{order_id}", web::patch().to(verify_order))
     );
 }
