@@ -2,6 +2,7 @@
 mod handlers;
 mod routes;
 mod models;
+mod helpers;
 
 use routes::*; // Loading routes.
 #[path="./state.rs"]
