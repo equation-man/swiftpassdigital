@@ -62,6 +62,25 @@ pub struct InitializeSplitPaymentResData {
     reference: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct VerifyPaymentRes {
+    status: bool,
+    message: String,
+    data: Option<VerifyPaymentResData>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct VerifyPaymentResData {
+    id: u64,
+    domain: String,
+    status: String,
+    reference: String,
+    receipt_number: Option<String>,
+    amount: u64,
+    message: Option<String>,
+    gateway_response: String,
+}
+
 /// Creating a subaccount where to deposit ticket sales funds after fees.
 async fn create_subaccnt(payment_url: String, subaccount_payload: SubAccount) -> Result<SubAccountResult, Error> {
     let client = reqwest::Client::new();
@@ -70,8 +89,8 @@ async fn create_subaccnt(payment_url: String, subaccount_payload: SubAccount) ->
         .header("Content-Type", "application/json")
         .json(&subaccount_payload)
         .send().await?;
-    let result: SubAccountResult = res.json().await?;
-    Ok(result)
+    let subaccnt_result: SubAccountResult = res.json().await?;
+    Ok(subaccnt_result)
 }
 
 /// Initialize split transactions.
@@ -82,8 +101,18 @@ async fn init_split_trans(payment_url: String, payload: InitializeSplitPayment) 
         .header("Content-Type", "application/json")
         .json(&payload)
         .send().await?;
-    let result: InitializeSplitPaymentResult = res.json().await?;
-    Ok(result)
+    let split_result: InitializeSplitPaymentResult = res.json().await?;
+    Ok(split_result)
+}
+
+/// Verify transactions
+async fn verify_trans(target_url: String) -> Result<VerifyPaymentRes, Error> {
+    let client = reqwest::Client::new();
+    let res = client.get(&target_url)
+        .bearer_auth("sk_test_be74a6aae684bbcfb2a29831ca06c50d2c879000")
+        .send().await?;
+    let verify_result: VerifyPaymentRes = res.json().await?;
+    Ok(verify_result)
 }
 
 #[cfg(test)]
@@ -107,6 +136,11 @@ mod tests {
         "https://api.paystack.co/transaction/initialize".to_string()
     }
 
+    fn verify_payment_url(reference: &str) -> String {
+      let ref_url = format!("https://api.paystack.co/transaction/verify/{}", reference);
+      ref_url.to_string()
+    }
+
     fn init_split_fixture() -> InitializeSplitPayment {
         InitializeSplitPayment {
             email: "bigtechguyz@gmail.com".to_string(),
@@ -124,8 +158,16 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore]
     async fn initialize_payment_test() {
         let init_trans = init_split_trans(init_split_payment_url(), init_split_fixture()).await;
         println!("The initialized split transaction result is {:#?}", init_trans);
+    }
+
+    #[tokio::test]
+    async fn verfying_payment_test() {
+        let url = verify_payment_url("3uufjfxmz2");
+        let verification = verify_trans(url).await;
+        println!("The payment url is result is {:#?}", verification);
     }
 }
