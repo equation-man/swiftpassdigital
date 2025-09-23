@@ -118,8 +118,6 @@ checkTicketOrder() {
     curl -X GET "$API_URL/events/ticket/order/8bc51b2b-62d8-45ff-89ee-6191d702093f?entrance_code=W9FG26KJ"
 }
 
-#5f51badb-acfe-4b0f-8b9d-6a2d96a5fd1e
-#529cf379-372d-410f-9022-6584946d2e97
 # Verifying the ticket order.
 verifyTicket() {
     curl -X PATCH \
@@ -132,7 +130,7 @@ verifyTicket() {
 
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 echo "Testing SwiftPassDigital Software"
-result=$(verifyTicket)
+result=$(userLogin)
 echo "$result" | jq
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 

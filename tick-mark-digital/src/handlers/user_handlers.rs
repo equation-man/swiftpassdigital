@@ -2,6 +2,7 @@
 use actix_web::{web, HttpResponse};
 use crate::models::{User, CreateUser, UserPayload};
 use crate::models::db_access::*;
+use crate::helpers::NotfoundErrorResponse;
 use uuid::Uuid;
 
 #[path="../state.rs"]
@@ -17,7 +18,14 @@ pub async fn user_registration(new_user: web::Json<CreateUser>, app_state: web::
 /// User login handler.
 pub async fn user_login(user_cred: web::Json<UserPayload>, app_state: web::Data<AppState>) -> HttpResponse {
     let res = get_users(&app_state.db, user_cred.into()).await;
-    HttpResponse::Ok().json(res)
+    if res.len() != 0 {
+        return HttpResponse::Ok().json(res[0].clone());
+    } else {
+        HttpResponse::NotFound().json(NotfoundErrorResponse {
+            error: "User not found".into(),
+            code: 404
+        })
+    }
 }
 
 /// Handler for updating a user.
