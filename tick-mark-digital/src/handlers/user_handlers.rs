@@ -2,7 +2,11 @@
 use actix_web::{web, HttpResponse};
 use crate::models::{User, CreateUser, UserPayload};
 use crate::models::db_access::*;
-use crate::helpers::NotfoundErrorResponse;
+use crate::helpers::{
+    NotfoundErrorResponse,
+    Claims, AuthResponse,
+    hash_password,
+};
 use uuid::Uuid;
 
 #[path="../state.rs"]
@@ -11,7 +15,20 @@ use crate::state::AppState;
 
 /// User registration or sign up handler
 pub async fn user_registration(new_user: web::Json<CreateUser>, app_state: web::Data<AppState>) -> HttpResponse {
-    let n_user = add_new_user(&app_state.db, new_user.into()).await;
+    let password_hash = match hash_password(new_user.password.clone()).await {
+        Ok(hash) => hash,
+        Err(_) => return HttpResponse::InternalServerError().body("Failed to hash password."),
+    };
+    let added_user = CreateUser {
+        first_name: new_user.first_name.clone(),
+        last_name: new_user.last_name.clone(),
+        user_name: new_user.user_name.clone(),
+        email: new_user.email.clone(),
+        telephone: new_user.telephone.clone(),
+        password: password_hash.clone(),
+    };
+    println!("The added user payload {:#?}", &added_user);
+    let n_user = add_new_user(&app_state.db, added_user).await;
     HttpResponse::Ok().json(n_user)
 }
 

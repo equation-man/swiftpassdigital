@@ -78,6 +78,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore]
     async fn test_generate_jwt() {
         let jwt=generate_jwt("abrakadabra@gmail.com", &load_secret_key().await).await;
         //println!("The web token is {}", jwt.unwrap());

@@ -16,11 +16,11 @@ userReg() {
         "$API_URL/users/register" \
         -H 'Content-Type: application/json' \
         -d '{
-            "first_name": "Charles",
-            "last_name": "Schwab",
-            "user_name": "charlesschwab",
-            "email": "charlesschwab@example.com",
-            "telephone": "0789438901",
+            "first_name": "Chevy",
+            "last_name": "Woods",
+            "user_name": "chevvywoods",
+            "email": "chevvywoods@gmail.com",
+            "telephone": "0789445327",
             "password": "123456789"
         }'
 }
@@ -130,7 +130,7 @@ verifyTicket() {
 
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 echo "Testing SwiftPassDigital Software"
-result=$(userLogin)
+result=$(userReg)
 echo "$result" | jq
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 
