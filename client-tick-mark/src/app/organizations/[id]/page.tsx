@@ -8,7 +8,6 @@ const OrganizationActivityPage = () => {
         <div className="p-2">
             <OrgHeader />
             <Events />
-            <p className="text-center">&copy;2025</p>
         </div>
     );
 };
