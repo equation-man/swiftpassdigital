@@ -37,10 +37,8 @@ pub async fn user_registration(new_user: web::Json<CreateUser>, app_state: web::
 pub async fn user_login(user_cred: web::Json<UserPayload>, app_state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
     // Retrieving user from the database.
     let res = get_users(&app_state.db, user_cred.clone().into()).await;
-    println!("The response from the server is {:#?}", &res);
     if res.len() != 0 {
         let logged_user = res[0].clone();
-        println!("The passord is and check is {} {}", &logged_user.password, user_cred.password.clone().unwrap());
         if verify_password(&logged_user.password, user_cred.password.clone().unwrap()).await.unwrap_or(false) {
             let token = match generate_jwt(&logged_user.email.clone(), &load_secret_key().await).await {
                 Ok(token) => token,
