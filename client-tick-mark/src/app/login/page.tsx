@@ -50,11 +50,9 @@ const LoginPage = () => {
                         secondary: "#047857",
                     },
                 });
-                console.log("The session data is", session);
-                router.push(`/organizations/${res.user_id}`)
+                router.push(`/organizations/${session.user.user_id}`)
             }
         } catch (err) {
-            console.log("The login error is", err);
             toast.dismiss();
             toast.error("Something went wrong, try again!")
         }

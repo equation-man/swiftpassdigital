@@ -40,7 +40,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             // fetch user from backend API.
             user = await loginUserFn(credentials);
 
-            console.log("The login result is", user)
             if (!user) {
                 // No user is found.
                 throw new Error("Invalid credentials.")
