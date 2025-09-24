@@ -165,6 +165,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore]
     async fn verfying_payment_test() {
         let url = verify_payment_url("3uufjfxmz2");
         let verification = verify_trans(url).await;

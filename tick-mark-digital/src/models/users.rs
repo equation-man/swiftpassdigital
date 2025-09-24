@@ -1,10 +1,8 @@
 //! Users models.
 use crate::models::db_access;
-
 use actix_web::web;
 use uuid::Uuid;
 use serde::{Deserialize, Serialize};
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct User {
