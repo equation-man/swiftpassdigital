@@ -48,11 +48,11 @@ export default function Home() {
                           alt="Swimmer" />
                       </figure>
                       <div className="card-body">
-                        <h1 className="font-bold text-emerald-200">promoted</h1>
-                        <h2 className="card-title text-emerald-400">Kiambu Level 1 swimming championship</h2>
-                        <p>Level 1 swimming championship at mpesa foundation from 7 am on saturday.</p>
+                        <h1 className="font-bold text-emerald-200">promotion</h1>
+                        <h2 className="card-title text-emerald-400">Advertise your product here</h2>
+                        <p></p>
                         <div className="card-actions justify-end">
-                            <button className="px-4 py-1 bg-green-600 font-semibold rounded-sm hover:cursor-pointer">Get ticket</button>
+                            {/*<button className="px-4 py-1 bg-green-600 font-semibold rounded-sm hover:cursor-pointer">Get ticket</button>*/}
                         </div>
                       </div>
                     </div>

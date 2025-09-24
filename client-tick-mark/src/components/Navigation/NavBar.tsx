@@ -1,9 +1,13 @@
 /// Navigation bar.
+"use client";
 import React from "react";
 import Link from "next/link";
 import LogoutButton from "./LogoutButton";
+import { useSession } from "next-auth/react";
 
 const NavBar = () => {
+    const { data: session, status } = useSession();
+
     return (
         <main>
             {/*HEADER*/}
@@ -21,7 +25,7 @@ const NavBar = () => {
                             Create Event
                         </Link>
                     </button>
-                    <LogoutButton />
+                    {session && <LogoutButton />}
                 </div>
             </div>
         </main>
