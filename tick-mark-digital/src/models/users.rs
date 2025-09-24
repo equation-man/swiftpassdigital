@@ -56,6 +56,32 @@ impl From<web::Json<UserPayload>> for UserPayload{
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LoggedUser {
+    pub user_id: Uuid,
+    pub first_name: String,
+    pub last_name: String,
+    pub user_name: String,
+    pub email: String,
+    pub telephone: String,
+    pub password: String,
+    pub email_verification: bool,
+}
+
+impl From<web::Json<LoggedUser>> for LoggedUser {
+    fn from(user: web::Json<LoggedUser>) -> Self {
+        LoggedUser {
+            user_id: user.user_id.clone(),
+            first_name: user.first_name.clone(),
+            last_name: user.last_name.clone(),
+            user_name: user.user_name.clone(),
+            email: user.email.clone(),
+            telephone: user.telephone.clone(),
+            password: user.password.clone(),
+            email_verification: user.email_verification.clone(),
+        }
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateUser {

@@ -1,11 +1,13 @@
 //! User handler functions.
-use actix_web::{web, HttpResponse};
-use crate::models::{User, CreateUser, UserPayload};
+use actix_web::{web, HttpResponse, HttpRequest, HttpMessage};
+use actix_identity::{Identity};
+use crate::models::{User, CreateUser, UserPayload, LoggedUser};
 use crate::models::db_access::*;
 use crate::helpers::{
     NotfoundErrorResponse,
-    Claims, AuthResponse,
-    hash_password,
+    Claims, AuthResponse, generate_jwt,
+    hash_password, verify_password,
+    load_secret_key,
 };
 use uuid::Uuid;
 
@@ -27,16 +29,38 @@ pub async fn user_registration(new_user: web::Json<CreateUser>, app_state: web::
         telephone: new_user.telephone.clone(),
         password: password_hash.clone(),
     };
-    println!("The added user payload {:#?}", &added_user);
     let n_user = add_new_user(&app_state.db, added_user).await;
     HttpResponse::Ok().json(n_user)
 }
 
 /// User login handler.
-pub async fn user_login(user_cred: web::Json<UserPayload>, app_state: web::Data<AppState>) -> HttpResponse {
-    let res = get_users(&app_state.db, user_cred.into()).await;
+pub async fn user_login(user_cred: web::Json<UserPayload>, app_state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
+    // Retrieving user from the database.
+    let res = get_users(&app_state.db, user_cred.clone().into()).await;
+    println!("The response from the server is {:#?}", &res);
     if res.len() != 0 {
-        return HttpResponse::Ok().json(res[0].clone());
+        let logged_user = res[0].clone();
+        println!("The passord is and check is {} {}", &logged_user.password, user_cred.password.clone().unwrap());
+        if verify_password(&logged_user.password, user_cred.password.clone().unwrap()).await.unwrap_or(false) {
+            let token = match generate_jwt(&logged_user.email.clone(), &load_secret_key().await).await {
+                Ok(token) => token,
+                Err(_) => return HttpResponse::InternalServerError().body("Failed to generate token")
+            };
+            Identity::login(&mut req.extensions_mut(), logged_user.email.clone()).unwrap();
+            let user = User {
+                user_id: logged_user.user_id,
+                first_name: logged_user.first_name,
+                last_name: logged_user.last_name,
+                user_name: logged_user.user_name,
+                email: logged_user.email,
+                telephone: logged_user.telephone,
+                email_verification: logged_user.email_verification,
+            };
+            let response = AuthResponse { token, user };
+            return HttpResponse::Ok().json(response);
+        } else {
+            HttpResponse::Unauthorized().body("Invalid Credentials")
+        }
     } else {
         HttpResponse::NotFound().json(NotfoundErrorResponse {
             error: "User not found".into(),

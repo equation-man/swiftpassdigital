@@ -1,5 +1,5 @@
 //! Database functions for user object related login.
-use crate::models::{CreateUser, User, UserPayload};
+use crate::models::{CreateUser, User, UserPayload, LoggedUser};
 use sqlx::postgres::PgPool;
 use sqlx::Row;
 use uuid::Uuid;
@@ -30,7 +30,7 @@ pub async fn add_new_user(db_pool: &PgPool, new_user: CreateUser) -> User {
     }
 }
 
-pub async fn get_users(db_pool: &PgPool, filters: UserPayload) -> Vec<User> {
+pub async fn get_users(db_pool: &PgPool, filters: UserPayload) -> Vec<LoggedUser> {
     let res = sqlx::query(r#"
         SELECT * FROM ticket_market.users
         WHERE
@@ -38,19 +38,19 @@ pub async fn get_users(db_pool: &PgPool, filters: UserPayload) -> Vec<User> {
             AND ($2 IS NULL OR user_name=$2)
             AND ($3 IS NULL OR email=$3)
             AND ($4 IS NULL OR telephone=$4)
-            AND ($5 IS NULL OR password=$5)
     "#).bind(Some(filters.user_id)).bind(Some(filters.user_name))
-    .bind(Some(filters.email)).bind(Some(filters.telephone))
-    .bind(Some(filters.password)).fetch_all(db_pool).await
+    .bind(Some(filters.email))
+    .bind(Some(filters.telephone)).fetch_all(db_pool).await
     .expect("Failed getting users");
 
-    res.iter().map(|usr| User {
+    res.iter().map(|usr| LoggedUser {
         user_id: usr.get("user_id"),
         first_name: usr.get("first_name"),
         last_name: usr.get("last_name"),
         user_name: usr.get("user_name"),
         email: usr.get("email"),
         telephone: usr.get("telephone"),
+        password: usr.get("password"),
         email_verification: usr.get("email_verification"),
     }).collect()
 }

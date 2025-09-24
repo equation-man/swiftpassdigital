@@ -30,7 +30,7 @@ userLogin() {
         "$API_URL/users/login" \
         -H 'Content-Type: application/json' \
         -d '{
-            "email": "charlesschwab@example.com",
+            "email": "chevvywoods@gmail.com",
             "password": "123456789"
         }'
 }
@@ -130,7 +130,7 @@ verifyTicket() {
 
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 echo "Testing SwiftPassDigital Software"
-result=$(userReg)
+result=$(userLogin)
 echo "$result" | jq
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 
