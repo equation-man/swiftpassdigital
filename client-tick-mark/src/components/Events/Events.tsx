@@ -21,7 +21,7 @@ const Events = () => {
         <div className="carousel carousel-center rounded-box w-full space-x-4 px-2">
             {data ? (
                 <>
-                    {data.map((event) => <Event key={event.event_id} event={event}/>)}
+                    {data.map((event) => <Event key={event.event_id} evnt={event}/>)}
                 </>
             ):(
                 <p className="font-semibold font-gray-600">Error loading data...</p>

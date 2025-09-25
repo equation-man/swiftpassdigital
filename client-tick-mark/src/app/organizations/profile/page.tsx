@@ -1,5 +1,4 @@
 // Organization profile.
-import React from "react";
 import AdminInfo from "@/components/AdminInfo/AdminInfo";
 
 const OrganizationProfilePage = () => {
