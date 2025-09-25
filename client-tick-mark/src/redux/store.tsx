@@ -4,10 +4,13 @@ import {configureStore, Dispatch, applyThunk, ThunkAction} from "@reduxjs/toolki
 import thunk from "redux-thunk";
 import {Action} from "@reduxjs/toolkit";
 import authReducer from "@/redux/reducers/authReducer";
+import modalReducer from "@/redux/reducers/generalReducer";
 
 const store = configureStore({
     reducer: {
         auth: authReducer,
+        //general: generalReducer,
+        generalModal: modalReducer, // Key matches name.
         // Add other reducer if needed.
     },
     middleware: (getDefaultMiddleware) => 

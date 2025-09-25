@@ -262,7 +262,7 @@ pub struct Order {
     pub order_id: Uuid,
     pub ticket_id: Uuid,
     //pub user_id: Uuid,
-    //pub user_email: String,
+    pub user_email: String,
     pub user_contact: String,
     pub ticket_price: String, //Decimal,
     pub added_at: DateTime<Utc>,
@@ -278,7 +278,7 @@ impl From<web::Json<Order>> for Order {
             order_id: order.order_id.clone(),
             ticket_id: order.ticket_id.clone(),
             //user_id: order.user_id.clone(),
-            //user_email: order.user_email.clone(),
+            user_email: order.user_email.clone(),
             user_contact: order.user_contact.clone(),
             ticket_price: order.ticket_price.clone(),
             added_at: order.added_at.clone(),
@@ -294,7 +294,7 @@ impl From<web::Json<Order>> for Order {
 pub struct CreateOrder {
     //pub ticket_id: Uuid,
     //pub user_id: Uuid,
-    //pub user_email: String,
+    pub user_email: String,
     pub user_contact: String,
     //pub ticket_price: Decimal,
     //pub promo_code: String,
@@ -307,7 +307,7 @@ impl From<web::Json<CreateOrder>> for CreateOrder {
         CreateOrder {
             //ticket_id: create_order.ticket_id.clone(),
             //user_id: create_order.user_id.clone(),
-            //user_email: create_order.user_email.clone(),
+            user_email: create_order.user_email.clone(),
             user_contact: create_order.user_contact.clone(),
             //ticket_price: create_order.ticket_price.clone(),
             //promo_code: create_order.promo_code.clone(),
@@ -320,6 +320,7 @@ impl From<web::Json<CreateOrder>> for CreateOrder {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct OrderDetails {
     pub ticket_id: Uuid,
+    pub user_email: String,
     pub user_contact: String,
     pub ticket_status: TickStatus,
     pub order_limit: i64,
@@ -330,6 +331,7 @@ impl From<web::Json<OrderDetails>> for OrderDetails {
     fn from(order_det: web::Json<OrderDetails>) -> Self {
         OrderDetails {
             ticket_id: order_det.ticket_id.clone(),
+            user_email: order_det.user_email.clone(),
             user_contact: order_det.user_contact.clone(),
             ticket_status: order_det.ticket_status.clone(),
             order_limit: order_det.order_limit.clone(),

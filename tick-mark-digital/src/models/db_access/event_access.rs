@@ -281,22 +281,22 @@ pub async fn add_order(db_pool: &PgPool, entrance_code: String, new_order: Order
     let n_order = sqlx::query!(r#"
         INSERT INTO ticket_market.orders
             (ticket_id, user_contact, ticket_price, ticket_status,
-            entrance_code, order_limit)
+            entrance_code, order_limit, user_email)
         VALUES
-            ($1, $2, $3, $4, $5, $6)
+            ($1, $2, $3, $4, $5, $6, $7)
         RETURNING order_id, ticket_id, user_id, user_email,
             user_contact, ticket_price, added_at, promo_code,
             ticket_status as "tick_status: TickStatus", entrance_code, order_limit
     "#, new_order.ticket_id, new_order.user_contact, new_order.ticket_price,
-    new_order.ticket_status as TickStatus, entrance_code, new_order.order_limit
-    ).fetch_one(db_pool).await.unwrap();
+    new_order.ticket_status as TickStatus, entrance_code, new_order.order_limit,
+    new_order.user_email).fetch_one(db_pool).await.unwrap();
 
     let order_price = n_order.ticket_price.unwrap().to_string();
     Order {
         order_id: n_order.order_id,
         ticket_id: n_order.ticket_id.unwrap(),
         //user_id: n_order.user_id.unwrap(),
-        //user_email: n_order.user_email.unwrap(),
+        user_email: n_order.user_email.unwrap(),
         user_contact: n_order.user_contact.unwrap(),
         ticket_price: order_price,
         added_at: n_order.added_at,
@@ -342,7 +342,7 @@ pub async fn get_orders(db_pool: &PgPool, ticket_id: Uuid, filters: OrderPayload
             order_id: order.get("order_id"),
             ticket_id: order.get("ticket_id"),
             //user_id: order.get("user_id"),
-            //user_email: order.get("user_email"),
+            user_email: order.get("user_email"),
             user_contact: order.get("user_contact"),
             ticket_price: o_price,
             added_at: order.get("added_at"),
@@ -376,7 +376,7 @@ pub async fn update_order(db_pool: &PgPool, owner_id: Uuid, order_id: Uuid, payl
         order_id: upd_order.get("order_id"),
         ticket_id: upd_order.get("ticket_id"),
         //user_id: order.get("user_id"),
-        //user_email: order.get("user_email"),
+        user_email: upd_order.get("user_email"),
         user_contact: upd_order.get("user_contact"),
         ticket_price: o_price,
         added_at: upd_order.get("added_at"),

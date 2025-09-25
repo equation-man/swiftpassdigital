@@ -1,15 +1,75 @@
 // Individual event.
 "use client";
+import { useState } from "react";
 import { useParams } from "next/navigation";
+import { useDispatch } from "react-redux";
 import { useQuery } from "@tanstack/react-query";
-import { eventInfoFn } from "../actions";
+import { eventInfoFn, ticketInfoFn } from "../actions";
 import { EventDate, ClientOnly } from "@/components/Events/EventDateTime";
+import TicketPaymentModal from "@/components/Events/EventModals";
+import { updatePaymentModalState } from "@/redux/reducers/generalReducer";
+import { Ticket } from "@/types/types";
+
+type TicketProps = {
+    ticketDetails: Ticket;
+    ticketIdViewFn: (value: string) => void,
+};
+
+
+const Info = ({ ticketDetails, ticketIdViewFn }: TicketProps ) => {
+    const dispatch = useDispatch();
+    const handleTicketPurchase = (e, state) => {
+        e.preventDefault();
+        ticketIdViewFn(ticketDetails.ticket_id);
+        dispatch(updatePaymentModalState(state))
+    }
+
+    return (
+        <div className="card bg-base-100 image-full w-96 shadow-sm rounded-sm">
+          <figure>
+            <img
+              src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"
+              alt="Shoes" />
+          </figure>
+          <div className="card-body">
+            <h2 className="card-title">{ticketDetails.base_price}</h2>
+            <p className="text-xs text-emerald-200 font-medium">{ticketDetails.ticket_class} {ticketDetails.ticket_type}</p>
+            <p>{ticketDetails.description}</p>
+            <div>
+                <p className="text-xs"><span className="text-gray-100 font-bold text-emerald-200">From</span> <ClientOnly><EventDate iso={ticketDetails.start_time} /></ClientOnly></p>
+                <p className="text-xs"><span className="text-gray-100 font-bold text-emerald-200">To</span> <ClientOnly><EventDate iso={ticketDetails.finish_time} /></ClientOnly></p>
+            </div>
+            <div className="card-actions justify-end">
+                <button
+                    onClick={e => handleTicketPurchase(e, true)}
+                    className="px-4 py-2 bg-emerald-600 font-semibold rounded-sm hover:cursor-pointer text-white"
+                >
+                    Purchase Ticket
+                </button>
+            </div>
+          </div>
+        </div>
+    );
+};
 
 const EventInfo = () => {
+    const [currentTicketId, setCurrentTicketId] = useState(null);
+    const handleShowTicketPaymentModal = (value) => {
+        setCurrentTicketId(value)
+    }
     const params=useParams<{ event_id: string}>(); // typed params
     const ev_id = params.id;
 
     const { data, isLoading, error } = useQuery({
+        queryKey: ['tickets', ev_id],
+        queryFn: () => ticketInfoFn(ev_id),
+        onSuccess: () => {
+        },
+        onError: () => {
+        }
+    });
+
+    const { data: currentEvent, isLoading: evLoading, error: evError } = useQuery({
         queryKey: ['event', ev_id],
         queryFn: () => eventInfoFn(ev_id),
         onSuccess: () => {
@@ -35,35 +95,24 @@ const EventInfo = () => {
     if (error) return <p className="font-semibold font-gray-600 text-center">Error loading data</p>
 
     return (
-        <div className="p-2 flex flex-row items-center justify-center">
-            <div className="card bg-base-100 image-full w-96 shadow-sm rounded-sm">
-              <figure>
-                <img
-                  src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"
-                  alt="Shoes" />
-              </figure>
-              <div className="card-body">
-                <h2 className="card-title">{data.title}</h2>
-                <p className="text-xs text-emerald-200 font-medium">#{data.event_tag}</p>
-                <p>{data.description}</p>
-                <div>
-                    <p className="text-xs"><span className="text-gray-100 font-bold text-emerald-200">From</span> <ClientOnly><EventDate iso={data.start_date} /></ClientOnly></p>
-                    <p className="text-xs"><span className="text-gray-100 font-bold text-emerald-200">To</span> <ClientOnly><EventDate iso={data.start_date} /></ClientOnly></p>
+        <div className="p-2">
+            <div className="grid grid-col items-center justify-center mt-8">
+                <div className="py-3">
+                    <h1 className="text-emrald-800 text-2xl font-bold">{currentEvent?.title}</h1>
+                    <h3 className="text-gray-600 font-bold text-lg">tickets</h3>
                 </div>
-                <div>
-                    <p className="flex flex-row items-center text-green-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} viewBox="0 0 1024 1024">
-                            <path fill="currentColor" d="M800 416a288 288 0 1 0-576 0c0 118.144 94.528 272.128 288 456.576C705.472 688.128 800 534.144 800 416M512 960C277.312 746.688 160 565.312 160 416a352 352 0 0 1 704 0c0 149.312-117.312 330.688-352 544"></path>
-                            <path fill="currentColor" d="M512 512a96 96 0 1 0 0-192a96 96 0 0 0 0 192m0 64a160 160 0 1 1 0-320a160 160 0 0 1 0 320"></path>
-                        </svg>
-                        {data.venue}
-                    </p>
-                </div>
-                <div className="card-actions justify-end">
-                    <button className="px-4 py-2 bg-emerald-600 font-semibold rounded-sm hover:cursor-pointer text-white">Purchase</button>
-                </div>
-              </div>
+                {data ? (
+                    <div className="flex flex-col gap-y-4">
+                        {data.map((ticket) => <Info key={ticket.ticket_id} ticketDetails={ticket} ticketIdViewFn={handleShowTicketPaymentModal}/>)}
+                    </div>
+                ):(
+                    <div>
+                        <p className="text-center">No data</p>
+                    </div>
+                )}
             </div>
+            {/* MODALS */}
+            <TicketPaymentModal ticketId={currentTicketId} eventDetails={currentEvent}/>
         </div>
     );
 };

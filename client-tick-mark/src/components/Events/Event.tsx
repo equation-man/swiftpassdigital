@@ -2,11 +2,12 @@
 "use client";
 import React from "react";
 import { useRouter } from "next/navigation";
+import { useSelector, useDispatch } from "react-redux";
 import { Event } from "@/types/types";
 import { formatDateTime } from "@/lib/helpers";
 import { EventDate, ClientOnly } from "@/components/Events/EventDateTime";
 
-type props = {
+type Props = {
     evnt: Event;
 };
 

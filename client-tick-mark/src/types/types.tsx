@@ -28,3 +28,17 @@ export interface Event {
     edited: string;
     event_tag: string;
 }
+
+export interface Ticket {
+    ticket_id: string;
+    event_id: string;
+    base_price: string;
+    ticket_type: string;
+    ticket_class: string;
+    start_time: string;
+    finish_time: string;
+    added_at: string;
+    description: string;
+    discount_time: number;
+    capacity: number;
+}

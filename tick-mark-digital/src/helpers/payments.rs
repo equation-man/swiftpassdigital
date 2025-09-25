@@ -46,6 +46,7 @@ pub struct InitializeSplitPayment {
     email: String,
     amount: String,
     subaccount: String,
+    callback_url: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -146,6 +147,7 @@ mod tests {
             email: "bigtechguyz@gmail.com".to_string(),
             amount: "1000".to_string(),
             subaccount: "ACCT_xa89kyc7gtujnzh".to_string(),
+            callback_url: "http://localhost:3000/event/5f51badb-acfe-4b0f-8b9d-6a2d96a5fd1e".to_string()
         }
     }
 
@@ -158,16 +160,16 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn initialize_payment_test() {
         let init_trans = init_split_trans(init_split_payment_url(), init_split_fixture()).await;
         println!("The initialized split transaction result is {:#?}", init_trans);
     }
 
+
     #[tokio::test]
     #[ignore]
     async fn verfying_payment_test() {
-        let url = verify_payment_url("3uufjfxmz2");
+        let url = verify_payment_url("mz2233rb2z");
         let verification = verify_trans(url).await;
         println!("The payment url is result is {:#?}", verification);
     }

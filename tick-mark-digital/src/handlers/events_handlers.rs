@@ -90,7 +90,7 @@ pub async fn ticket_info(ticket_id: web::Path<String>, app_state: web::Data<AppS
 }
 
 // ============================== ORDER TICKETS =========================
-/// Ordering a ticket.
+/// Ordering a ticket. Payment action goes here.
 pub async fn create_order(payload: web::Json<CreateOrder>, token_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
     let order_payload: CreateOrder = payload.into();
     let alphabet: [char; 32] = [
@@ -103,6 +103,7 @@ pub async fn create_order(payload: web::Json<CreateOrder>, token_id: web::Path<S
     let ticket_det = get_single_ticket(&app_state.db, t_id).await;
     let order_details = OrderDetails {
         ticket_id: ticket_det.ticket_id.clone(),
+        user_email: order_payload.user_email,
         user_contact: order_payload.user_contact,
         ticket_status: TickStatus::Pending,
         order_limit: ticket_det.capacity,
@@ -112,7 +113,7 @@ pub async fn create_order(payload: web::Json<CreateOrder>, token_id: web::Path<S
     HttpResponse::Ok().json(new_order)
 }
 
-/// Verify order purchase.
+/// Verify order purchase. Checking or confirming the ticket goes here.
 pub async fn verify_order(upd_pld: web::Json<OrderPayload>, path: web::Path<(String, String)>, app_state: web::Data<AppState>) -> HttpResponse {
     let (own_id, od_id) = path.into_inner();
     let owner_id: Uuid = Uuid::parse_str(&own_id).unwrap();

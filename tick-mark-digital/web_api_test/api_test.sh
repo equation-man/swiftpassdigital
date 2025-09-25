@@ -113,6 +113,7 @@ purchaseTicket() {
         "$API_URL/events/ticket/order/purchase/8bc51b2b-62d8-45ff-89ee-6191d702093f" \
         -H 'Content-Type: applicatoin/json' \
         -d '{
+            "user_email": "abracadabra@gmail.com",
             "user_contact": "0757894326"
         }'
 }
@@ -134,7 +135,7 @@ verifyTicket() {
 
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 echo "Testing SwiftPassDigital Software"
-result=$(eventInfo)
+result=$(listTickets)
 echo "$result" | jq
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 

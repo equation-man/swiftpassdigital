@@ -14,7 +14,7 @@ export default function Home() {
                         </h1>
                     </div>
                     {/*SEARCH EVENTS"*/}
-                    <div className="relative mx-auto w-full">
+                    {/*<div className="relative mx-auto w-full">
                       <form className="flex items-center w-full">
                         <label
                           htmlFor="default-search"
@@ -38,7 +38,7 @@ export default function Home() {
                             </svg>
                         </button>
                       </form>
-                    </div>
+                      </div>*/}
                 </div>
                 <div className="order-1 md:order-2">
                     <div className="card bg-base-100 image-full w-96 shadow-sm rounded-md hover:cursor-pointer">
@@ -60,7 +60,7 @@ export default function Home() {
             </div>
             {/*Events List*/}
             <div className="flex flex-row items-center gap-x-2 my-4">
-                <h2 className="font-bold text-lg">Trending</h2>
+                <h2 className="font-bold text-lg">Available Events</h2>
                 <button className="bg-emerald-800 rounded-full px-4 py-1 text-white">topics</button>
                 <ul className="inline-flex space-x-1 font-semibold text-gray-600">
                     <li>#Sports</li>

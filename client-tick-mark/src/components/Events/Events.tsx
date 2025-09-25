@@ -15,6 +15,7 @@ const Events = () => {
         onError: () => {
         },
     });
+
     if (error) return <p className="font-semibold font-gray-600">Error loading data</p>
 
     return (
