@@ -23,6 +23,13 @@ pub async fn create_event(new_event: web::Json<CreateEvent>, app_state: web::Dat
     HttpResponse::Ok().json(n_event)
 }
 
+/// Getting the details of an event.
+pub async fn event_info(event_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
+    let evnt_id: Uuid = Uuid::parse_str(&event_id.into_inner()).unwrap();
+    let event = get_event(&app_state.db, evnt_id).await;
+    HttpResponse::Ok().json(event)
+}
+
 /// Listing available events.
 pub async fn list_events(filter: Option<web::Json<EventPayload>>, app_state: web::Data<AppState>) -> HttpResponse {
     match filter {

@@ -130,7 +130,7 @@ verifyTicket() {
 
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 echo "Testing SwiftPassDigital Software"
-result=$(userLogin)
+result=$(listEvents)
 echo "$result" | jq
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 

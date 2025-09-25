@@ -50,6 +50,30 @@ pub async fn add_event(db_pool: &PgPool, new_event: CreateEvent) -> Event {
     }
 }
 
+pub async fn get_event(db_pool: &PgPool, event_id: Uuid) -> Event {
+    let event = sqlx::query!(r#"
+        SELECT event_id, owner_id, title,
+            description, venue, start_time,
+            finish_time, added_at, edited,
+            event_tag
+        FROM ticket_market.events
+        WHERE event_id=$1
+    "#, event_id).fetch_one(db_pool).await.unwrap();
+
+    Event {
+        event_id: event.event_id,
+        owner_id: event.owner_id,
+        title: event.title,
+        description: event.description,
+        venue: event.venue,
+        start_date: event.start_time.to_rfc3339(),
+        finish_date: event.finish_time.to_rfc3339(),
+        added_at: event.added_at.to_rfc3339(),
+        edited: event.edited.unwrap(),
+        event_tag: event.event_tag.unwrap(),
+    }
+}
+
 pub async fn get_events(db_pool: &PgPool, filters: EventPayload) -> Vec<Event> {
     let start_date = match filters.start_date {
         Some(s_date) => Some(s_date.parse::<DateTime<Utc>>().unwrap()),
