@@ -77,6 +77,10 @@ listEvents() {
     curl -X GET "$API_URL/events/list" 
 }
 
+eventInfo() {
+    curl -X GET "$API_URL/events/5f51badb-acfe-4b0f-8b9d-6a2d96a5fd1e"
+}
+
 createTicket() {
     curl -X POST \
         "$API_URL/events/ticket/create" \
@@ -130,7 +134,7 @@ verifyTicket() {
 
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 echo "Testing SwiftPassDigital Software"
-result=$(listEvents)
+result=$(eventInfo)
 echo "$result" | jq
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 
