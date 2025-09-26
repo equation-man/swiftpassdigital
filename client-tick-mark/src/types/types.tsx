@@ -42,3 +42,36 @@ export interface Ticket {
     discount_time: number;
     capacity: number;
 }
+
+export interface OrderDetails {
+    order_id: string;
+    ticket_id: string;
+    user_email: string;
+    user_contact: string;
+    ticket_price: string;
+    added_at: string;
+    ticket_status: string;
+    entrance_code: string;
+    order_limit: number;
+}
+
+export interface RegisterOrg {
+    organization_name: string;
+    org_email: string;
+    org_pwd: string;
+    country: string;
+}
+
+export interface LoginOrg {
+    org_email: string;
+    org_pwd: string;
+}
+
+export interface Organization {
+    organization_id: string;
+    organization_name: string;
+    organization_username: string;
+    org_email: string;
+    country: string;
+    description: string;
+}

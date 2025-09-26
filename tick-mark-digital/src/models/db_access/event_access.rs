@@ -290,7 +290,7 @@ pub async fn add_order(db_pool: &PgPool, entrance_code: String, new_order: Order
     "#, new_order.ticket_id, new_order.user_contact, new_order.ticket_price,
     new_order.ticket_status as TickStatus, entrance_code, new_order.order_limit,
     new_order.user_email).fetch_one(db_pool).await.unwrap();
-
+    let added_at_str = n_order.added_at.to_rfc3339();
     let order_price = n_order.ticket_price.unwrap().to_string();
     Order {
         order_id: n_order.order_id,
@@ -299,7 +299,7 @@ pub async fn add_order(db_pool: &PgPool, entrance_code: String, new_order: Order
         user_email: n_order.user_email.unwrap(),
         user_contact: n_order.user_contact.unwrap(),
         ticket_price: order_price,
-        added_at: n_order.added_at,
+        added_at: added_at_str,
         //promo_code: n_order.promo_code.unwrap(),
         ticket_status: n_order.tick_status.unwrap(),
         entrance_code: n_order.entrance_code.unwrap(),
@@ -335,8 +335,8 @@ pub async fn get_orders(db_pool: &PgPool, ticket_id: Uuid, filters: OrderPayload
     .bind(Some(filters.entrance_code)).bind(Some(filters.order_limit))
     .fetch_all(db_pool).await.expect("Failed fetching orders");
 
-
     orders.iter().map(|order| {
+        let added_at_str = order.get::<DateTime<Utc>, &str>("added_at").to_rfc3339();
         let o_price = order.get::<Decimal, &str>("ticket_price").to_string();
         Order {
             order_id: order.get("order_id"),
@@ -345,7 +345,7 @@ pub async fn get_orders(db_pool: &PgPool, ticket_id: Uuid, filters: OrderPayload
             user_email: order.get("user_email"),
             user_contact: order.get("user_contact"),
             ticket_price: o_price,
-            added_at: order.get("added_at"),
+            added_at: added_at_str,
             //promo_code: order.get("promo_code"),
             ticket_status: order.get("ticket_status"),
             entrance_code: order.get("entrance_code"),
@@ -371,6 +371,7 @@ pub async fn update_order(db_pool: &PgPool, owner_id: Uuid, order_id: Uuid, payl
     .bind(order_id)
     .fetch_one(db_pool).await.expect("Failed updateing event");
 
+    let added_at_str = upd_order.get::<DateTime<Utc>, &str>("added_at").to_rfc3339();
     let o_price = upd_order.get::<Decimal, &str>("ticket_price").to_string();
     Order {
         order_id: upd_order.get("order_id"),
@@ -379,7 +380,7 @@ pub async fn update_order(db_pool: &PgPool, owner_id: Uuid, order_id: Uuid, payl
         user_email: upd_order.get("user_email"),
         user_contact: upd_order.get("user_contact"),
         ticket_price: o_price,
-        added_at: upd_order.get("added_at"),
+        added_at: added_at_str,
         //promo_code: order.get("promo_code"),
         ticket_status: upd_order.get("ticket_status"),
         entrance_code: upd_order.get("entrance_code"),

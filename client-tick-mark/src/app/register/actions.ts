@@ -1,7 +1,7 @@
 "use server";
 import axios from "axios";
 import { API_URL } from "@/config";
-import { RegisterUser, User } from "@/types/types";
+import { RegisterUser, User, RegisterOrg, Organization } from "@/types/types";
 
 export async function registerUserFn(newUser: RegisterUser): Promise<User | unknown> {
     const createUser: RegisterUser = {
@@ -16,3 +16,13 @@ export async function registerUserFn(newUser: RegisterUser): Promise<User | unkn
     return response.data;
 }
 
+export async function registerOrgFn(newOrg: RegisterOrg): Promise<Organization | unknown> {
+    const createOrg: RegisterOrg = {
+        organization_name: newOrg.organization_name,
+        org_email: newOrg.org_email,
+        org_pwd: newOrg.org_pwd,
+        country: newOrg.country,
+    };
+    const response = await axios.post(`${API_URL}/organization/registration`, createOrg);
+    return response.data;
+}

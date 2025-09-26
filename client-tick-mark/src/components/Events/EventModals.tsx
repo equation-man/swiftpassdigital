@@ -1,10 +1,12 @@
 // Event payment modal.
 "use client";
 import { useState } from "react";
+import { toast } from "react-hot-toast";
+import PhoneInput from "react-phone-input-2";
 import { useSelector, useDispatch } from "react-redux";
 import { updatePaymentModalState } from "@/redux/reducers/generalReducer";
-import { singleTicketInfoFn } from "@/app/event/actions";
-import { useQuery } from "@tanstack/react-query";
+import { singleTicketInfoFn, purchaseTicketFn } from "@/app/event/actions";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Event } from "@/types/types";
 
 // Defining props for this component.
@@ -16,6 +18,7 @@ type PaymentModalProps = {
 const TicketPaymentModal = ({ ticketId, eventDetails }: PayemntModalProps) => {
     const fetch_states = useSelector((state) => state.generalModal.payment);
     const [inputs, setInputs] = useState();
+    const [phone, setPhone] = useState("");
 
     const handleChange = (event) => {
         const name = event.target.name;
@@ -38,8 +41,27 @@ const TicketPaymentModal = ({ ticketId, eventDetails }: PayemntModalProps) => {
         }
     });
 
+    const mutation = useMutation({
+        mutationKey: ['purchaseOrder'],
+        mutationFn: (orderInputData) => purchaseTicketFn(orderInputData),
+        onSuccess: (data) => {
+            toast.success("Success! Check your email for access code", {
+                iconTheme: {
+                    primary: "#ecfdf5",
+                    secondary: "#047857",
+                },
+            })
+            dispatch(updatePaymentModalState(false));
+            //router.push(redirect to payment url)
+        },
+        onError: (err: Error) => {
+        }
+    });
     const handleContactSubmission = async (event) => {
         event.preventDefault();
+        inputs.user_contact=phone
+        const payload = {orderDet: inputs, ticketId: ticketId};
+        mutation.mutate(payload)
     }
 
     return (
@@ -48,19 +70,27 @@ const TicketPaymentModal = ({ ticketId, eventDetails }: PayemntModalProps) => {
                 <div className="flex justify-center items-center fixed z-50 inset-0 backdrop-blur-sm">
                     <dialog className="relative bg-neutral-50 w-96 py-6 mx-2 flex flex-col items-center shadow-lg rounded-sm">
                         <div className="flex flex-col items-center justify-center">
-                            <h3 className="font-bold text-gray-700 text-md">Payments and Contact details</h3>
+                            <h3 className="font-bold text-gray-700 text-md">Ticket payment and contact details</h3>
                             <h1 className="font-bold text-lg">{eventDetails?.title}</h1>
                             <p className="text-emerald-800 font-bold text-xl">{data?.base_price}</p>
                             <p className="text-emerald-600 font-medium">{data?.ticket_class} {data?.ticket_type}</p>
-                            <div>
+                            <div className="px-2">
                                 <form id="contactForm" onSubmit={handleContactSubmission}>
                                     <div>
                                         <label className="font-medium text-gray-600">Email</label>
                                         <input onChange={handleChange} id="user_email" name="user_email" className="input validator w-full" type="email" required placeholder="mail@gmail.com" />
                                     </div>
                                     <div>
-                                        <label className="font-medium text-gray-600">Phone</label>
-                                        <input onChange={handleChange} id="user_contact" name="user_contact" className="input validator w-full" type="text" required placeholder="Phone no."/>
+                                        <label className="font-medium text-gray-600">Phone (with country code)</label>
+                                        <PhoneInput
+                                            country={"ke"}
+                                            value={phone}
+                                            onChange={setPhone}
+                                            inputProps={{
+                                                name: "user_contact",
+                                                required: true,
+                                            }}
+                                        />
                                     </div>
                                 </form>
                             </div>

@@ -1,6 +1,6 @@
 import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials";
-import { loginUserFn } from "@/app/login/actions";
+import { loginUserFn, loginOrgFn } from "@/app/login/actions";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
     secret: process.env.AUTH_SECRET,
@@ -23,12 +23,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         name: "credentials",
         // Fields that should be submitted.
         credentials: {
-            email: {
+            org_email: {
                 label: "email",
                 type: "text",
                 placeholder: "Email",
             },
-            password: {
+            org_pwd: {
                 label: "password",
                 type: "text",
                 placeholder: "*******"
@@ -38,7 +38,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             let user = null
 
             // fetch user from backend API.
-            user = await loginUserFn(credentials);
+            user = await loginOrgFn(credentials);
 
             if (!user) {
                 // No user is found.

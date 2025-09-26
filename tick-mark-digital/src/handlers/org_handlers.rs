@@ -1,10 +1,17 @@
 //! Org handler functions
-use actix_web::{web, HttpResponse};
+use actix_web::{web, HttpResponse, HttpRequest, HttpMessage};
+use actix_identity::{Identity};
 use crate::models::{
     Organization, OrgPayload, CreateOrg,
     Contact, CreateContact, ContactPayload,
     CreateAccess, AccessCodesPayload,
     db_access::*,
+};
+use crate::helpers::{
+    NotfoundErrorResponse,
+    Claims, AuthResponse, generate_jwt,
+    hash_password, verify_password,
+    load_secret_key,
 };
 use uuid::Uuid;
 use nanoid::nanoid;
@@ -15,7 +22,17 @@ use crate::state::AppState;
 
 /// Organization registration handler
 pub async fn org_registration(new_org: web::Json<CreateOrg>, app_state: web::Data<AppState>) -> HttpResponse {
-    let n_org = add_new_org(&app_state.db, new_org.into()).await;
+    let password_hash = match hash_password(new_org.org_pwd.clone()).await {
+        Ok(hash) => hash,
+        Err(_) => return HttpResponse::InternalServerError().body("Failed to hash password."),
+    };
+    let added_org = CreateOrg {
+        organization_name: new_org.organization_name.clone(),
+        org_email: new_org.org_email.clone(),
+        org_pwd: password_hash,
+        country: new_org.country.clone(),
+    };
+    let n_org = add_new_org(&app_state.db, added_org).await;
     HttpResponse::Ok().json(n_org)
 }
 

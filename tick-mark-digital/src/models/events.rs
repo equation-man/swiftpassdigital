@@ -265,7 +265,7 @@ pub struct Order {
     pub user_email: String,
     pub user_contact: String,
     pub ticket_price: String, //Decimal,
-    pub added_at: DateTime<Utc>,
+    pub added_at: String, //DateTime<Utc>,
     //pub promo_code: String,
     pub ticket_status: TickStatus,
     pub entrance_code: String,

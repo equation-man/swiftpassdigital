@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
+import "react-phone-input-2/lib/style.css";
 import NavBar from "@/components/Navigation/NavBar";
 import Footer from "@/components/Footer/Footer";
 import Provider from "@/lib/queryClient";

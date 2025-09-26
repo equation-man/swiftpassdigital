@@ -40,8 +40,8 @@ orgRegistration() {
         "$API_URL/organization/registration" \
         -H 'Content-Type: application/json' \
         -d '{
-            "organization_name": "KCAA",
-            "org_email": "kcaa@example.com",
+            "organization_name": "Crawford School",
+            "org_email": "crawfordschool@example.com",
             "org_pwd": "123456789",
             "country": "Kenya"
         }'
@@ -135,7 +135,7 @@ verifyTicket() {
 
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 echo "Testing SwiftPassDigital Software"
-result=$(listTickets)
+result=$(orgRegistration)
 echo "$result" | jq
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 
