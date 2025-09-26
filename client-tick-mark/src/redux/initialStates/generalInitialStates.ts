@@ -9,5 +9,6 @@ export interface ModalState {
 // Defining the initial state.
 export const initialState: ModalState = {
     payment: false,
-    createTicket: false,
+    create_ticket: false,
+    create_event: false,
 }

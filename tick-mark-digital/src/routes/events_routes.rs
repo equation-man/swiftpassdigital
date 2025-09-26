@@ -2,7 +2,7 @@
 use actix_web::web;
 use crate::{
     handlers::{
-        create_event, list_events, event_info, event_update, event_delete,
+        create_event, list_events, list_myevents, event_info, event_update, event_delete,
         create_ticket, tickets_display, ticket_info, create_order,
         orders_list, verify_order,
     },
@@ -14,6 +14,7 @@ pub fn events_routes(cfg: &mut web::ServiceConfig) {
         web::scope("/events")
         .route("/create", web::post().to(create_event))
         .route("/list", web::get().to(list_events))
+        .route("/myevents/{owner_id}", web::get().to(list_myevents))
         .route("/{event_id}", web::get().to(event_info))
         .route("/update/{event_id}", web::patch().to(event_update))
         .route("/delete/{event_id}", web::delete().to(event_delete))

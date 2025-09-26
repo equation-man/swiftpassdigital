@@ -74,7 +74,7 @@ pub async fn get_event(db_pool: &PgPool, event_id: Uuid) -> Event {
     }
 }
 
-pub async fn get_events(db_pool: &PgPool, filters: EventPayload) -> Vec<Event> {
+pub async fn get_events(db_pool: &PgPool, owner_id: Option<Uuid>, filters: EventPayload) -> Vec<Event> {
     let start_date = match filters.start_date {
         Some(s_date) => Some(s_date.parse::<DateTime<Utc>>().unwrap()),
         None => None
@@ -93,7 +93,7 @@ pub async fn get_events(db_pool: &PgPool, filters: EventPayload) -> Vec<Event> {
             AND ($5 IS NULL OR start_time=$5)
             AND ($6 IS NULL OR finish_time=$6)
             AND ($7 IS NULL OR event_tag=$7)
-    "#).bind(Some(filters.event_id)).bind(Some(filters.owner_id))
+    "#).bind(Some(filters.event_id)).bind(Some(owner_id))
         .bind(Some(filters.title)).bind(Some(filters.venue))
         .bind(Some(start_date)).bind(Some(finish_date))
         .bind(Some(filters.event_tag))

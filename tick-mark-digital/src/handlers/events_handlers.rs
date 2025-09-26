@@ -34,7 +34,7 @@ pub async fn event_info(event_id: web::Path<String>, app_state: web::Data<AppSta
 pub async fn list_events(filter: Option<web::Json<EventPayload>>, app_state: web::Data<AppState>) -> HttpResponse {
     match filter {
         Some(filter) => {
-            let events = get_events(&app_state.db, filter.into()).await;
+            let events = get_events(&app_state.db, None, filter.into()).await;
             HttpResponse::Ok().json(events)
         },
         None => {
@@ -48,7 +48,32 @@ pub async fn list_events(filter: Option<web::Json<EventPayload>>, app_state: web
                 event_tag: None,
                 search_query: None,
             };
-            let events = get_events(&app_state.db, event_payload).await;
+            let events = get_events(&app_state.db, None, event_payload).await;
+            HttpResponse::Ok().json(events)
+        }
+    }
+}
+
+/// Listing my events.
+pub async fn list_myevents(filter: Option<web::Json<EventPayload>>, owner_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
+    let owner_id: Uuid = Uuid::parse_str(&owner_id.into_inner()).unwrap();
+    match filter {
+        Some(filter) => {
+            let events = get_events(&app_state.db, Some(owner_id), filter.into()).await;
+            HttpResponse::Ok().json(events)
+        },
+        None => {
+            let event_payload = EventPayload {
+                event_id: None,
+                owner_id: None,
+                title: None,
+                venue: None,
+                start_date: None,
+                finish_date: None,
+                event_tag: None,
+                search_query: None,
+            };
+            let events = get_events(&app_state.db, Some(owner_id), event_payload).await;
             HttpResponse::Ok().json(events)
         }
     }

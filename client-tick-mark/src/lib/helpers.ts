@@ -9,3 +9,10 @@ export function formatDateTime(
     const dt = DateTime.fromISO(isoString, { zone: "utc" }).setZone(timeZone); //parse as UTC.
     return dt.toFormat(format);
 }
+
+export function dateTimeToUtc(inputDate: string): string{
+    // Convert to date object.
+    const localDate = new Date(inputDate);
+    // Convert to UTC ISO string.
+    return localDate.toISOString();
+}

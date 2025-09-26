@@ -46,8 +46,8 @@ const Event = ({ evnt }: Props) => {
                             <p className="text-xs"><span className="text-gray-700 font-medium">To</span> <ClientOnly><EventDate iso={evnt.start_date} /></ClientOnly></p>
                         </div>
                     </div>
-                    <button onClick={showEvent} className="px-4 py-1 bg-emerald-600 font-semibold rounded-sm hover:cursor-pointer text-white">Get ticket</button>
                 </div>
+                <button onClick={showEvent} className="px-4 py-1 bg-emerald-600 font-semibold rounded-sm hover:cursor-pointer text-white">Get ticket</button>
               </div>
             </div>
         </div>

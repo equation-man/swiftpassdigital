@@ -1,20 +1,43 @@
 // Organization Header component
+"use client";
 import React from "react";
 import Link from "next/link";
+import Organization from "@/types/types";
+import { useDispatch } from "react-redux";
+import { createEventModalState } from "@/redux/reducers/generalReducer";
 
-const OrgHeader = () => {
+type Props = {
+    org: Organization;
+};
+
+
+const OrgHeader = ({ org }: Props) => {
+
+    const dispatch = useDispatch();
+    const handleCreateEventModDisp = (e, state) => {
+        e.preventDefault();
+        dispatch(createEventModalState(state))
+    }
+
     return (
         <div className="p-2">
             <div className="my-2">
-                <h1 className="font-bold text-2xl">KCAA</h1>
-                <p>Kiambu County Aquatics Association</p>
+                <h1 className="font-bold text-2xl">{org.organization_name}</h1>
+                <div className="text-sm">
+                    <p>{org.org_email}</p>
+                    <p>{org.organization_username}</p>
+                    <p>{org.description}</p>
+                </div>
                 <div className="flex flex-row gap-x-2">
                     <button className="text-emerald-700 hover:cursor-pointer font-medium rounded-xs border border-emerald-600 text-xs p-1">
                         <Link href="/organizations/profile">
                             Manage Account
                         </Link>
                     </button>
-                    <button className="bg-emerald-700 text-white font-medium text-xs p-1 rounded-xs">
+                    <button
+                        onClick={e => handleCreateEventModDisp(e, true)}
+                        className="bg-emerald-700 text-white font-medium text-xs p-1 rounded-xs hover:cursor-pointer"
+                    >
                         Create New Event
                     </button>
                 </div>

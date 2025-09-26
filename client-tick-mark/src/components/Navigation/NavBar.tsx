@@ -1,12 +1,21 @@
 /// Navigation bar.
 "use client";
-import React from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import LogoutButton from "./LogoutButton";
 import { useSession } from "next-auth/react";
 
 const NavBar = () => {
     const { data: session, status } = useSession();
+    const router = useRouter();
+
+    const handleRouteToDashboard = () => {
+        if (!!session.user) {
+            router.push(`/organizations/${session.user.organization_id}`)
+        } else {
+            router.push("/login")
+        }
+    }
 
     return (
         <main>
@@ -28,10 +37,11 @@ const NavBar = () => {
                             </g>
                         </svg>
                     </Link>
-                    <button className="rounded-sm text-white bg-emerald-800 text-xs px-4 py-2">
-                        <Link href="/organizations">
-                            Create Event
-                        </Link>
+                    <button
+                        onClick={handleRouteToDashboard}
+                        className="rounded-sm text-white bg-emerald-800 text-xs px-4 py-2 hover:cursor-pointer"
+                    >
+                        Create Event
                     </button>
                     {session && <LogoutButton />}
                 </div>

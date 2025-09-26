@@ -25,7 +25,7 @@ export interface Event {
     start_date: string;
     finish_date: string;
     added_at: string;
-    edited: bool;
+    edited: string;
     event_tag: string;
 }
 

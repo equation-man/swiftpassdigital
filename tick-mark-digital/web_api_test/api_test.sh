@@ -63,13 +63,13 @@ createEvent() {
         "$API_URL/events/create" \
         -H 'Content-Type: application/json' \
         -d '{
-            "owner_id": "aaed0607-4dc6-488a-bcc7-12c377bc08ce",
-            "title": "Athletics competition",
-            "description": "Developmental athletics championships",
-            "venue": "Kasarani Sports Center",
+            "owner_id": "2b7992ad-223b-40b6-a66a-a0b0567de0e7",
+            "title": "Kiambu level 2 Swimming Championship",
+            "description": "Kiambu county regional swimming gala",
+            "venue": "Mpesa Foundation Academy",
             "start_date": "2025-09-18T10:15:30Z",
             "finish_date": "2025-09-19T10:15:30Z",
-            "event_tag": "Athletics"
+            "event_tag": "Swimming"
         }'
 }
 
@@ -79,6 +79,11 @@ listEvents() {
 
 eventInfo() {
     curl -X GET "$API_URL/events/5f51badb-acfe-4b0f-8b9d-6a2d96a5fd1e"
+}
+
+# List events for a particular organization.
+listMyEvents() {
+    curl -X GET "$API_URL/events/myevents/2b7992ad-223b-40b6-a66a-a0b0567de0e7"
 }
 
 createTicket() {
@@ -135,7 +140,7 @@ verifyTicket() {
 
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 echo "Testing SwiftPassDigital Software"
-result=$(orgLogin)
+result=$(listMyEvents)
 echo "$result" | jq
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 

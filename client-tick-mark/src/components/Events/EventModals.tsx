@@ -12,7 +12,7 @@ import { Event } from "@/types/types";
 // Defining props for this component.
 type PaymentModalProps = {
     ticketId: string;
-    evendDetails: Event;
+    eventDetails: Event;
 }
 
 const TicketPaymentModal = ({ ticketId, eventDetails }: PayemntModalProps) => {

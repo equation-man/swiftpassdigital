@@ -2,18 +2,22 @@
 "use client";
 import React from "react";
 import Event from "@/components/Events/Event";
+import { useParams } from "next/navigation";
 import { toast } from "react-hot-toast";
 import {useQuery} from "@tanstack/react-query";
-import { fetchEventsFn } from "./actions";
+import { myEventsFn } from "@/app/organizations/actions";
 
 type Props = {
     owner: T;
 }
-// pass user object.
-const Events = ({ owner }: Props) => {
+
+const MyEvents = ({ owner }: Props) => {
+    const params = useParams<{ owner_id: string}>(); //typed params
+    const owner_id = params.id;
+
     const { data, isLoading, error } = useQuery({
-        queryKey: ['events'],
-        queryFn: () => fetchEventsFn(),
+        queryKey: ['MyEvents'],
+        queryFn: () => myEventsFn(owner_id),
         onSuccess: () => {
         },
         onError: () => {
@@ -35,4 +39,4 @@ const Events = ({ owner }: Props) => {
     );
 };
 
-export default Events;
+export default MyEvents;

@@ -1,13 +1,24 @@
 // Organizations page for organization activities.
 import React from "react";
 import OrgHeader from "@/components/OrgHeader/OrgHeader";
-import Events from "@/components/Events/Events";
+import MyEvents from "@/components/Events/MyEvents";
+import EventCreationModal from "@/components/Events/CreateEventModal";
+import { auth } from "@/auth";
 
-const OrganizationActivityPage = () => {
+const OrganizationActivityPage = async () => {
+    const session = await auth();
+    let user = session;
+
+    if (session?.user) {
+        user = session.user;
+    }
+
     return (
         <div className="p-2">
-            <OrgHeader />
-            <Events />
+            <OrgHeader org={user}/>
+            <MyEvents owner={user}/>
+            {/* MODALS */}
+            <EventCreationModal eventOwner={user}/>
         </div>
     );
 };
