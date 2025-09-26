@@ -1,6 +1,6 @@
 //! Organization accesst to the database.
 use crate::models::{
-    Organization, OrgPayload, CreateOrg,
+    Organization, OrgPayload, CreateOrg, LoggedOrganization,
     Contact, ContactType, ContactPayload,
     CreateContact, OrganizationAccessCodes,
     CreateAccess, AccessCodesPayload,
@@ -42,14 +42,14 @@ pub async fn add_new_org(db_pool: &PgPool, new_org: CreateOrg) -> Organization {
     }
 }
 
-pub async fn get_org_by_pwd(db_pool: &PgPool, filters: OrgPayload) -> Organization {
+pub async fn get_org_by_email(db_pool: &PgPool, filters: OrgPayload) -> Option<LoggedOrganization> {
     let org = sqlx::query(r#"
         SELECT * FROM ticket_market.organizations
-        WHERE org_pwd=$1 AND org_email=$2
-    "#).bind(filters.org_pwd).bind(filters.org_email)
+        WHERE org_email=$1
+    "#).bind(filters.org_email)
     .fetch_one(db_pool).await.expect("Organizations can't be retrieved.");
 
-    Organization {
+    let logged_org = LoggedOrganization {
         organization_id: org.get("organization_id"),
         organization_name: org.get("organization_name"),
         organization_username: match org.get("organization_username") {
@@ -58,11 +58,13 @@ pub async fn get_org_by_pwd(db_pool: &PgPool, filters: OrgPayload) -> Organizati
         },
         org_email: org.get("org_email"),
         country: org.get("country"),
+        org_pwd: org.get("org_pwd"),
         description: match org.get("description") {
             Some(des) => des,
             None => "DESCRIPTION_NOT_SET".to_string()
         }
-    }
+    };
+    Some(logged_org)
 }
 
 pub async fn get_orgs(db_pool: &PgPool, filters: OrgPayload) -> Vec<Organization> {
@@ -73,8 +75,10 @@ pub async fn get_orgs(db_pool: &PgPool, filters: OrgPayload) -> Vec<Organization
             AND ($2 IS NULL OR organization_name=$2)
             AND ($3 IS NULL OR organization_username=$3)
             AND ($4 IS NULL OR country=$4)
+            AND ($5 IS NULL OR org_email=$5)
     "#).bind(Some(filters.organization_id)).bind(Some(filters.organization_name))
     .bind(Some(filters.organization_username)).bind(Some(filters.country))
+    .bind(Some(filters.org_email))
     .fetch_all(db_pool).await.expect("Organizations can't be retrieved.");
 
     orgs_lst.iter().map(|org| Organization {

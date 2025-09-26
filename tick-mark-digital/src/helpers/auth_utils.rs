@@ -4,7 +4,7 @@ use jsonwebtoken::{encode, decode, Header, EncodingKey, DecodingKey, Validation}
 use chrono::{Utc, Duration};
 use std::error::Error;
 use serde::{Deserialize, Serialize};
-use crate::models::{User};
+use crate::models::{User, Organization};
 use std::env;
 use dotenvy::dotenv;
 
@@ -15,9 +15,9 @@ pub struct Claims {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AuthResponse {
+pub struct AuthResponse<T> {
     pub token: String,
-    pub user: User,
+    pub user: T,
 }
 
 pub async fn load_secret_key() -> Vec<u8> {

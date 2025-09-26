@@ -37,9 +37,36 @@ pub async fn org_registration(new_org: web::Json<CreateOrg>, app_state: web::Dat
 }
 
 /// Organization login handler
-pub async fn org_login(org_payload: web::Json<OrgPayload>, app_state: web::Data<AppState>) -> HttpResponse {
-    let org = get_org_by_pwd(&app_state.db, org_payload.into()).await;
-    HttpResponse::Ok().json(org)
+pub async fn org_login(org_payload: web::Json<OrgPayload>, app_state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
+    let org_res = get_org_by_email(&app_state.db, org_payload.clone().into()).await;
+    if let Some(org) = org_res {
+        let logged_org = org.clone();
+        if verify_password(&logged_org.org_pwd, org_payload.org_pwd.clone().unwrap()).await.unwrap_or(false) {
+            let token = match generate_jwt(&logged_org.org_email.clone(), &load_secret_key().await).await {
+                Ok(token) => token,
+                Err(_) => return HttpResponse::InternalServerError().body("Failed to generate token")
+            };
+            Identity::login(&mut req.extensions_mut(), logged_org.org_email.clone()).unwrap();
+
+            let user = Organization {
+                organization_id: logged_org.organization_id,
+                organization_name: logged_org.organization_name,
+                organization_username: logged_org.organization_username,
+                org_email: logged_org.org_email,
+                country: logged_org.country,
+                description: logged_org.description,
+            };
+            let response = AuthResponse { token, user };
+            return HttpResponse::Ok().json(response);
+        } else {
+            HttpResponse::Unauthorized().body("Invalid Credentials")
+        }
+    } else {
+        HttpResponse::NotFound().json(NotfoundErrorResponse {
+            error: "User not found".into(),
+            code: 404
+        })
+    }
 }
 
 /// Organization listing handler

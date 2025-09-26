@@ -52,7 +52,7 @@ orgLogin() {
         "$API_URL/organization/admin" \
         -H 'Content-Type: application/json' \
         -d '{
-            "org_email": "kcaa@example.com",
+            "org_email": "crawfordschool@example.com",
             "org_pwd": "123456789"
         }'
 
@@ -135,7 +135,7 @@ verifyTicket() {
 
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 echo "Testing SwiftPassDigital Software"
-result=$(orgRegistration)
+result=$(orgLogin)
 echo "$result" | jq
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 
