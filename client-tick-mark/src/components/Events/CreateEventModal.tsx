@@ -4,14 +4,18 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useSelector, useDispatch } from "react-redux";
 import { createEventModalState } from "@/redux/reducers/generalReducer";
+import { createTicketModalState, updateEvDetails } from "@/redux/reducers/generalReducer";
 import { createEventFn } from "@/app/event/actions";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Event, CreateEvent } from "@/types/types";
 import { dateTimeToUtc } from "@/lib/helpers";
+import { Event } from "@/types/types";
+import CreateTicketModal from "@/components/Events/CreateTicketModal";
 
 // Defining props for this component.
 type Props= {
     eventOwner: T;
+    ownerUpdFn: (value: Event) => void;
 }
 
 const EventCreationModal = ({ eventOwner }: Props) => {
@@ -34,16 +38,16 @@ const EventCreationModal = ({ eventOwner }: Props) => {
         mutationKey: ['createEvent'],
         mutationFn: (inputs) => createEventFn(inputs),
         onSuccess: (data) => {
-            toast.success("Congratulations your event created!", {
+            toast.success("Congratulations your event has been created!", {
                 iconTheme: {
                     primary: "#ecfdf5",
                     secondary: "#047857",
                 },
             })
+            dispatch(updateEvDetails({ event_id: data.event_id, event_title: data.title, start_time: data.start_date, finish_time: data.finish_date}))
             dispatch(createEventModalState(false));
         },
         onError: (err: Error) => {
-            console.log("The error is", err);
             toast.error("Failed creating event, try again!");
         }
     });
@@ -55,6 +59,7 @@ const EventCreationModal = ({ eventOwner }: Props) => {
         inputs.start_date = s_date;
         inputs.finish_date = f_date;
         mutation.mutate(inputs)
+        dispatch(createTicketModalState(true))
     }
 
     return (

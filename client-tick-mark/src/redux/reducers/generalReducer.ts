@@ -12,6 +12,12 @@ export const modalSlice = createSlice({
         },
         createEventModalState: (state, action) => {
             state.create_event = action.payload
+        },
+        createTicketModalState:  (state, action) => {
+            state.create_ticket = action.payload
+        },
+        updateEvDetails: (state, action) => {
+            state.event_details = action.payload
         }
     }
 });
@@ -27,5 +33,5 @@ const generalReducer = (state: ModalState=modalInitialState, action: bool) => {
     }
 }
 
-export const { updatePaymentModalState, createEventModalState } = modalSlice.actions;
+export const { updatePaymentModalState, createEventModalState, createTicketModalState, updateEvDetails } = modalSlice.actions;
 export default modalSlice.reducer;

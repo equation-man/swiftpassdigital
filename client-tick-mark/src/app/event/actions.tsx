@@ -2,10 +2,15 @@
 "use server";
 import axios from "axios";
 import { API_URL } from "@/config";
-import { Event, Ticket, OrderDetails, CreateEvent } from "@/types/types";
+import { Event, Ticket, OrderDetails, CreateEvent, CreateTicket } from "@/types/types";
 
 export async function eventInfoFn(e_id: string): Promise<Event | unknown>{
     const response = await axios.get(`${API_URL}/events/${e_id}`);
+    return response.data;
+}
+
+export async function createTicketFn(ticketDet: CreateTicket): Promise<Ticket | unknown> {
+    const response = await axios.post(`${API_URL}/events/ticket/create`, ticketDet);
     return response.data;
 }
 
@@ -29,8 +34,6 @@ export async function purchaseTicketFn({orderDet, ticketId}: OrdDet): Promise<Or
 }
 
 export async function createEventFn(evntDetails: CreateEvent): Promise<Event | unknown> {
-    console.log("The event payload is", evntDetails);
     const response = await axios.post(`${API_URL}/events/create`, evntDetails);
-    console.log("The response for creating event is", response);
     return response.data;
 }

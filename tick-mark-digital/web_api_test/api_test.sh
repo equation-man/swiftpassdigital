@@ -86,20 +86,21 @@ listMyEvents() {
     curl -X GET "$API_URL/events/myevents/2b7992ad-223b-40b6-a66a-a0b0567de0e7"
 }
 
+
 createTicket() {
     curl -X POST \
         "$API_URL/events/ticket/create" \
         -H 'Content-Type: application/json' \
         -d '{
-            "event_id": "5f51badb-acfe-4b0f-8b9d-6a2d96a5fd1e",
+            "event_id": "c1f3bfd8-9734-4274-9fa0-cb53f3cb8d12",
             "base_price": "1000",
-            "capacity": 300,
+            "capacity": 60,
             "ticket_type": "Regular",
             "ticket_class": "Individual",
-            "discount_time": 3,
+            "discount_time": 0,
             "start_time": "2025-09-18T10:15:30Z",
             "finish_time": "2025-09-18T10:15:30Z",
-            "description": "Athletics event at Kasarani"
+            "description": "Abadares zone 3 championship. See you there."
         }'
 }
 
@@ -140,7 +141,7 @@ verifyTicket() {
 
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 echo "Testing SwiftPassDigital Software"
-result=$(listMyEvents)
+result=$(createTicket)
 echo "$result" | jq
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 

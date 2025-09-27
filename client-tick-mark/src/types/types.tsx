@@ -53,6 +53,18 @@ export interface Ticket {
     capacity: number;
 }
 
+export interface CreateTicket {
+    event_id: string;
+    base_price: string;
+    capacity: number;
+    ticket_type: string;
+    ticket_class: string;
+    discount_time: number;
+    start_time: string;
+    finish_time: string;
+    description: string;
+}
+
 export interface OrderDetails {
     order_id: string;
     ticket_id: string;

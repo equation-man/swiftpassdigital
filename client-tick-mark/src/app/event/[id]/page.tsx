@@ -40,13 +40,13 @@ const Info = ({ ticketDetails, ticketIdViewFn }: TicketProps ) => {
                 <p className="text-xs"><span className="text-gray-100 font-bold text-emerald-200">To</span> <ClientOnly><EventDate iso={ticketDetails.finish_time} /></ClientOnly></p>
             </div>
             <div className="card-actions justify-end">
-                <button
-                    onClick={e => handleTicketPurchase(e, true)}
-                    className="px-4 py-2 bg-emerald-600 font-semibold rounded-sm hover:cursor-pointer text-white"
-                >
-                    Purchase Ticket
-                </button>
             </div>
+            <button
+                onClick={e => handleTicketPurchase(e, true)}
+                className="px-4 py-2 bg-emerald-600 font-semibold rounded-sm hover:cursor-pointer text-white"
+            >
+                Purchase Ticket
+            </button>
           </div>
         </div>
     );
