@@ -2,6 +2,8 @@
 use reqwest::Error;
 use serde::{Serialize, Deserialize};
 use actix_web::{web};
+use dotenvy::dotenv;
+use std::env;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SubAccount {
@@ -82,15 +84,79 @@ pub struct VerifyPaymentResData {
     gateway_response: String,
 }
 
+// ================== PESAPAL ========================
+#[derive(Debug, Serialize, Deserialize)]
+pub struct IntegrationDetails {
+    consumer_key: String,
+    consumer_secret: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct IntegrationResult{
+    token: String,
+    expiryDate: String,
+    error: Option<String>,
+    status: String,
+    message: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct IPNRegData {
+    url: String,
+    ipn_notification_type: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct IPNRegDataRes {
+    url: String,
+    created_date: String,
+    ipn_id: String,
+    notification_type: u8,
+    ipn_notification_type_description: String,
+    ipn_status: u8,
+    //ipn_status_description: String,
+    error: Option<String>,
+    status: String,
+}
+
+pub async fn integration_details() -> (String, String) {
+    dotenv().ok();
+    let consumer_key = env::var("PESAPAL_CONSUMER_KEY").expect("Provide pesapal consumer key");
+    let consumer_secret = env::var("PESAPAL_CONSUMER_SECRET").expect("Provide consumer secret");
+    (consumer_key, consumer_secret)
+}
+
+/// Authentication in pesapal.
+pub async fn payment_auth(payment_url: String, credentials: IntegrationDetails) -> Result<IntegrationResult, Error> {
+    let client = reqwest::Client::new();
+    let res = client.post(&payment_url)
+        .header("Content-Type", "application/json")
+        .json(&credentials)
+        .send().await?;
+    let auth_res = res.json().await?;
+    Ok(auth_res)
+}
+
+/// IPN Registraions.(Instant Payment Notification)
+pub async fn ipnregistration(payment_url: String, bearer_token: String, ipnregCred: IPNRegData) -> Result<IPNRegDataRes, Error> {
+    let client = reqwest::Client::new();
+    let ipn_res = client.post(&payment_url)
+        .bearer_auth(&bearer_token)
+        .header("Content-type", "application/json")
+        .json(&ipnregCred)
+        .send().await?;
+    let ipn = ipn_res.json().await?;
+    Ok(ipn)
+}
+
 /// Creating a subaccount where to deposit ticket sales funds after fees.
 async fn create_subaccnt(payment_url: String, subaccount_payload: SubAccount) -> Result<SubAccountResult, Error> {
     let client = reqwest::Client::new();
     let res = client.post(&payment_url)
-        .bearer_auth("sk_test_be74a6aae684bbcfb2a29831ca06c50d2c879000")
         .header("Content-Type", "application/json")
         .json(&subaccount_payload)
         .send().await?;
-    let subaccnt_result: SubAccountResult = res.json().await?;
+    let subaccnt_result = res.json().await?;
     Ok(subaccnt_result)
 }
 
@@ -151,6 +217,56 @@ mod tests {
         }
     }
 
+    // ========== PESAPAL TESTS =========
+    async fn integration_payload() -> IntegrationDetails {
+        let (c_key, c_secret) = integration_details().await;
+        IntegrationDetails {
+            consumer_key: c_key,
+            consumer_secret: c_secret,
+        }
+    }
+
+    fn payment_url() -> String {
+        "https://cybqa.pesapal.com/pesapalv3/api/Auth/RequestToken".to_string()
+    }
+
+    fn ipnreg_fixture() -> IPNRegData {
+        IPNRegData {
+            url: "https://www.myapplication.com/ipn".to_string(),
+            ipn_notification_type: "GET".to_string(),
+        }
+    }
+
+    fn ipnreg_url() -> String {
+        "https://cybqa.pesapal.com/pesapalv3/api/URLSetup/RegisterIPN".to_string()
+    }
+
+    fn test_token() -> String {
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3VzZXJkYXRhIjoiZWQ2MTkwMGYtZGNiMy00NjM2LWIxNGUtY2U1MGQwYzk2M2I1IiwidWlkIjoicWtpbzFCR0dZQVhUdTJKT2ZtN1hTWE5ydW9ac3JxRVciLCJuYmYiOjE3NTkxODE5MTEsImV4cCI6MTc1OTE4NTUxMSwiaWF0IjoxNzU5MTgxOTExLCJpc3MiOiJodHRwOi8vY3licWEucGVzYXBhbC5jb20vIiwiYXVkIjoiaHR0cDovL2N5YnFhLnBlc2FwYWwuY29tLyJ9.vcZAZ8iqPJs4VhtR2_gmsf13QW05WxztFKRVBRsjux8".to_string()
+
+    }
+    #[tokio::test]
+    #[ignore]
+    async fn testing_pesapal_keys() {
+        let details = integration_details().await;
+        println!("The pesapal details are {:#?}", details);
+        println!("Testing 1 2");
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn auth_test() {
+        let cred = integration_payload().await;
+        let auth = payment_auth(payment_url(), cred).await;
+        println!("The auth res is {:#?}", auth);
+    }
+
+    #[tokio::test]
+    async fn ipnreg_test() {
+        let ipn_res = ipnregistration(ipnreg_url(), test_token(), ipnreg_fixture()).await;
+        println!("The auth res is {:#?}", ipn_res);
+    }
+
     // ========== REAL TESTS ==========
     #[tokio::test]
     #[ignore]
@@ -160,6 +276,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore]
     async fn initialize_payment_test() {
         let init_trans = init_split_trans(init_split_payment_url(), init_split_fixture()).await;
         println!("The initialized split transaction result is {:#?}", init_trans);

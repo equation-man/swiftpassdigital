@@ -5,6 +5,7 @@ use crate::{
         org_registration, org_login, org_list, org_update,
         add_contact, contact_list, contact_update,
         delete_contact, create_access_code, list_access_codes,
+        new_wallet, get_wallet, delete_wallet,
         get_org_via_code
     },
 };
@@ -17,6 +18,9 @@ pub fn orgs_routes(cfg: &mut web::ServiceConfig) {
         .route("/admin", web::post().to(org_login))
         .route("/login", web::post().to(get_org_via_code))
         .route("/list", web::get().to(org_list))
+        .route("/wallet/create", web::post().to(new_wallet))
+        .route("/wallet/{org_id}", web::get().to(get_wallet))
+        .route("/wallet/delete/{org_id}", web::delete().to(delete_wallet))
         .route("/update/{org_id}", web::post().to(org_update))
         .route("/contact/{org_id}", web::post().to(add_contact))
         .route("/contact/list/{org_id}", web::get().to(contact_list))

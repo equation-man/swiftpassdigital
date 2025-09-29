@@ -365,3 +365,76 @@ impl From<web::Json<PermissionPayload>> for PermissionPayload {
         }
     }
 }
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Wallet {
+    pub wallet_id: Uuid,
+    pub owner_id: Uuid,
+    pub business_name: String,
+    pub bank_code: String,
+    pub account_number: String,
+    pub subaccount: String,
+    pub currency: String,
+}
+
+impl From<web::Json<Wallet>> for Wallet {
+    fn from(wallet: web::Json<Wallet>) -> Self {
+        Wallet {
+            wallet_id: wallet.wallet_id.clone(),
+            owner_id: wallet.owner_id.clone(),
+            business_name: wallet.business_name.clone(),
+            bank_code: wallet.bank_code.clone(),
+            account_number: wallet.account_number.clone(),
+            subaccount: wallet.subaccount.clone(),
+            currency: wallet.currency.clone(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct CreateWallet {
+    pub owner_id: Uuid,
+    pub business_name: String,
+    pub bank_code: String,
+    pub account_number: String,
+    pub subaccount: String,
+    pub currency: String,
+}
+
+impl From<web::Json<CreateWallet>> for CreateWallet {
+    fn from(wallet: web::Json<CreateWallet>) -> Self {
+        CreateWallet {
+            owner_id: wallet.owner_id.clone(),
+            business_name: wallet.business_name.clone(),
+            bank_code: wallet.bank_code.clone(),
+            account_number: wallet.account_number.clone(),
+            subaccount: wallet.subaccount.clone(),
+            currency: wallet.currency.clone(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct WalletPayload {
+    pub wallet_id: Option<Uuid>,
+    pub owner_id: Option<Uuid>,
+    pub business_name: Option<String>,
+    pub bank_code: Option<String>,
+    pub account_number: Option<String>,
+    pub subaccount: Option<String>,
+    pub currency: Option<String>,
+}
+
+impl From<web::Json<WalletPayload>> for WalletPayload {
+    fn from(wallet: web::Json<WalletPayload>) -> Self {
+        WalletPayload {
+            wallet_id: wallet.wallet_id.clone(),
+            owner_id: wallet.owner_id.clone(),
+            business_name: wallet.business_name.clone(),
+            bank_code: wallet.bank_code.clone(),
+            account_number: wallet.account_number.clone(),
+            subaccount: wallet.subaccount.clone(),
+            currency: wallet.currency.clone(),
+        }
+    }
+}

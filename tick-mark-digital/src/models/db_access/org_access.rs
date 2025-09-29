@@ -6,7 +6,8 @@ use crate::models::{
     CreateAccess, AccessCodesPayload,
     RoleType, Role, CreateRole, RolePayload,
     PermissionType, Permission,
-    CreatePermission, PermissionPayload
+    CreatePermission, PermissionPayload,
+    Wallet, CreateWallet, WalletPayload
 };
 use sqlx::postgres::PgPool;
 use sqlx::Row;
@@ -367,5 +368,64 @@ pub async fn remove_permission(db_pool: &PgPool, permission_id: Uuid) -> Permiss
         permission_id: del_perms.permission_id,
         role_id: del_perms.user_access_role_id.unwrap(),
         permission: del_perms.permission_type.unwrap(),
+    }
+}
+
+// ============================ ORGANIZATION WALLET =====================
+pub async fn create_org_wallet(db_pool: &PgPool, org_id: Uuid, new_wallet: CreateWallet) -> Wallet {
+    let n_wallet = sqlx::query!(r#"
+        INSERT INTO ticket_market.wallets
+            (owner_id, business_name, bank_code, account_number, subaccount, currency)
+        VALUES
+            ($1, $2, $3, $4, $5, $6)
+        RETURNING wallet_id, owner_id, business_name, bank_code, account_number,
+            subaccount, currency
+    "#, org_id, new_wallet.business_name, new_wallet.bank_code, new_wallet.account_number,
+    new_wallet.subaccount, new_wallet.currency).fetch_one(db_pool).await.unwrap();
+
+    Wallet {
+        wallet_id: n_wallet.wallet_id,
+        owner_id: n_wallet.owner_id,
+        business_name: n_wallet.business_name,
+        bank_code: n_wallet.bank_code,
+        account_number: n_wallet.account_number,
+        subaccount: n_wallet.subaccount,
+        currency: n_wallet.currency.unwrap()
+    }
+}
+
+pub async fn get_org_wallet(db_pool: &PgPool, org_id: Uuid) -> Wallet {
+    let org_wallet = sqlx::query!(r#"
+        SELECT * FROM ticket_market.wallets
+        WHERE owner_id=$1
+    "#, org_id).fetch_one(db_pool).await.unwrap();
+
+    Wallet {
+        wallet_id: org_wallet.wallet_id,
+        owner_id: org_wallet.owner_id,
+        business_name: org_wallet.business_name,
+        bank_code: org_wallet.bank_code,
+        account_number: org_wallet.account_number,
+        subaccount: org_wallet.subaccount,
+        currency: org_wallet.currency.unwrap(),
+    }
+}
+
+pub async fn delete_org_wallet(db_pool: &PgPool, org_id: Uuid) -> Wallet {
+    let delete_wallet = sqlx::query!(r#"
+        DELETE FROM ticket_market.wallets
+        WHERE owner_id=$1
+        RETURNING wallet_id, owner_id, business_name, bank_code, account_number,
+            subaccount, currency
+    "#, org_id).fetch_one(db_pool).await.unwrap();
+
+    Wallet {
+        wallet_id: delete_wallet.wallet_id,
+        owner_id: delete_wallet.owner_id,
+        business_name: delete_wallet.business_name,
+        bank_code: delete_wallet.bank_code,
+        account_number: delete_wallet.account_number,
+        subaccount: delete_wallet.subaccount,
+        currency: delete_wallet.currency.unwrap(),
     }
 }

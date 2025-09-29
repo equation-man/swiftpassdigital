@@ -5,6 +5,7 @@ use crate::models::{
     Organization, OrgPayload, CreateOrg,
     Contact, CreateContact, ContactPayload,
     CreateAccess, AccessCodesPayload,
+    CreateWallet, Wallet, WalletPayload,
     db_access::*,
 };
 use crate::helpers::{
@@ -80,6 +81,25 @@ pub async fn org_update(payload: web::Json<OrgPayload>, params: web::Path<String
     let org_id: Uuid = Uuid::parse_str(&params.into_inner()).unwrap();
     let upd_org = update_org(&app_state.db, org_id, payload.into()).await;
     HttpResponse::Ok().json(upd_org)
+}
+
+// ================== WALLETS =====================
+pub async fn new_wallet(wallet_det: web::Json<CreateWallet>, org_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
+    let owner_id: Uuid = Uuid::parse_str(&org_id.into_inner()).unwrap();
+    let new_wallet = create_org_wallet(&app_state.db, owner_id, wallet_det.into()).await;
+    HttpResponse::Ok().json(new_wallet)
+}
+
+pub async fn get_wallet(org_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
+    let owner_id: Uuid = Uuid::parse_str(&org_id.into_inner()).unwrap();
+    let wallet = get_org_wallet(&app_state.db, owner_id).await;
+    HttpResponse::Ok().json(wallet)
+}
+
+pub async fn delete_wallet(org_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
+    let owner_id: Uuid = Uuid::parse_str(&org_id.into_inner()).unwrap();
+    let wallet = delete_org_wallet(&app_state.db, owner_id).await;
+    HttpResponse::Ok().json(wallet)
 }
 
 // ================== CONTACTS ====================

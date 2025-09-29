@@ -256,7 +256,7 @@ mod tests {
         CreateOrder {
             //ticket_id: Uuid::parse_str("e2500818-b029-4c84-87fe-9dece7135549").unwrap(),
             //user_id: Uuid::parse_str("029da29a-d932-4ed4-a978-09d5caec43fe").unwrap(),
-            //user_email: "maryjohn@gmai.com".to_string(),
+            user_email: "maryjohn@gmai.com".to_string(),
             user_contact: "0719984385".to_string(),
             //ticket_price: Decimal::new(100000, 2).to_string(),
             //promo_code: "KCAA2025".to_string(),
