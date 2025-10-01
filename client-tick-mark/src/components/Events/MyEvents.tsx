@@ -1,11 +1,10 @@
 // Events component.
 "use client";
-import React from "react";
-import Event from "@/components/Events/Event";
 import { useParams } from "next/navigation";
 import { toast } from "react-hot-toast";
 import {useQuery} from "@tanstack/react-query";
 import { myEventsFn } from "@/app/organizations/actions";
+import Event from "@/components/Events/Event";
 
 type Props = {
     owner: T;

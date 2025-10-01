@@ -6,7 +6,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { createEventModalState } from "@/redux/reducers/generalReducer";
 import { createTicketModalState, updateEvDetails } from "@/redux/reducers/generalReducer";
 import { createEventFn } from "@/app/event/actions";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Event, CreateEvent } from "@/types/types";
 import { dateTimeToUtc } from "@/lib/helpers";
 import { Event } from "@/types/types";
@@ -34,10 +34,12 @@ const EventCreationModal = ({ eventOwner }: Props) => {
         dispatch(createEventModalState(state))
     }
 
+    const queryClient = useQueryClient();
     const mutation = useMutation({
         mutationKey: ['createEvent'],
         mutationFn: (inputs) => createEventFn(inputs),
         onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ["MyEvents"] });
             toast.success("Congratulations your event has been created!", {
                 iconTheme: {
                     primary: "#ecfdf5",

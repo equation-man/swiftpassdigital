@@ -1,9 +1,11 @@
 // Organization Header component
 "use client";
 import React from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Organization from "@/types/types";
 import { useDispatch } from "react-redux";
+import { useSession } from "next-auth/react";
 import { createEventModalState } from "@/redux/reducers/generalReducer";
 
 type Props = {
@@ -12,11 +14,22 @@ type Props = {
 
 
 const OrgHeader = ({ org }: Props) => {
+    const { data: session, status } = useSession();
 
     const dispatch = useDispatch();
     const handleCreateEventModDisp = (e, state) => {
         e.preventDefault();
         dispatch(createEventModalState(state))
+    }
+
+    const router = useRouter();
+    const handleManageAccount = (e) => {
+        e.preventDefault();
+        if (!!session) {
+            router.push(`/organizations/profile/${session.user.organization_id}`)
+        } else {
+            router.push("/login")
+        }
     }
 
     return (
@@ -29,10 +42,11 @@ const OrgHeader = ({ org }: Props) => {
                     <p>{org.description}</p>
                 </div>
                 <div className="flex flex-row gap-x-2">
-                    <button className="text-emerald-700 hover:cursor-pointer font-medium rounded-xs border border-emerald-600 text-xs p-1">
-                        <Link href="/organizations/profile">
-                            Manage Account
-                        </Link>
+                    <button
+                        onClick={handleManageAccount}
+                        className="text-emerald-700 hover:cursor-pointer font-medium rounded-xs border border-emerald-600 text-xs p-1"
+                    >
+                        Manage Account
                     </button>
                     <button
                         onClick={e => handleCreateEventModDisp(e, true)}

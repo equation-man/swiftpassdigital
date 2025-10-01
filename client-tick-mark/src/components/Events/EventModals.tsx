@@ -71,9 +71,9 @@ const TicketPaymentModal = ({ ticketId, eventDetails }: PayemntModalProps) => {
                     <dialog className="relative bg-neutral-50 w-96 py-6 mx-2 flex flex-col items-center shadow-lg rounded-sm">
                         <div className="flex flex-col items-center justify-center">
                             <h3 className="font-bold text-gray-700 text-md">Ticket payment and contact details</h3>
-                            <h1 className="font-bold text-lg">{eventDetails?.title}</h1>
-                            <p className="text-emerald-800 font-bold text-xl">{data?.base_price}</p>
-                            <p className="text-emerald-600 font-medium">{data?.ticket_class} {data?.ticket_type}</p>
+                            <h1 className="font-bold text-lg text-center">{eventDetails?.title}</h1>
+                            <p className="text-emerald-800 font-bold text-xl text-center">{data?.base_price}</p>
+                            <p className="text-emerald-600 font-medium text-center">{data?.ticket_class} {data?.ticket_type}</p>
                             <div className="px-2">
                                 <form id="contactForm" onSubmit={handleContactSubmission}>
                                     <div>

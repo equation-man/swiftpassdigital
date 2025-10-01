@@ -10,5 +10,6 @@ export async function loginUserFn(loginUser: LoginUser): Promise<User[] | unknow
 
 export async function loginOrgFn(loginOrg: LoginOrg): Promise<Organization | unknown> {
     const response = await axios.post(`${API_URL}/organization/admin`, loginOrg);
+    console.log("The admin login response is", response)
     return response.data;
 }

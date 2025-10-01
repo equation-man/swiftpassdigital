@@ -10,6 +10,7 @@ export async function eventInfoFn(e_id: string): Promise<Event | unknown>{
 }
 
 export async function createTicketFn(ticketDet: CreateTicket): Promise<Ticket | unknown> {
+    console.log("The ticket creation input is", ticketDet);
     const response = await axios.post(`${API_URL}/events/ticket/create`, ticketDet);
     return response.data;
 }

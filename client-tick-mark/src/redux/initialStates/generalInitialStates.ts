@@ -15,6 +15,7 @@ const evDetails = {
     event_title: null,
     start_time: null,
     finish_time: null,
+    del_event: null,
 }
 
 // Defining the initial state.
@@ -22,5 +23,6 @@ export const initialState: ModalState = {
     payment: false,
     create_ticket: false,
     create_event: false,
+    del_event: false,
     event_details: evDetails,
 }

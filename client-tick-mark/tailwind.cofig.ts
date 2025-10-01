@@ -11,6 +11,7 @@ const config: Config = {
         colors: {
             transparent: 'transparent',
             current: 'currentColor',
+            rose: colors.rose,
             'white': '#ffffff',
             'emerald': {
                 50: '#ecfdf5',

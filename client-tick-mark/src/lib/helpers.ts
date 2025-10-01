@@ -16,3 +16,12 @@ export function dateTimeToUtc(inputDate: string): string{
     // Convert to UTC ISO string.
     return localDate.toISOString();
 }
+
+type CurrencyStyle = {
+    style: string;
+    currency: string;
+};
+export function formatCurrency(value: number, currency: string="en-KE", style: CurrencyStyle={ style: 'currency', currency: 'KES' }): string {
+    const formattedVal = new Intl.NumberFormat(currency, style).format(value)
+    return formattedVal
+}

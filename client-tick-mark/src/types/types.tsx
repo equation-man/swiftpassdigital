@@ -97,3 +97,13 @@ export interface Organization {
     country: string;
     description: string;
 }
+
+export interface Wallet {
+    wallet_id: string;
+    owner_id: string;
+    business_name: string;
+    bank_code: string;
+    account_number: string;
+    subaccount: string;
+    currency: string;
+}

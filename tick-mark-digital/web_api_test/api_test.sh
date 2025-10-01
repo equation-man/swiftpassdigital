@@ -139,9 +139,17 @@ verifyTicket() {
         }'
 }
 
+# Checking the list of paystack supported banks.
+checkBanks() {
+    curl -X GET \
+        "https://api.paystack.co/bank" \
+        -H 'Authorization: Bearer sk_test_be74a6aae684bbcfb2a29831ca06c50d2c879000'
+}
+
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 echo "Testing SwiftPassDigital Software"
-result=$(createTicket)
+result=$(checkBanks)
+# echo "$result" | jq '.data[] | select(.country == "Nigeria")'
 echo "$result" | jq
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 

@@ -9,6 +9,7 @@ import { EventDate, ClientOnly } from "@/components/Events/EventDateTime";
 import TicketPaymentModal from "@/components/Events/EventModals";
 import { updatePaymentModalState } from "@/redux/reducers/generalReducer";
 import { Ticket } from "@/types/types";
+import { formatCurrency } from "@/lib/helpers";
 
 type TicketProps = {
     ticketDetails: Ticket;
@@ -32,7 +33,7 @@ const Info = ({ ticketDetails, ticketIdViewFn }: TicketProps ) => {
               alt="Shoes" />
           </figure>
           <div className="card-body">
-            <h2 className="card-title">{ticketDetails.base_price}</h2>
+            <h2 className="card-title">{formatCurrency(ticketDetails.base_price)}</h2>
             <p className="text-xs text-emerald-200 font-medium">{ticketDetails.ticket_class} {ticketDetails.ticket_type}</p>
             <p>{ticketDetails.description}</p>
             <div>

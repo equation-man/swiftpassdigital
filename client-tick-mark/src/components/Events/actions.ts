@@ -8,3 +8,8 @@ export async function fetchEventsFn(): Promise<Event[] | unknown>{
     const events = await axios.get(`${API_URL}/events/list`);
     return events.data;
 }
+
+export async function deleteEventFn(event_id: string): Promise<Event | unknown> {
+    const del_event = await axios.delete(`${API_URL}/events/delete/${event_id}`);
+    return del_event;
+}

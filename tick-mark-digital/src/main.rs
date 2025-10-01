@@ -12,6 +12,7 @@ use state::AppState;
 use actix_web::{cookie::Key, App, HttpServer, web, middleware::Logger};
 use actix_identity::IdentityMiddleware;
 use actix_session::{SessionMiddleware, storage::CookieSessionStore};
+use actix_cors::Cors;
 use env_logger::Env;
 use log::info;
 use dotenvy::dotenv;
@@ -28,10 +29,12 @@ async fn main() -> io::Result<()> {
 
     // Database connections
     let shared_data = AppState::new().await;
+
     // Construct app and configure routes
     let app = move || {
         App::new()
             .wrap(Logger::default()) // Logger middleware
+            .wrap(Cors::permissive()) // Permissive used for development
             .wrap(IdentityMiddleware::default())
             .wrap(
                 SessionMiddleware::builder(CookieSessionStore::default(), secret_key.clone())
@@ -43,5 +46,5 @@ async fn main() -> io::Result<()> {
             .configure(orgs_routes)
             .configure(events_routes)
     };
-    HttpServer::new(app).bind("127.0.0.1:5000")?.run().await
+    HttpServer::new(app).bind(("0.0.0.0", 5000))?.run().await
 }

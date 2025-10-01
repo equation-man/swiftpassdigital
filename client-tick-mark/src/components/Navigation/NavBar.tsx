@@ -10,7 +10,7 @@ const NavBar = () => {
     const router = useRouter();
 
     const handleRouteToDashboard = () => {
-        if (!!session.user) {
+        if (!!session) {
             router.push(`/organizations/${session.user.organization_id}`)
         } else {
             router.push("/login")
