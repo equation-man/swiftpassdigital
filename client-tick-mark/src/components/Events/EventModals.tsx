@@ -8,6 +8,7 @@ import { updatePaymentModalState } from "@/redux/reducers/generalReducer";
 import { singleTicketInfoFn, purchaseTicketFn } from "@/app/event/actions";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Event } from "@/types/types";
+import { formatCurrency } from "@/lib/helpers";
 
 // Defining props for this component.
 type PaymentModalProps = {
@@ -45,16 +46,18 @@ const TicketPaymentModal = ({ ticketId, eventDetails }: PayemntModalProps) => {
         mutationKey: ['purchaseOrder'],
         mutationFn: (orderInputData) => purchaseTicketFn(orderInputData),
         onSuccess: (data) => {
-            toast.success("Success! Check your email for access code", {
+            toast.success("Checkout initiated redirecting to payments page", {
                 iconTheme: {
                     primary: "#ecfdf5",
                     secondary: "#047857",
                 },
             })
+            //console.log("The payment result will be", data)
+            window.location.href = data.authorization_url;
             dispatch(updatePaymentModalState(false));
-            //router.push(redirect to payment url)
         },
         onError: (err: Error) => {
+            toast.error("Failed initiating payments processing")
         }
     });
     const handleContactSubmission = async (event) => {
@@ -72,7 +75,7 @@ const TicketPaymentModal = ({ ticketId, eventDetails }: PayemntModalProps) => {
                         <div className="flex flex-col items-center justify-center">
                             <h3 className="font-bold text-gray-700 text-md">Ticket payment and contact details</h3>
                             <h1 className="font-bold text-lg text-center">{eventDetails?.title}</h1>
-                            <p className="text-emerald-800 font-bold text-xl text-center">{data?.base_price}</p>
+                            <p className="text-emerald-800 font-bold text-xl text-center">{formatCurrency(data?.base_price)}</p>
                             <p className="text-emerald-600 font-medium text-center">{data?.ticket_class} {data?.ticket_type}</p>
                             <div className="px-2">
                                 <form id="contactForm" onSubmit={handleContactSubmission}>

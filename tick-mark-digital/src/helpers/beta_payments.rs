@@ -174,7 +174,7 @@ mod tests {
         InitializeSplitPayment {
             email: "bigtechguyz@gmail.com".to_string(),
             amount: "1000".to_string(),
-            subaccount: "ACCT_xa89kyc7gtujnzh".to_string(),
+            subaccount: "ACCT_cmjmenayvnae4hw".to_string(),
             callback_url: "http://localhost:3000/event/5f51badb-acfe-4b0f-8b9d-6a2d96a5fd1e".to_string()
         }
     }
@@ -190,9 +190,8 @@ mod tests {
     #[tokio::test]
     #[ignore]
     async fn initialize_payment_test() {
-        //let init_trans = init_split_trans(init_split_payment_url(), init_split_fixture()).await;
-        //println!("The initialized split transaction result is {:#?}", init_trans);
-        todo!();
+        let init_trans = init_split_trans(init_split_fixture()).await;
+        println!("The initialized split transaction result is {:#?}", init_trans);
     }
 
     #[tokio::test]

@@ -7,6 +7,10 @@ use crate::models::{
     Ticket, AddTicket, TicketPayload, TickStatus,
     db_access::*,
 };
+use crate::helpers::{
+    InitializeSplitPayment,
+    init_split_trans,
+};
 use nanoid::nanoid;
 use rust_decimal::Decimal;
 use std::str::FromStr;
@@ -115,8 +119,8 @@ pub async fn ticket_info(ticket_id: web::Path<String>, app_state: web::Data<AppS
 }
 
 // ============================== ORDER TICKETS =========================
-/// Ordering a ticket. Payment action goes here.
-pub async fn create_order(payload: web::Json<CreateOrder>, token_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
+/// Ordering a ticket. Payment or purchase action goes here.
+pub async fn create_order(payload: web::Json<CreateOrder>, ticket_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
     let order_payload: CreateOrder = payload.into();
     let alphabet: [char; 32] = [
         'A','B','C','D','E','F','G','H','J','K','L','M',
@@ -124,18 +128,34 @@ pub async fn create_order(payload: web::Json<CreateOrder>, token_id: web::Path<S
         '2', '3', '4', '5', '6', '7', '8', '9'
     ];
     let entrance_code_gen = nanoid!(8, &alphabet);
-    let t_id: Uuid = Uuid::parse_str(&token_id.into_inner()).unwrap();
+    let t_id: Uuid = Uuid::parse_str(&ticket_id.into_inner()).unwrap();
     let ticket_det = get_single_ticket(&app_state.db, t_id).await;
-    let order_details = OrderDetails {
-        ticket_id: ticket_det.ticket_id.clone(),
-        user_email: order_payload.user_email,
-        user_contact: order_payload.user_contact,
-        ticket_status: TickStatus::Pending,
-        order_limit: ticket_det.capacity,
-        ticket_price: Decimal::from_str(&ticket_det.base_price).unwrap(),
+    let target_event = get_event(&app_state.db, ticket_det.event_id.clone()).await;
+    let target_wallet = get_org_wallet(&app_state.db, target_event.owner_id.clone()).await;
+    let initSplitPymt = InitializeSplitPayment {
+        email: order_payload.user_email,
+        amount: ticket_det.base_price,
+        subaccount: target_wallet.subaccount_code,
+        callback_url: format!("http://localhost:3000/verify/{}", ticket_det.ticket_id),
     };
-    let new_order = add_order(&app_state.db, entrance_code_gen, order_details).await;
-    HttpResponse::Ok().json(new_order)
+    match init_split_trans(initSplitPymt).await {
+        Ok(init_payment) => {
+            let split_payment_data = init_payment.data.unwrap();
+            //let order_details = OrderDetails {
+            //    ticket_id: ticket_det.ticket_id.clone(),
+            //    user_email: order_payload.user_email,
+            //    user_contact: order_payload.user_contact,
+            //    ticket_status: TickStatus::Pending,
+            //    order_limit: ticket_det.capacity,
+            //    ticket_price: Decimal::from_str(&ticket_det.base_price).unwrap(),
+            //};
+            //let new_order = add_order(&app_state.db, entrance_code_gen, order_details).await;
+            HttpResponse::Ok().json(split_payment_data)
+        },
+        Err(err) => {
+            HttpResponse::InternalServerError().body("Error processing transaction")
+        }
+    }
 }
 
 /// Verify order purchase. Checking or confirming the ticket goes here.
@@ -197,6 +217,7 @@ mod tests {
         // Convert back
         DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(rand_ts, rand_nanos), Utc)
     }
+
 
     // ====================== FIXTURES ==================
     fn create_event_info() -> CreateEvent {
@@ -354,9 +375,10 @@ mod tests {
     async fn create_order_test() {
         let test_state: web::Data<AppState> = web::Data::new(app_state().await);
         let order_payload = web::Json(create_order_info());
-        //let ticket_order = create_order(order_payload, test_state).await;
-        //println!("The ticket order is {:#?}", ticket_order.body());
-        //assert_eq!(ticket_order.status(), StatusCode::OK);
+        let ticket_id = web::Path::from("d98016ac-cf3c-4d67-bc2c-614bb3132d62".to_string());
+        let ticket_order = create_order(order_payload, ticket_id, test_state).await;
+        println!("The ticket order is {:#?}", ticket_order.body());
+        assert_eq!(ticket_order.status(), StatusCode::OK);
     }
 
     #[actix_web::test]

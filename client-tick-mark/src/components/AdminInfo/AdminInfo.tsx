@@ -83,15 +83,28 @@ const AdminInfo = ({ org }: Props) => {
                     <p>{org.description}</p>
                 </div>
                 <div>
-                    <div className="w-64 border border-emerald-500 border-2px rounded-sm h-20 py-2 my-3 flex flex-col items-center justify-center hover:cursor-pointer">
+                    <div className="w-90 border border-emerald-500 border-2px rounded-sm py-2 my-3 flex flex-col items-center justify-center hover:cursor-pointer">
+                        <h3 className="font-semibold text-gray-500">Wallet Details</h3>
                         {data ? (
-                            <button className="bg-emerald-700 text-white px-2 py-1 rounded-sm text-sm flex flex-row items-center gap-x-1 hover:cursor-pointer">
-                                Edit wallet
-                                <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24">
-                                    <path fill="currentColor" d="M19 12a1 1 0 0 1 1-1h.01a1 1 0 1 1 0 2H20a1 1 0 0 1-1-1"></path>
-                                    <path fill="currentColor" fillRule="evenodd" d="M18.6 4H3.4A2.4 2.4 0 0 0 1 6.4v11.2A2.4 2.4 0 0 0 3.4 20h15.2a2.4 2.4 0 0 0 2.4-2.4V16h.4a2.6 2.6 0 0 0 2.6-2.6v-2.8A2.6 2.6 0 0 0 21.4 8H21V6.4A2.4 2.4 0 0 0 18.6 4m-2 6a.6.6 0 0 0-.6.6v2.8a.6.6 0 0 0 .6.6h4.8a.6.6 0 0 0 .6-.6v-2.8a.6.6 0 0 0-.6-.6z" clipRule="evenodd"></path>
-                                </svg>
-                            </button>
+                            <div className="w-full p-2">
+                                <div className="">
+                                    <p className="text-emerald-800"><span className="text-gray-800 font-medium">Account Number:</span> {data.account_number}</p>
+                                    <p className="text-emerald-800"><span className="text-gray-800 font-medium">Currency:</span> {data.currency}</p>
+                                    <p className="text-emerald-800"><span className="text-gray-800 font-medium">Service fee(percent):</span> {data.percentage_charge}</p>
+                                    <p className="text-emerald-800"><span className="text-gray-800 font-medium">Settlement bank:</span> {data.settlement_bank}</p>
+                                    <p className="text-emerald-800"><span className="text-gray-800 font-medium">Wallet email:</span> {data.wallet_email}</p>
+                                </div>
+                                <button className="bg-rose-600 btn-block text-white px-2 py-1 rounded-sm text-sm flex flex-row items-center gap-x-1 hover:cursor-pointer">
+                                    Delete/Change Wallet
+                                    <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24">
+                                        <path fill="currentColor" d="M19 12a1 1 0 0 1 1-1h.01a1 1 0 1 1 0 2H20a1 1 0 0 1-1-1"></path>
+                                        <path fill="currentColor" fillRule="evenodd" d="M18.6 4H3.4A2.4 2.4 0 0 0 1 6.4v11.2A2.4 2.4 0 0 0 3.4 20h15.2a2.4 2.4 0 0 0 2.4-2.4V16h.4a2.6 2.6 0 0 0 2.6-2.6v-2.8A2.6 2.6 0 0 0 21.4 8H21V6.4A2.4 2.4 0 0 0 18.6 4m-2 6a.6.6 0 0 0-.6.6v2.8a.6.6 0 0 0 .6.6h4.8a.6.6 0 0 0 .6-.6v-2.8a.6.6 0 0 0-.6-.6z" clipRule="evenodd"></path>
+                                    </svg>
+                                </button>
+                                {/*Delete wallet*/}
+                                <div>
+                                </div>
+                            </div>
                         ):(
                             <button onClick={(e) => handleWalletCreation(e, true)}
                                 className="bg-emerald-700 text-white px-2 py-1 rounded-sm text-sm flex flex-row items-center gap-x-1 hover:cursor-pointer"

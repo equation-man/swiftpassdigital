@@ -98,12 +98,12 @@ const EventInfo = () => {
     return (
         <div className="p-2">
             <div className="grid grid-col items-center justify-center mt-8">
-                <div className="py-3">
-                    <h1 className="text-emrald-800 text-2xl font-bold">{currentEvent?.title}</h1>
+                <div className="py-3 flex flex-col justify-center items-center">
+                    <h1 className="text-emrald-800 text-2xl font-bold text-center">{currentEvent?.title}</h1>
                     <h3 className="text-gray-600 font-bold text-lg">tickets</h3>
                 </div>
                 {data ? (
-                    <div className="flex flex-col gap-y-4">
+                    <div className="flex flex-col gap-y-4 justify-center items-center">
                         {data.map((ticket) => <Info key={ticket.ticket_id} ticketDetails={ticket} ticketIdViewFn={handleShowTicketPaymentModal}/>)}
                     </div>
                 ):(

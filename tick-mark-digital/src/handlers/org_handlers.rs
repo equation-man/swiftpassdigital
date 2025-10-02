@@ -14,7 +14,7 @@ use crate::helpers::{
     hash_password, verify_password,
     load_secret_key,
     SubAccount, InitializeSplitPayment, PaystackWalletDetails,
-    create_subaccnt, init_split_trans, verify_trans,
+    create_subaccnt,
 };
 use uuid::Uuid;
 use nanoid::nanoid;
