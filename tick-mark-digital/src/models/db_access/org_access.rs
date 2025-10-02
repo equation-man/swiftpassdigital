@@ -410,7 +410,7 @@ pub async fn get_org_wallet(db_pool: &PgPool, org_id: Uuid) -> Wallet {
         wallet_id: org_wallet.wallet_id,
         owner_id: org_wallet.owner_id,
         business_name: org_wallet.business_name.unwrap(),
-        bank_code: org_wallet.bank_code.unwrap(),
+        bank_code: "NOT_SET".to_string(),
         account_number: org_wallet.account_number.unwrap(),
         percentage_charge: org_wallet.percentage_charge.unwrap().to_string(),
         settlement_bank: org_wallet.settlement_bank.unwrap(),
@@ -420,18 +420,18 @@ pub async fn get_org_wallet(db_pool: &PgPool, org_id: Uuid) -> Wallet {
     }
 }
 
-pub async fn delete_org_wallet(db_pool: &PgPool, org_id: Uuid) -> Wallet {
+pub async fn delete_org_wallet(db_pool: &PgPool, wallet_id: Uuid) -> Wallet {
     let delete_wallet = sqlx::query!(r#"
         DELETE FROM ticket_market.wallets
-        WHERE owner_id=$1
+        WHERE wallet_id=$1
         RETURNING *
-    "#, org_id).fetch_one(db_pool).await.unwrap();
+    "#, wallet_id).fetch_one(db_pool).await.unwrap();
 
     Wallet {
         wallet_id: delete_wallet.wallet_id,
         owner_id: delete_wallet.owner_id,
         business_name: delete_wallet.business_name.unwrap(),
-        bank_code: delete_wallet.bank_code.unwrap(),
+        bank_code: "NOT_SET".to_string(),
         account_number: delete_wallet.account_number.unwrap(),
         percentage_charge: delete_wallet.percentage_charge.unwrap().to_string(),
         settlement_bank: delete_wallet.settlement_bank.unwrap(),

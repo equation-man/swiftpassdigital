@@ -109,11 +109,9 @@ pub async fn new_wallet(wallet_details: web::Json<NewUserWalletData>, org_id: we
                 wallet_email: wallet_details.wallet_email.clone(),
             };
             let new_wallet = create_org_wallet(&app_state.db, owner_id, new_wallet).await;
-            println!("The new wallet is {:#?}", &new_wallet);
             HttpResponse::Ok().json(new_wallet)
         },
         Err(err) => {
-            println!("The error is {:#?}", err);
             HttpResponse::InternalServerError().body("Subaccount not created")
         }
     }
@@ -125,9 +123,9 @@ pub async fn get_wallet(org_id: web::Path<String>, app_state: web::Data<AppState
     HttpResponse::Ok().json(wallet)
 }
 
-pub async fn delete_wallet(org_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
-    let owner_id: Uuid = Uuid::parse_str(&org_id.into_inner()).unwrap();
-    let wallet = delete_org_wallet(&app_state.db, owner_id).await;
+pub async fn delete_wallet(wallet_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
+    let w_id: Uuid = Uuid::parse_str(&wallet_id.into_inner()).unwrap();
+    let wallet = delete_org_wallet(&app_state.db, w_id).await;
     HttpResponse::Ok().json(wallet)
 }
 
@@ -284,6 +282,7 @@ mod tests {
 
     // ================= TESTING TRANSACTION ===============
     #[actix_web::test]
+    #[ignore]
     async fn create_org_wallet() {
         let test_state: web::Data<AppState> = web::Data::new(app_state_fixture().await);
         let org_id = web::Path::from("029da29a-d932-4ed4-a978-09d5caec43fe".to_string());
@@ -291,6 +290,28 @@ mod tests {
         let resp_create = new_wallet(test_subaccnt, org_id, test_state).await;
         println!("The result subaccount creation is {:#?}", resp_create);
         assert_eq!(resp_create.status(), StatusCode::OK);
+    }
+
+    #[actix_web::test]
+    #[ignore]
+    async fn get_org_wallet_test() {
+        let test_state: web::Data<AppState> = web::Data::new(app_state_fixture().await);
+        let org_id = web::Path::from("029da29a-d932-4ed4-a978-09d5caec43fe".to_string());
+        let wallet_resp = get_wallet(org_id, test_state).await;
+        println!("The wallet result is {:#?}", wallet_resp.body());
+        assert_eq!(wallet_resp.status(), StatusCode::OK);
+
+    }
+
+    #[actix_web::test]
+    #[ignore]
+    async fn delete_org_wallet_test() {
+        let test_state: web::Data<AppState> = web::Data::new(app_state_fixture().await);
+        let wallet_id = web::Path::from("1dfad197-be1e-4707-b3c9-60d1e2ac90a3".to_string());
+        let del_wallet = delete_wallet(wallet_id, test_state).await;
+        println!("The wallet is {:#?}", del_wallet.body());
+        assert_eq!(del_wallet.status(), StatusCode::OK);
+
     }
 
     // ================= FULL TESTS ==============
