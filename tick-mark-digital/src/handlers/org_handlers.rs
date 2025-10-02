@@ -5,7 +5,7 @@ use crate::models::{
     Organization, OrgPayload, CreateOrg,
     Contact, CreateContact, ContactPayload,
     CreateAccess, AccessCodesPayload,
-    CreateWallet, Wallet, WalletPayload,
+    NewUserWalletData, CreateWallet, Wallet, WalletPayload,
     db_access::*,
 };
 use crate::helpers::{
@@ -13,6 +13,8 @@ use crate::helpers::{
     Claims, AuthResponse, generate_jwt,
     hash_password, verify_password,
     load_secret_key,
+    SubAccount, InitializeSplitPayment, PaystackWalletDetails,
+    create_subaccnt, init_split_trans, verify_trans,
 };
 use uuid::Uuid;
 use nanoid::nanoid;
@@ -84,10 +86,37 @@ pub async fn org_update(payload: web::Json<OrgPayload>, params: web::Path<String
 }
 
 // ================== WALLETS =====================
-pub async fn new_wallet(wallet_det: web::Json<CreateWallet>, org_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
-    let owner_id: Uuid = Uuid::parse_str(&org_id.into_inner()).unwrap();
-    let new_wallet = create_org_wallet(&app_state.db, owner_id, wallet_det.into()).await;
-    HttpResponse::Ok().json(new_wallet)
+pub async fn new_wallet(wallet_details: web::Json<NewUserWalletData>, org_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
+    let details = SubAccount {
+        business_name: wallet_details.business_name.clone(),
+        settlement_bank: wallet_details.settlement_bank.clone(),
+        account_number: wallet_details.account_number.clone(),
+        percentage_charge: Some(6),
+        description: Some("Subaccount wallet created".to_string()),
+    };
+    match create_subaccnt(details).await {
+        Ok(subaccnt_res) => {
+            let res = subaccnt_res.data.unwrap();
+            let owner_id: Uuid = Uuid::parse_str(&org_id.into_inner()).unwrap();
+            let new_wallet = CreateWallet {
+                owner_id: owner_id,
+                business_name: res.business_name.clone(),
+                account_number: res.account_number.clone(),
+                settlement_bank: res.settlement_bank.clone(),
+                percentage_charge: res.percentage_charge.clone().to_string(),
+                subaccount_code: res.subaccount_code.clone(),
+                currency: res.currency.clone(),
+                wallet_email: wallet_details.wallet_email.clone(),
+            };
+            let new_wallet = create_org_wallet(&app_state.db, owner_id, new_wallet).await;
+            println!("The new wallet is {:#?}", &new_wallet);
+            HttpResponse::Ok().json(new_wallet)
+        },
+        Err(err) => {
+            println!("The error is {:#?}", err);
+            HttpResponse::InternalServerError().body("Subaccount not created")
+        }
+    }
 }
 
 pub async fn get_wallet(org_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
@@ -244,6 +273,26 @@ mod tests {
         AppState::new().await
     }
 
+    fn create_wallet_fixture() -> NewUserWalletData {
+        NewUserWalletData {
+            business_name: "Test Organization Ltd".to_string(),
+            settlement_bank: "MPESA".to_string(),
+            account_number: "0711111111".to_string(),
+            wallet_email: "mytestemail@gmail.com".to_string(),
+        }
+    }
+
+    // ================= TESTING TRANSACTION ===============
+    #[actix_web::test]
+    async fn create_org_wallet() {
+        let test_state: web::Data<AppState> = web::Data::new(app_state_fixture().await);
+        let org_id = web::Path::from("029da29a-d932-4ed4-a978-09d5caec43fe".to_string());
+        let test_subaccnt = web::Json(create_wallet_fixture());
+        let resp_create = new_wallet(test_subaccnt, org_id, test_state).await;
+        println!("The result subaccount creation is {:#?}", resp_create);
+        assert_eq!(resp_create.status(), StatusCode::OK);
+    }
+
     // ================= FULL TESTS ==============
     #[actix_web::test]
     #[ignore]
@@ -344,7 +393,6 @@ mod tests {
         let lst_access = list_access_codes(filter_pyld, param, test_state).await;
         println!("The list of access codes are {:#?}", lst_access.body());
         assert_eq!(lst_access.status(), StatusCode::OK);
-
     }
 
 }

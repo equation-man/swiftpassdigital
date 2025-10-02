@@ -10,6 +10,8 @@ use crate::models::{
     Wallet, CreateWallet, WalletPayload
 };
 use sqlx::postgres::PgPool;
+use rust_decimal::Decimal;
+use std::str::FromStr;
 use sqlx::Row;
 use uuid::Uuid;
 
@@ -373,24 +375,28 @@ pub async fn remove_permission(db_pool: &PgPool, permission_id: Uuid) -> Permiss
 
 // ============================ ORGANIZATION WALLET =====================
 pub async fn create_org_wallet(db_pool: &PgPool, org_id: Uuid, new_wallet: CreateWallet) -> Wallet {
+    let percentage_commission = Decimal::from_str(&new_wallet.percentage_charge).unwrap();
     let n_wallet = sqlx::query!(r#"
         INSERT INTO ticket_market.wallets
-            (owner_id, business_name, bank_code, account_number, subaccount, currency)
+            (owner_id, business_name, account_number, settlement_bank, percentage_charge, subaccount_code, currency, wallet_email)
         VALUES
-            ($1, $2, $3, $4, $5, $6)
-        RETURNING wallet_id, owner_id, business_name, bank_code, account_number,
-            subaccount, currency
-    "#, org_id, new_wallet.business_name, new_wallet.bank_code, new_wallet.account_number,
-    new_wallet.subaccount, new_wallet.currency).fetch_one(db_pool).await.unwrap();
+            ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING *
+    "#, org_id, new_wallet.business_name, new_wallet.account_number, new_wallet.settlement_bank,
+    percentage_commission, new_wallet.subaccount_code, new_wallet.currency,
+    new_wallet.wallet_email).fetch_one(db_pool).await.unwrap();
 
     Wallet {
         wallet_id: n_wallet.wallet_id,
         owner_id: n_wallet.owner_id,
-        business_name: n_wallet.business_name,
-        bank_code: n_wallet.bank_code,
-        account_number: n_wallet.account_number,
-        subaccount: n_wallet.subaccount,
-        currency: n_wallet.currency.unwrap()
+        business_name: n_wallet.business_name.unwrap(),
+        bank_code: "NOT_SET".to_string(), //n_wallet.bank_code,
+        account_number: n_wallet.account_number.unwrap(),
+        percentage_charge: n_wallet.percentage_charge.unwrap().to_string(),
+        settlement_bank: n_wallet.settlement_bank.unwrap(),
+        currency: n_wallet.currency.unwrap(),
+        subaccount_code: n_wallet.subaccount_code.unwrap(),
+        wallet_email: n_wallet.wallet_email.unwrap(),
     }
 }
 
@@ -403,11 +409,14 @@ pub async fn get_org_wallet(db_pool: &PgPool, org_id: Uuid) -> Wallet {
     Wallet {
         wallet_id: org_wallet.wallet_id,
         owner_id: org_wallet.owner_id,
-        business_name: org_wallet.business_name,
-        bank_code: org_wallet.bank_code,
-        account_number: org_wallet.account_number,
-        subaccount: org_wallet.subaccount,
+        business_name: org_wallet.business_name.unwrap(),
+        bank_code: org_wallet.bank_code.unwrap(),
+        account_number: org_wallet.account_number.unwrap(),
+        percentage_charge: org_wallet.percentage_charge.unwrap().to_string(),
+        settlement_bank: org_wallet.settlement_bank.unwrap(),
         currency: org_wallet.currency.unwrap(),
+        subaccount_code: org_wallet.subaccount_code.unwrap(),
+        wallet_email: org_wallet.wallet_email.unwrap(),
     }
 }
 
@@ -415,17 +424,19 @@ pub async fn delete_org_wallet(db_pool: &PgPool, org_id: Uuid) -> Wallet {
     let delete_wallet = sqlx::query!(r#"
         DELETE FROM ticket_market.wallets
         WHERE owner_id=$1
-        RETURNING wallet_id, owner_id, business_name, bank_code, account_number,
-            subaccount, currency
+        RETURNING *
     "#, org_id).fetch_one(db_pool).await.unwrap();
 
     Wallet {
         wallet_id: delete_wallet.wallet_id,
         owner_id: delete_wallet.owner_id,
-        business_name: delete_wallet.business_name,
-        bank_code: delete_wallet.bank_code,
-        account_number: delete_wallet.account_number,
-        subaccount: delete_wallet.subaccount,
+        business_name: delete_wallet.business_name.unwrap(),
+        bank_code: delete_wallet.bank_code.unwrap(),
+        account_number: delete_wallet.account_number.unwrap(),
+        percentage_charge: delete_wallet.percentage_charge.unwrap().to_string(),
+        settlement_bank: delete_wallet.settlement_bank.unwrap(),
         currency: delete_wallet.currency.unwrap(),
+        subaccount_code: delete_wallet.subaccount_code.unwrap(),
+        wallet_email: delete_wallet.wallet_email.unwrap(),
     }
 }

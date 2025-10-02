@@ -2,92 +2,115 @@
 use reqwest::Error;
 use serde::{Serialize, Deserialize};
 use actix_web::{web};
+use dotenvy::dotenv;
+use std::env;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SubAccount {
-    business_name: String,
-    settlement_bank: String,
-    account_number: String,
-    percentage_charge: Option<f64>,
-    description: Option<String>,
+    pub business_name: String,
+    pub settlement_bank: String,
+    pub account_number: String,
+    pub percentage_charge: Option<u8>,
+    pub description: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SubAccountResult {
-    status: bool,
-    message: String,
-    data: Option<SubAccountResData>,
+    pub status: bool,
+    pub message: String,
+    pub data: Option<SubAccountResData>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SubAccountResData {
-    business_name: String,
-    account_number: String,
-    percentage_charge: u8,
-    settlement_bank: String,
-    currency: String,
-    bank: u64,
-    integration: u64,
-    domain: String,
-    account_name: String,
-    product: String,
-    managed_by_integration: u64,
-    subaccount_code: String,
-    is_verified: bool,
-    settlement_schedule: String,
-    active: bool,
-    migrate: bool,
-    id: u64,
-    createdAt: String,
-    updatedAt: String,
+    pub business_name: String,
+    pub account_number: String,
+    pub percentage_charge: u8,
+    pub settlement_bank: String,
+    pub currency: String,
+    pub bank: u64,
+    pub integration: u64,
+    pub domain: String,
+    //account_name: String,
+    pub product: String,
+    pub managed_by_integration: u64,
+    pub subaccount_code: String,
+    pub is_verified: bool,
+    pub settlement_schedule: String,
+    pub active: bool,
+    pub migrate: bool,
+    pub id: u64,
+    pub createdAt: String,
+    pub updatedAt: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InitializeSplitPayment {
-    email: String,
-    amount: String,
-    subaccount: String,
-    callback_url: String,
+    pub email: String,
+    pub amount: String,
+    pub subaccount: String,
+    pub callback_url: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InitializeSplitPaymentResult {
-    status: bool,
-    message: String,
-    data: Option<InitializeSplitPaymentResData>,
+    pub status: bool,
+    pub message: String,
+    pub data: Option<InitializeSplitPaymentResData>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InitializeSplitPaymentResData {
-    authorization_url: String,
-    access_code: String,
-    reference: String,
+    pub authorization_url: String,
+    pub access_code: String,
+    pub reference: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VerifyPaymentRes {
-    status: bool,
-    message: String,
-    data: Option<VerifyPaymentResData>,
+    pub status: bool,
+    pub message: String,
+    pub data: Option<VerifyPaymentResData>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VerifyPaymentResData {
-    id: u64,
-    domain: String,
-    status: String,
-    reference: String,
-    receipt_number: Option<String>,
-    amount: u64,
-    message: Option<String>,
-    gateway_response: String,
+    pub id: u64,
+    pub domain: String,
+    pub status: String,
+    pub reference: String,
+    pub receipt_number: Option<String>,
+    pub amount: u64,
+    pub message: Option<String>,
+    pub gateway_response: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PaystackWalletDetails {
+    pub owner_id: String,
+    pub business_name: String,
+    pub account_number: String,
+    pub percentage_charge: f64,
+    pub settlement_bank: String,
+    pub currency: String,
+    pub subaccount_code: String,
+    pub wallet_email: String,
+}
+
+/// Load payment url and access key.
+async fn paystack_integration() -> (String, String) {
+    dotenv().ok();
+    let payment_url = env::var("PAYSTACK_URL").expect("Provide paystack url");
+    let access_token = env::var("PAYSTACK_ACCESS_KEY").expect("Provide access token");
+    (payment_url, access_token)
 }
 
 /// Creating a subaccount where to deposit ticket sales funds after fees.
-async fn create_subaccnt(payment_url: String, subaccount_payload: SubAccount) -> Result<SubAccountResult, Error> {
+pub async fn create_subaccnt(subaccount_payload: SubAccount) -> Result<SubAccountResult, Error> {
+    let (payment_url, access_key) = paystack_integration().await;
     let client = reqwest::Client::new();
-    let res = client.post(&payment_url)
-        .bearer_auth("sk_test_be74a6aae684bbcfb2a29831ca06c50d2c879000")
+    let res = client.post(format!("{}/subaccount",&payment_url))
+        .bearer_auth(&access_key)
         .header("Content-Type", "application/json")
         .json(&subaccount_payload)
         .send().await?;
@@ -96,10 +119,11 @@ async fn create_subaccnt(payment_url: String, subaccount_payload: SubAccount) ->
 }
 
 /// Initialize split transactions.
-async fn init_split_trans(payment_url: String, payload: InitializeSplitPayment) -> Result<InitializeSplitPaymentResult, Error> {
+pub async fn init_split_trans(payload: InitializeSplitPayment) -> Result<InitializeSplitPaymentResult, Error> {
+    let (payment_url, access_key) = paystack_integration().await;
     let client = reqwest::Client::new();
-    let res = client.post(&payment_url)
-        .bearer_auth("sk_test_be74a6aae684bbcfb2a29831ca06c50d2c879000")
+    let res = client.post(format!("{}/transaction/initialize",&payment_url))
+        .bearer_auth(&access_key)
         .header("Content-Type", "application/json")
         .json(&payload)
         .send().await?;
@@ -108,10 +132,11 @@ async fn init_split_trans(payment_url: String, payload: InitializeSplitPayment) 
 }
 
 /// Verify transactions
-async fn verify_trans(target_url: String) -> Result<VerifyPaymentRes, Error> {
+pub async fn verify_trans(reference: String, access_key: String) -> Result<VerifyPaymentRes, Error> {
+    let (payment_url, access_key) = paystack_integration().await;
     let client = reqwest::Client::new();
-    let res = client.get(&target_url)
-        .bearer_auth("sk_test_be74a6aae684bbcfb2a29831ca06c50d2c879000")
+    let res = client.get(format!("{}/transaction/verify/{}",&payment_url, &reference))
+        .bearer_auth(&access_key)
         .send().await?;
     let verify_result: VerifyPaymentRes = res.json().await?;
     Ok(verify_result)
@@ -125,8 +150,8 @@ mod tests {
         SubAccount {
             business_name: "Organization Ltd".to_string(),
             settlement_bank: "MPESA".to_string(),
-            account_number: "254711111111".to_string(),
-            percentage_charge: Some(6.0),
+            account_number: "0711111111".to_string(),
+            percentage_charge: Some(6),
             description: Some("Subaccount wallet for Organization Ltd".to_string()),
         }
     }
@@ -156,23 +181,26 @@ mod tests {
 
     // ========== REAL TESTS ==========
     #[tokio::test]
+    #[ignore]
     async fn creating_sub_account_test() {
-        let sub_accnt = create_subaccnt(sub_accnt_url(), sub_accnt_fixture()).await;
+        let sub_accnt = create_subaccnt(sub_accnt_fixture()).await;
         println!("The sub account creation {:#?}", sub_accnt);
     }
 
     #[tokio::test]
     #[ignore]
     async fn initialize_payment_test() {
-        let init_trans = init_split_trans(init_split_payment_url(), init_split_fixture()).await;
-        println!("The initialized split transaction result is {:#?}", init_trans);
+        //let init_trans = init_split_trans(init_split_payment_url(), init_split_fixture()).await;
+        //println!("The initialized split transaction result is {:#?}", init_trans);
+        todo!();
     }
 
     #[tokio::test]
     #[ignore]
     async fn verfying_payment_test() {
-        let url = verify_payment_url("mz2233rb2z");
-        let verification = verify_trans(url).await;
-        println!("The payment url is result is {:#?}", verification);
+        //let url = verify_payment_url("mz2233rb2z");
+        //let verification = verify_trans(url).await;
+        //println!("The payment url is result is {:#?}", verification);
+        todo!();
     }
 }

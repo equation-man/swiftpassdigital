@@ -373,8 +373,11 @@ pub struct Wallet {
     pub business_name: String,
     pub bank_code: String,
     pub account_number: String,
-    pub subaccount: String,
+    pub percentage_charge: String,
+    pub settlement_bank: String,
     pub currency: String,
+    pub subaccount_code: String,
+    pub wallet_email: String,
 }
 
 impl From<web::Json<Wallet>> for Wallet {
@@ -385,31 +388,11 @@ impl From<web::Json<Wallet>> for Wallet {
             business_name: wallet.business_name.clone(),
             bank_code: wallet.bank_code.clone(),
             account_number: wallet.account_number.clone(),
-            subaccount: wallet.subaccount.clone(),
+            percentage_charge: wallet.percentage_charge.clone(),
+            settlement_bank: wallet.settlement_bank.clone(),
             currency: wallet.currency.clone(),
-        }
-    }
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct CreateWallet {
-    pub owner_id: Uuid,
-    pub business_name: String,
-    pub bank_code: String,
-    pub account_number: String,
-    pub subaccount: String,
-    pub currency: String,
-}
-
-impl From<web::Json<CreateWallet>> for CreateWallet {
-    fn from(wallet: web::Json<CreateWallet>) -> Self {
-        CreateWallet {
-            owner_id: wallet.owner_id.clone(),
-            business_name: wallet.business_name.clone(),
-            bank_code: wallet.bank_code.clone(),
-            account_number: wallet.account_number.clone(),
-            subaccount: wallet.subaccount.clone(),
-            currency: wallet.currency.clone(),
+            subaccount_code: wallet.subaccount_code.clone(),
+            wallet_email: wallet.wallet_email.clone(),
         }
     }
 }
@@ -421,8 +404,11 @@ pub struct WalletPayload {
     pub business_name: Option<String>,
     pub bank_code: Option<String>,
     pub account_number: Option<String>,
-    pub subaccount: Option<String>,
+    pub percentage_charge: Option<String>,
+    pub settlement_bank: Option<String>,
+    pub subaccount_code: Option<String>,
     pub currency: Option<String>,
+    pub wallet_email: Option<String>,
 }
 
 impl From<web::Json<WalletPayload>> for WalletPayload {
@@ -433,8 +419,56 @@ impl From<web::Json<WalletPayload>> for WalletPayload {
             business_name: wallet.business_name.clone(),
             bank_code: wallet.bank_code.clone(),
             account_number: wallet.account_number.clone(),
-            subaccount: wallet.subaccount.clone(),
+            percentage_charge: wallet.account_number.clone(),
+            settlement_bank: wallet.settlement_bank.clone(),
+            subaccount_code: wallet.subaccount_code.clone(),
             currency: wallet.currency.clone(),
+            wallet_email: wallet.wallet_email.clone(),
+        }
+    }
+}
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct CreateWallet {
+    pub owner_id: Uuid,
+    pub business_name: String,
+    pub account_number: String,
+    pub settlement_bank: String,
+    pub percentage_charge: String,
+    pub subaccount_code: String,
+    pub currency: String,
+    pub wallet_email: String,
+}
+
+impl From<web::Json<CreateWallet>> for CreateWallet {
+    fn from(wallet: web::Json<CreateWallet>) -> Self {
+        CreateWallet {
+            owner_id: wallet.owner_id.clone(),
+            business_name: wallet.business_name.clone(),
+            account_number: wallet.account_number.clone(),
+            settlement_bank: wallet.settlement_bank.clone(),
+            percentage_charge: wallet.percentage_charge.clone(),
+            subaccount_code: wallet.subaccount_code.clone(),
+            currency: wallet.currency.clone(),
+            wallet_email: wallet.wallet_email.clone(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct NewUserWalletData {
+    pub business_name: String,
+    pub account_number: String,
+    pub wallet_email: String,
+    pub settlement_bank: String,
+}
+
+impl From<web::Json<NewUserWalletData>> for NewUserWalletData {
+    fn from(wallet_data: web::Json<NewUserWalletData>) -> Self {
+        NewUserWalletData {
+            business_name: wallet_data.business_name.clone(),
+            account_number: wallet_data.account_number.clone(),
+            wallet_email: wallet_data.wallet_email.clone(),
+            settlement_bank: wallet_data.settlement_bank.clone(),
         }
     }
 }
