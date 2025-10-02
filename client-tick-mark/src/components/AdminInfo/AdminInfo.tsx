@@ -2,9 +2,10 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "react-hot-toast";
 import { useSession } from "next-auth/react";
-import { myWalletFn } from "./actions";
-import { useQuery } from "@tanstack/react-query";
+import { myWalletFn, createWalletFn } from "./actions";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 type Props = {
     org: Organization;
@@ -12,9 +13,15 @@ type Props = {
 
 const AdminInfo = ({ org }: Props) => {
     const [createWallet, setCreateWallet] = useState(false);
+    const [inputs, setInputs] = useState();
+    const handleChange = (event) => {
+        const name = event.target.name;
+        const value = event.target.value;
+        setInputs(values => ({...values, [name]:value}));
+    }
+
     const { data: session, status } = useSession();
     const router = useRouter();
-
     const handleRouteToDashboard = () => {
         if (!!session) {
             router.push()
@@ -28,8 +35,33 @@ const AdminInfo = ({ org }: Props) => {
         setCreateWallet(value);
     }
 
+    const queryClient = useQueryClient();
+    const mutation = useMutation({
+        mutationKey: ['createWallet'],
+        mutationFn: (inputs) => createWalletFn(inputs),
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ["wallet"]});
+            toast.dismiss(); // Clear loading
+            toast.success("Wallet created successfully", {
+                iconTheme: {
+                    primary: "#ecfdf5",
+                    secondary: "#047857",
+                },
+            })
+            setCreateWallet(false);
+        },
+        onError: (err: Error) => {
+            toast.error("Wallet creation failed")
+        }
+    });
+    const handleCreateWalletSubmission = async (event) => {
+        event.preventDefault();
+        inputs.owner_id = org.organization_id;
+        mutation.mutate(inputs);
+    }
+
     const { data, isLoading, error } = useQuery({
-        queryKey: ['wallet'],
+        queryKey: ['wallet', org.organization_id],
         queryFn: () => myWalletFn(org.organization_id),
         onSuccess: (data) => {
             console.log("Wallet fetch success is", data)
@@ -76,14 +108,24 @@ const AdminInfo = ({ org }: Props) => {
                     <div>
                         {createWallet && (
                             <div className="max-w-xs md:max-w-sm p-1 shadow-xl border border-emerald-500 border-2px">
-                                <form>
+                                <form id="createWalletForm" onSubmit={handleCreateWalletSubmission}>
                                     <div>
                                         <label className="font-medium text-gray-600">Business Name</label>
-                                        <input id="business_name" name="business_name" className="input validator w-full" type="text" required placeholder="Business Name" />
+                                        <input id="business_name" onChange={handleChange} name="business_name" className="input validator w-full" type="text" required placeholder="Business Name" />
+                                    </div>
+                                    <div className="my-2">
+                                        <label className="font-medium text-gray-600">Settlement Scheme</label>
+                                        <select onClick={handleChange} id="settlement_bank" name="settlement_bank" className="px-2">
+                                            <option value="MPESA">MPESA</option>
+                                        </select>
                                     </div>
                                     <div>
-                                        <label className="font-medium text-gray-600">Account number</label>
-                                        <input id="account_number" name="account_number" className="input validator w-full" type="text" required placeholder="Account No." />
+                                        <label className="font-medium text-gray-600">Account (MPESA number)</label>
+                                        <input id="account_number" onChange={handleChange} name="account_number" className="input validator w-full" type="text" required placeholder="Mpesa no. eg 0712345678" />
+                                    </div>
+                                    <div>
+                                        <label className="font-medium text-gray-600">Email address</label>
+                                        <input id="wallet_email" onChange={handleChange} name="wallet_email" className="input validator w-full" type="text" required placeholder="Contact email." />
                                     </div>
                                 </form>
                                 <div className="flex flex-row gap-x-2 my-2">
@@ -94,7 +136,8 @@ const AdminInfo = ({ org }: Props) => {
                                         Cancel
                                     </button>
                                     <button
-                                        onClick={(e) => handleWalletCreation(e, false) }
+                                        type="submit"
+                                        form="createWalletForm"
                                         className="hover:cursor-pointer bg-emerald-800 text-white btn-block p-1"
                                     >
                                         Save Changes

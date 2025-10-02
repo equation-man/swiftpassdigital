@@ -107,3 +107,10 @@ export interface Wallet {
     subaccount: string;
     currency: string;
 }
+
+export interface CreateWallet {
+    business_name: string;
+    settlement_bank: string;
+    account_number: string;
+    wallet_email: string;
+}
