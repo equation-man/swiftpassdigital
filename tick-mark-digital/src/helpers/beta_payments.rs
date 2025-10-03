@@ -132,7 +132,7 @@ pub async fn init_split_trans(payload: InitializeSplitPayment) -> Result<Initial
 }
 
 /// Verify transactions
-pub async fn verify_trans(reference: String, access_key: String) -> Result<VerifyPaymentRes, Error> {
+pub async fn verify_trans(reference: String) -> Result<VerifyPaymentRes, Error> {
     let (payment_url, access_key) = paystack_integration().await;
     let client = reqwest::Client::new();
     let res = client.get(format!("{}/transaction/verify/{}",&payment_url, &reference))
@@ -197,9 +197,7 @@ mod tests {
     #[tokio::test]
     #[ignore]
     async fn verfying_payment_test() {
-        //let url = verify_payment_url("mz2233rb2z");
-        //let verification = verify_trans(url).await;
-        //println!("The payment url is result is {:#?}", verification);
-        todo!();
+        let verification = verify_trans("8te15wq0x5".to_string()).await;
+        println!("The payment url is result is {:#?}", verification);
     }
 }

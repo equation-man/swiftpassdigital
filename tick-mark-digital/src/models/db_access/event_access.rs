@@ -315,15 +315,15 @@ pub async fn add_order(db_pool: &PgPool, entrance_code: String, new_order: Order
     let n_order = sqlx::query!(r#"
         INSERT INTO ticket_market.orders
             (ticket_id, user_contact, ticket_price, ticket_status,
-            entrance_code, order_limit, user_email)
+            entrance_code, order_limit, user_email, paystack_reference)
         VALUES
-            ($1, $2, $3, $4, $5, $6, $7)
+            ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING order_id, ticket_id, user_id, user_email,
-            user_contact, ticket_price, added_at, promo_code,
+            user_contact, ticket_price, added_at, paystack_reference,
             ticket_status as "tick_status: TickStatus", entrance_code, order_limit
     "#, new_order.ticket_id, new_order.user_contact, new_order.ticket_price,
     new_order.ticket_status as TickStatus, entrance_code, new_order.order_limit,
-    new_order.user_email).fetch_one(db_pool).await.unwrap();
+    new_order.user_email, new_order.paystack_reference).fetch_one(db_pool).await.unwrap();
     let added_at_str = n_order.added_at.to_rfc3339();
     let order_price = n_order.ticket_price.unwrap().to_string();
     Order {
@@ -338,6 +338,7 @@ pub async fn add_order(db_pool: &PgPool, entrance_code: String, new_order: Order
         ticket_status: n_order.tick_status.unwrap(),
         entrance_code: n_order.entrance_code.unwrap(),
         order_limit: n_order.order_limit.unwrap(),
+        paystack_reference: n_order.paystack_reference.unwrap(),
     }
 }
 
@@ -362,11 +363,13 @@ pub async fn get_orders(db_pool: &PgPool, ticket_id: Uuid, filters: OrderPayload
             AND ($8 IS NULL OR ticket_status=$8)
             AND ($9 IS NULL OR entrance_code=$9)
             AND ($10 IS NULL OR order_limit=$10)
+            AND ($11 IS NULL OR paystack_reference=$11)
     "#).bind(Some(ticket_id)).bind(Some(filters.order_id))
     .bind(Some(filters.user_id)).bind(Some(filters.user_email))
     .bind(Some(filters.user_contact)).bind(Some(filters.ticket_price))
     .bind(Some(filters.promo_code)).bind(Some(filters.ticket_status))
     .bind(Some(filters.entrance_code)).bind(Some(filters.order_limit))
+    .bind(Some(filters.paystack_reference))
     .fetch_all(db_pool).await.expect("Failed fetching orders");
 
     orders.iter().map(|order| {
@@ -383,7 +386,8 @@ pub async fn get_orders(db_pool: &PgPool, ticket_id: Uuid, filters: OrderPayload
             //promo_code: order.get("promo_code"),
             ticket_status: order.get("ticket_status"),
             entrance_code: order.get("entrance_code"),
-            order_limit: order.get("order_limit")
+            order_limit: order.get("order_limit"),
+            paystack_reference: order.get("paystack_reference")
         }
     }).collect()
 }
@@ -418,7 +422,8 @@ pub async fn update_order(db_pool: &PgPool, owner_id: Uuid, order_id: Uuid, payl
         //promo_code: order.get("promo_code"),
         ticket_status: upd_order.get("ticket_status"),
         entrance_code: upd_order.get("entrance_code"),
-        order_limit: upd_order.get("order_limit")
+        order_limit: upd_order.get("order_limit"),
+        paystack_reference: upd_order.get("paystack_reference")
     }
 }
 

@@ -9,9 +9,11 @@ use crate::models::{
 };
 use crate::helpers::{
     InitializeSplitPayment,
-    init_split_trans,
+    init_split_trans, verify_trans,
 };
 use nanoid::nanoid;
+use std::time::Duration;
+use std::thread;
 use rust_decimal::Decimal;
 use std::str::FromStr;
 use serde::Deserialize;
@@ -122,34 +124,19 @@ pub async fn ticket_info(ticket_id: web::Path<String>, app_state: web::Data<AppS
 /// Ordering a ticket. Payment or purchase action goes here.
 pub async fn create_order(payload: web::Json<CreateOrder>, ticket_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
     let order_payload: CreateOrder = payload.into();
-    let alphabet: [char; 32] = [
-        'A','B','C','D','E','F','G','H','J','K','L','M',
-        'N','P','Q','R','S','T','U','V','W','X','Y','Z',
-        '2', '3', '4', '5', '6', '7', '8', '9'
-    ];
-    let entrance_code_gen = nanoid!(8, &alphabet);
     let t_id: Uuid = Uuid::parse_str(&ticket_id.into_inner()).unwrap();
     let ticket_det = get_single_ticket(&app_state.db, t_id).await;
     let target_event = get_event(&app_state.db, ticket_det.event_id.clone()).await;
     let target_wallet = get_org_wallet(&app_state.db, target_event.owner_id.clone()).await;
     let initSplitPymt = InitializeSplitPayment {
-        email: order_payload.user_email,
+        email: order_payload.user_email.clone(),
         amount: ticket_det.base_price,
         subaccount: target_wallet.subaccount_code,
-        callback_url: format!("http://localhost:3000/verify/{}", ticket_det.ticket_id),
+        callback_url: format!("http://192.168.88.149:3000/verify/{}?email={}&phone={}", ticket_det.ticket_id, order_payload.user_email.clone(), order_payload.user_contact.clone()),
     };
     match init_split_trans(initSplitPymt).await {
         Ok(init_payment) => {
             let split_payment_data = init_payment.data.unwrap();
-            //let order_details = OrderDetails {
-            //    ticket_id: ticket_det.ticket_id.clone(),
-            //    user_email: order_payload.user_email,
-            //    user_contact: order_payload.user_contact,
-            //    ticket_status: TickStatus::Pending,
-            //    order_limit: ticket_det.capacity,
-            //    ticket_price: Decimal::from_str(&ticket_det.base_price).unwrap(),
-            //};
-            //let new_order = add_order(&app_state.db, entrance_code_gen, order_details).await;
             HttpResponse::Ok().json(split_payment_data)
         },
         Err(err) => {
@@ -158,13 +145,67 @@ pub async fn create_order(payload: web::Json<CreateOrder>, ticket_id: web::Path<
     }
 }
 
+#[derive(Debug, Clone, Deserialize)]
+pub struct VerificationQuery {
+    pub trxref: Option<String>,
+    pub reference: Option<String>,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+}
+
 /// Verify order purchase. Checking or confirming the ticket goes here.
-pub async fn verify_order(upd_pld: web::Json<OrderPayload>, path: web::Path<(String, String)>, app_state: web::Data<AppState>) -> HttpResponse {
-    let (own_id, od_id) = path.into_inner();
-    let owner_id: Uuid = Uuid::parse_str(&own_id).unwrap();
-    let order_id: Uuid = Uuid::parse_str(&od_id).unwrap();
-    let order_upd = update_order(&app_state.db, owner_id, order_id, upd_pld.into()).await;
-    HttpResponse::Ok().json(order_upd)
+pub async fn verify_order(ticket_id: web::Path<String>, verif_query: web::Query<VerificationQuery>, app_state: web::Data<AppState>) -> HttpResponse {
+    let q = verif_query.into_inner();
+    let ticket_id: Uuid = Uuid::parse_str(&ticket_id.into_inner()).unwrap();
+    let order_payload: OrderPayload = OrderPayload {
+        order_id: None,
+        ticket_id: None,
+        user_id: None,
+        user_email: None,
+        user_contact: None,
+        ticket_price: None,
+        promo_code: None,
+        ticket_status: None,
+        entrance_code: None,
+        order_limit: None,
+        paystack_reference: Some(q.reference.clone().unwrap()),
+    };
+    // Check if the referece exists.
+    if get_orders(&app_state.db, ticket_id, order_payload).await.len() != 0{
+        return HttpResponse::InternalServerError().body("Error order exists");
+    }
+    let max_retries = 5;
+    let mut attempts = 0;
+    while let Ok(val) = verify_trans(q.reference.clone().unwrap()).await {
+        let res = val.data.unwrap();
+        if res.status == "success".to_string() {
+            let alphabet: [char; 32] = [
+                'A','B','C','D','E','F','G','H','J','K','L','M',
+                'N','P','Q','R','S','T','U','V','W','X','Y','Z',
+                '2', '3', '4', '5', '6', '7', '8', '9'
+            ];
+            let entrance_code_gen = nanoid!(8, &alphabet);
+            let ticket = get_single_ticket(&app_state.db, ticket_id).await;
+            let order_details = OrderDetails {
+                ticket_id: ticket_id,
+                user_email: q.email.unwrap(),
+                user_contact: q.phone.unwrap(),
+                ticket_status: TickStatus::Pending,
+                order_limit: ticket.capacity,
+                ticket_price: Decimal::from(res.amount),
+                paystack_reference: res.reference,
+            };
+            let new_order = add_order(&app_state.db, entrance_code_gen, order_details).await;
+            return HttpResponse::Ok().json(new_order);
+        } else if attempts == max_retries {
+            break;
+        } else {
+            attempts += 1;
+            // Backoff before retrying.(Exponential backoff)
+            thread::sleep(Duration::from_secs(2u64.pow(attempts)));
+        }
+    }
+    HttpResponse::InternalServerError().body("Payment verification failed")
 }
 
 #[derive(Debug, Deserialize)]
@@ -187,6 +228,7 @@ pub async fn orders_list(params: web::Path<String>, query: web::Query<OrderQuery
         ticket_status: None,
         entrance_code: q.entrance_code,
         order_limit: None,
+        paystack_reference: None,
     };
     let orders_list = get_orders(&app_state.db, ticket_id, filters).await;
     HttpResponse::Ok().json(orders_list)
@@ -297,7 +339,8 @@ mod tests {
             promo_code: None,
             ticket_status: None,
             entrance_code: None,
-            order_limit: None
+            order_limit: None,
+            paystack_reference: None
         }
     }
 

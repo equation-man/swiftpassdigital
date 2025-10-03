@@ -267,9 +267,10 @@ pub struct Order {
     pub ticket_price: String, //Decimal,
     pub added_at: String, //DateTime<Utc>,
     //pub promo_code: String,
-    pub ticket_status: TickStatus,
     pub entrance_code: String,
+    pub ticket_status: TickStatus,
     pub order_limit: i64,
+    pub paystack_reference: String,
 }
 
 impl From<web::Json<Order>> for Order {
@@ -283,9 +284,10 @@ impl From<web::Json<Order>> for Order {
             ticket_price: order.ticket_price.clone(),
             added_at: order.added_at.clone(),
             //promo_code: order.promo_code.clone(),
-            ticket_status: order.ticket_status.clone(),
             entrance_code: order.entrance_code.clone(),
+            ticket_status: order.ticket_status.clone(),
             order_limit: order.order_limit.clone(),
+            paystack_reference: order.paystack_reference.clone(),
         }
     }
 }
@@ -324,7 +326,8 @@ pub struct OrderDetails {
     pub user_contact: String,
     pub ticket_status: TickStatus,
     pub order_limit: i64,
-    pub ticket_price: Decimal
+    pub ticket_price: Decimal,
+    pub paystack_reference: String,
 }
 
 impl From<web::Json<OrderDetails>> for OrderDetails {
@@ -335,7 +338,8 @@ impl From<web::Json<OrderDetails>> for OrderDetails {
             user_contact: order_det.user_contact.clone(),
             ticket_status: order_det.ticket_status.clone(),
             order_limit: order_det.order_limit.clone(),
-            ticket_price: order_det.ticket_price.clone()
+            ticket_price: order_det.ticket_price.clone(),
+            paystack_reference: order_det.paystack_reference.clone(),
         }
     }
 }
@@ -352,6 +356,7 @@ pub struct OrderPayload {
     pub ticket_status: Option<TickStatus>,
     pub entrance_code: Option<String>,
     pub order_limit: Option<i64>,
+    pub paystack_reference: Option<String>,
 }
 
 impl From<web::Json<OrderPayload>> for OrderPayload {
@@ -367,6 +372,7 @@ impl From<web::Json<OrderPayload>> for OrderPayload {
             ticket_status: order_payload.ticket_status.clone(),
             entrance_code: order_payload.entrance_code.clone(),
             order_limit: order_payload.order_limit.clone(),
+            paystack_reference: order_payload.paystack_reference.clone(),
         }
     }
 }

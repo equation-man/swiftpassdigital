@@ -114,3 +114,19 @@ export interface CreateWallet {
     account_number: string;
     wallet_email: string;
 }
+
+export interface Order {
+    order_id: string;
+    ticket_id: string;
+    user_id: string;
+    user_email: string;
+    user_contact: string;
+    ticket_price: string;
+    added_at: string;
+    promo_code: string;
+    ticket_status: string;
+    entrance_code: string;
+    order_limit: string;
+    discount_time: string;
+    paystack_reference: string;
+}
