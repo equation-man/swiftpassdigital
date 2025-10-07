@@ -11,6 +11,7 @@ export async function fetchOrderFn(params): Promise<Order | unknown> {
             reference: params.reference,
             email: params.email,
             phone: params.phone,
+            event_id: params.event_id,
         },
     });
     return order.data;

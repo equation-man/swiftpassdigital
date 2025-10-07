@@ -1,0 +1,15 @@
+# Using the main rust docker image.
+FROM rust as build
+# Copy app into docker image
+COPY . /app
+# Setting working directory
+WORKDIR /app
+# Build the app
+RUN cargo build --release
+# use google distroless as runtime image.
+FROM gcr.io/distroless/cc-debian11
+# Copy app from builder
+COPY --from=build /app/target/release/tick-mark-digital /app/tick-mark-digital
+WORKDIR /app
+# Starting the application
+CMD ["./tick-mark-digital"]

@@ -32,7 +32,7 @@ const SuccessStatus = ({ order }: OrderProps) => {
                     <rect width={24} height={24} fill="currentColor" mask="url(#SVGkzXYXbbR)"></rect>
                 </svg>
             </div>
-            <h1 className="text-emerald-800 text-center">Payment Successful</h1>
+            <h1 className="text-emerald-800 text-center">Payment Successful. Entrance code sent to your email</h1>
             <div>
                 <p className="text-center text-sm text-emerald-600"><ClientOnly><EventDate iso={order.added_at} /></ClientOnly></p>
                 <p className="text-center text-sm">Amount: {formatCurrency(Number(order.ticket_price))}</p>
@@ -73,16 +73,17 @@ const PaymentStatusPage = () => {
         trxref: searchParams.get("trxref"),
         reference: searchParams.get("reference"),
         email: searchParams.get("email"),
-        phone: searchParams.get("phone")
+        phone: searchParams.get("phone"),
+        event_id: searchParams.get("event_id")
     };
     const { data, isLoading, error } = useQuery({
         queryKey: ['paymentStatus'],
         queryFn: () => fetchOrderFn(params),
         onSuccess: (data) => {
-            console.log("The order fetch result is", data);
+            //console.log("The order fetch result is", data);
         },
         onError: (err) => {
-            console.log("The err result when fetching order is", err);
+            //console.log("The err result when fetching order is", err);
         },
     });
     if (isLoading) return <div className="font-semibold font-gray-600 flex flex-row items-center justify-center">

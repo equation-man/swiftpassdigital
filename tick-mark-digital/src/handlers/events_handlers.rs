@@ -10,6 +10,7 @@ use crate::models::{
 use crate::helpers::{
     InitializeSplitPayment,
     init_split_trans, verify_trans,
+    parse_email_html_content, send_email,
 };
 use nanoid::nanoid;
 use std::time::Duration;
@@ -132,7 +133,13 @@ pub async fn create_order(payload: web::Json<CreateOrder>, ticket_id: web::Path<
         email: order_payload.user_email.clone(),
         amount: ticket_det.base_price,
         subaccount: target_wallet.subaccount_code,
-        callback_url: format!("http://192.168.88.149:3000/verify/{}?email={}&phone={}", ticket_det.ticket_id, order_payload.user_email.clone(), order_payload.user_contact.clone()),
+        callback_url: format!(
+            "http://10.84.96.63:3000/verify/{}?event_id={}&email={}&phone={}",
+            ticket_det.ticket_id,
+            ticket_det.event_id.clone(),
+            order_payload.user_email.clone(),
+            order_payload.user_contact.clone()
+            ),
     };
     match init_split_trans(initSplitPymt).await {
         Ok(init_payment) => {
@@ -151,9 +158,11 @@ pub struct VerificationQuery {
     pub reference: Option<String>,
     pub email: Option<String>,
     pub phone: Option<String>,
+    pub event_id: Option<String>
 }
 
-/// Verify order purchase. Checking or confirming the ticket goes here.
+/// Verify order purchase. Checking or confirming the ticket goes here, we also send the ticket to
+/// the email.
 pub async fn verify_order(ticket_id: web::Path<String>, verif_query: web::Query<VerificationQuery>, app_state: web::Data<AppState>) -> HttpResponse {
     let q = verif_query.into_inner();
     let ticket_id: Uuid = Uuid::parse_str(&ticket_id.into_inner()).unwrap();
@@ -184,7 +193,8 @@ pub async fn verify_order(ticket_id: web::Path<String>, verif_query: web::Query<
                 'N','P','Q','R','S','T','U','V','W','X','Y','Z',
                 '2', '3', '4', '5', '6', '7', '8', '9'
             ];
-            let entrance_code_gen = nanoid!(8, &alphabet);
+            let code_gen = nanoid!(8, &alphabet);
+            let entrance_pass = format!("SWPD-{}", code_gen);
             let ticket = get_single_ticket(&app_state.db, ticket_id).await;
             let order_details = OrderDetails {
                 ticket_id: ticket_id,
@@ -195,7 +205,22 @@ pub async fn verify_order(ticket_id: web::Path<String>, verif_query: web::Query<
                 ticket_price: Decimal::from(res.amount),
                 paystack_reference: res.reference,
             };
-            let new_order = add_order(&app_state.db, entrance_code_gen, order_details).await;
+            let new_order = add_order(&app_state.db, entrance_pass, order_details).await;
+            // Retrieve the info to the target event using q.event_id.clone().
+            let evnt_id: Uuid = Uuid::parse_str(&q.event_id.clone().unwrap()).unwrap();
+            let event = get_event(&app_state.db, evnt_id).await;
+            let ev_title = &event.title;
+            let start = &event.start_date;
+            // Send the ticket to the email here.
+            let sender = "swiftpassdigital@drugsverse.com".to_string();
+            let subject = "SwiftPassDigital Ticket Confirmation".to_string();
+            let target_name = "SwiftPassDigital User".to_string();
+            let text = format!("Your event spot created successfully via SwiftPassDigital. Your ticket id is: {}. Enjoy your event", new_order.entrance_code);
+            let html = parse_email_html_content(
+                new_order.entrance_code.clone(), new_order.ticket_status.clone().to_string(),
+                ev_title.to_string(), start.to_string()
+                ).await;
+            let _ = send_email(sender, new_order.user_email.clone(), subject, target_name, text, Some(html)).await;
             return HttpResponse::Ok().json(new_order);
         } else if attempts == max_retries {
             break;

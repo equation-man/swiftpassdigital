@@ -146,9 +146,32 @@ checkBanks() {
         -H 'Authorization: Bearer sk_test_be74a6aae684bbcfb2a29831ca06c50d2c879000'
 }
 
+sendSMS() {
+curl --request POST \
+     --url https://api.brevo.com/v3/smtp/email \
+     --header 'accept: application/json' \
+     --header 'api-key: ' \
+     --header 'content-type: application/json' \
+     --data '{
+      "sender": {
+        "name": "SwiftPassDigital",
+        "email": "swiftpassdigital@drugsverse.com"
+      },
+      "to": [
+        {
+          "email": "bigtechguyz@gmail.com",
+          "name": "Big Tech"
+        }
+      ],
+      "htmlContent": "<!DOCTYPE html> <html> <body> <h1>Confirm you email</h1> <p>Please confirm your email address by clicking on the link below</p> </body> </html>",
+      "textContent": "Please confirm your email address by clicking on the link https://text.domain.com",
+      "subject": "Login Email confirmation"
+    }'
+}
+
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='
 echo "Testing SwiftPassDigital Software"
-result=$(checkBanks)
+result=$(sendSMS)
 # echo "$result" | jq '.data[] | select(.country == "Nigeria")'
 echo "$result" | jq
 printf "${color}%*s${reset}\n" "$width" '' | tr ' ' '='

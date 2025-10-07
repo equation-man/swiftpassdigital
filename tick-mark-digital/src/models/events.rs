@@ -6,6 +6,7 @@ use rust_decimal::Decimal;
 use actix_web::web;
 use sqlx::Type;
 use uuid::Uuid;
+use std::fmt;
 
 // Converting PgInterval to Duration.
 pub fn pg_interval_to_chrono_duration(interval: PgInterval) -> Duration {
@@ -254,6 +255,17 @@ impl From<web::Json<&str>> for TickStatus {
             web::Json("Expired") => TickStatus::Expired,
             web::Json(&_) => unimplemented!("No other trait to be implemented")
         }
+    }
+}
+
+impl fmt::Display for TickStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let text = match self {
+            TickStatus::Pending => "Pending",
+            TickStatus::Checked => "Checked",
+            TickStatus::Expired => "Expired",
+        };
+        write!(f, "{}", text)
     }
 }
 
