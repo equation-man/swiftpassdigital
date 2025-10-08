@@ -427,7 +427,6 @@ pub async fn update_order(db_pool: &PgPool, owner_id: Uuid, order_id: Uuid, payl
     }
 }
 
-
 // ======================== DISCOUNT =====================
 pub async fn add_discount(db_pool: &PgPool, new_discount: AddDiscount) -> Discount {
     let n_discount = sqlx::query!(r#"

@@ -14,7 +14,6 @@ type walletDet = {
 }
 
 export async function createWalletFn(walletData: Wallet): Promise<Wallet | unknown> {
-    console.log("The data is", walletData);
     const payload: CreateWallet = {
         business_name: walletData.business_name,
         settlement_bank: walletData.settlement_bank,
@@ -22,5 +21,16 @@ export async function createWalletFn(walletData: Wallet): Promise<Wallet | unkno
         wallet_email: walletData.wallet_email,
     };
     const response = await axios.post(`${API_URL}/organization/wallet/create/${walletData.owner_id}`, payload);
+    return response.data;
+}
+
+export async function createMpesaWalletFn(walletData: Wallet): Promise<Wallet | unknown> {
+    const payload: CreateWallet = {
+        business_name: walletData.business_name,
+        settlement_bank: walletData.settlement_bank,
+        account_number: walletData.account_number,
+        wallet_email: walletData.wallet_email,
+    };
+    const response = await axios.post(`${API_URL}/organization/wallet/mpesa/create/${walletData.owner_id}`, payload);
     return response.data;
 }

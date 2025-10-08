@@ -9,7 +9,7 @@ use chrono::Local;
 use base64;
 
 // =============== MPESA EXPRESS ==================
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StkPushRequest {
     pub Password: String,
     pub BusinessShortCode: String,
@@ -24,7 +24,7 @@ pub struct StkPushRequest {
     pub CallBackURL: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StkPushResponse {
     pub MerchantRequestID: String,
     pub CheckoutRequestID: String,
@@ -33,7 +33,7 @@ pub struct StkPushResponse {
     pub CustomerMessage: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct B2CRequest {
     OriginatorConversationID: String,
     InitiatorName: String,
@@ -48,7 +48,7 @@ pub struct B2CRequest {
     Occasion: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct B2CResponse {
     ConversationID: String,
     OriginatorConversationID: String,
@@ -56,8 +56,50 @@ pub struct B2CResponse {
     ResponseDescription: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct C2BTransactionStatus {
+    Initiator: String,
+    SecurityCredential: String,
+    CommandID: String,
+    TransactionID: String,
+    PartyA: u64,
+    IdentifierType: u8,
+    ResultURL: String,
+    QueueTimeOutURL: String,
+    Remarks: String,
+    Occassion: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct C2BTransactionStatusResp {
+    OriginatorConversationID: String,
+    ConversationID: String,
+    ResponseCode: String,
+    ResponseDescription: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ConfirmStkTransaction {
+    pub BusinessShortCode: String,
+    pub Password: String,
+    pub Timestamp: String,
+    pub CheckoutRequestID: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct ConfirmStkTransactionResponse {
+    pub ResponseCode: String,
+    pub ResponseDescription: String,
+    pub MerchantRequestID: String,
+    pub CheckoutRequestID: String,
+    pub ResultCode: String,
+    pub ResultDesc: String,
+}
+
 /// Generating daraja password.
-pub async fn generate_daraja_password(till_or_paybill: String, passkey: String) -> (String, String) {
+pub async fn generate_daraja_password(till_or_paybill: String) -> (String, String) {
+    dotenv().ok();
+    let passkey = env::var("MPESA_DARAJA_PASSKEY").expect("Provide Mpesa daraja passkey");
     let timestamp = Local::now().format("%Y%m%d%H%M%S").to_string();
     // Combine shortcode, passkey, and timestamp.
     let raw = format!("{}{}{}", &till_or_paybill, &passkey, timestamp);
@@ -86,6 +128,11 @@ pub async fn mpesa_auth_details() -> (String, String) {
     (api_url, bearer_token.to_string())
 }
 
+/// Calculating the commission amount
+pub async fn commission_amount(amount: String) -> u64 {
+    (6*amount.parse::<u64>().unwrap())/100
+}
+
 /// Mpesa STK push payment.
 pub async fn mpesa_stk_push(payment_request: StkPushRequest) -> Result<StkPushResponse, Error> {
     let (url, bearer_token) = mpesa_auth_details().await;
@@ -112,6 +159,33 @@ pub async fn mpesa_b2c_settlement(b2c_request: B2CRequest) -> Result<B2CResponse
     Ok(jsn_resp)
 }
 
+/// Confirm stk push or c2b transaction.
+pub async fn stk_c2b_status(c2b_trans_status: C2BTransactionStatus) -> Result<C2BTransactionStatusResp, Error> {
+    let (url, bearer_token) = mpesa_auth_details().await;
+    let client = reqwest::Client::new();
+    let c2b_status = client.post(format!("{}/mpesa/transactionstatus/v1/query", &url))
+        .bearer_auth(&bearer_token)
+        .header("Content-Type", "application/json")
+        .json(&c2b_trans_status)
+        .send().await?;
+    let res = c2b_status.json().await?;
+    Ok(res)
+}
+
+/// Confirm stk push transaction query.
+pub async fn stk_push_status(stk_status_request: ConfirmStkTransaction) -> Result<ConfirmStkTransactionResponse, Error> {
+    let (url, bearer_token) = mpesa_auth_details().await;
+    let client = reqwest::Client::new();
+    let stk_status = client.post(format!("{}/mpesa/stkpushquery/v1/query", &url))
+        .bearer_auth(&bearer_token)
+        .header("Content-Type", "application/json")
+        .json(&stk_status_request)
+        .send().await?;
+    let res = stk_status.json().await?;
+    Ok(res)
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -119,9 +193,8 @@ mod tests {
     // ============== FIXTURES ====================
     async fn generate_request() -> StkPushRequest {
         dotenv().ok();
-        let passkey = env::var("MPESA_DARAJA_PASSKEY").expect("Provide Mpesa daraja passkey");
         let till_or_paybill = "174379".to_string();
-        let (my_password, timestamp) = generate_daraja_password(till_or_paybill.clone(), passkey).await;
+        let (my_password, timestamp) = generate_daraja_password(till_or_paybill.clone()).await;
         StkPushRequest {
             Password: my_password, 
             BusinessShortCode: till_or_paybill.clone(),
@@ -145,7 +218,7 @@ mod tests {
             InitiatorName: "testapi".to_string(),
             SecurityCredential: sec_credentials,
             CommandID: "SalaryPayment".to_string(),
-            Amount: 10,
+            Amount: commission_amount("1000".to_string()).await,
             PartyA: 600998,
             PartyB: 254708374149,
             Remarks: "Test remarks".to_string(),
@@ -155,6 +228,34 @@ mod tests {
         }
     }
 
+    async fn generate_c2b_status() -> C2BTransactionStatus {
+        dotenv().ok();
+        let sec_cred = env::var("MPESA_B2C_SECURITY_CRED").expect("Provide sec cred");
+        C2BTransactionStatus {
+            Initiator: "testapi".to_string(),
+            SecurityCredential: sec_cred,
+            CommandID: "TransactionStatusQuery".to_string(),
+            TransactionID: "ws_CO_08102025093200359759009593".to_string(),
+            PartyA: 600987,
+            IdentifierType: 4,
+            ResultURL: "https://mydomain.com/TransactionStatus/result/".to_string(),
+            QueueTimeOutURL: "https://mydomain.com/TransactionStatus/queue/".to_string(),
+            Remarks: "OK".to_string(),
+            Occassion: "null".to_string(),
+        }
+    }
+
+    async fn confirm_stk_trans() -> ConfirmStkTransaction {
+        dotenv().ok();
+        let till_or_paybill = "174379".to_string();
+        let (my_password, timestamp) = generate_daraja_password(till_or_paybill.clone()).await;
+        ConfirmStkTransaction {
+            BusinessShortCode: till_or_paybill,
+            Password: my_password,
+            Timestamp: timestamp,
+            CheckoutRequestID: "ws_CO_08102025093200359759009593".to_string(),
+        }
+    }
 
     // Generating auth details
     #[tokio::test]
@@ -169,13 +270,36 @@ mod tests {
     #[ignore]
     async fn stk_push_mpesa() {
         let stk_push_res = mpesa_stk_push(generate_request().await).await;
-        println!("The mpesa stk push result is {:#?}", stk_push_res);
+        println!("The mpesa stk(c2b) push result is {:#?}", stk_push_res);
+    }
+
+    // Test stk status
+    #[tokio::test]
+    #[ignore]
+    async fn stk_push_c2b_test() {
+        let status = stk_c2b_status(generate_c2b_status().await).await;
+        println!("The stk push status is {:#?}", status);
+    }
+
+    // STK push status.
+    #[tokio::test]
+    async fn stk_status_push_test() {
+        let status = stk_push_status(confirm_stk_trans().await).await;
+        println!("The status for stk push is {:#?}", status);
     }
 
     // Test b2c api.
     #[tokio::test]
+    #[ignore]
     async fn b2c_payment_test() {
         let b2c_test = mpesa_b2c_settlement(generate_b2c_req().await).await;
         println!("The b2c result is {:#?}", b2c_test);
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn commission_test() {
+        let comm_amount = commission_amount("1000".to_string()).await;
+        println!("The commission amount is: {:#?}", comm_amount);
     }
 }

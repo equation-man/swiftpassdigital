@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useSession } from "next-auth/react";
-import { myWalletFn, createWalletFn } from "./actions";
+import { myWalletFn, createMpesaWalletFn } from "./actions";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 type Props = {
@@ -38,7 +38,7 @@ const AdminInfo = ({ org }: Props) => {
     const queryClient = useQueryClient();
     const mutation = useMutation({
         mutationKey: ['createWallet'],
-        mutationFn: (inputs) => createWalletFn(inputs),
+        mutationFn: (inputs) => createMpesaWalletFn(inputs),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["wallet"]});
             toast.dismiss(); // Clear loading
@@ -70,7 +70,6 @@ const AdminInfo = ({ org }: Props) => {
             console.llg("Wallet fetch error is", error)
         }
     });
-    console.log("The data and error is", data, error)
 
     return (
         <div>

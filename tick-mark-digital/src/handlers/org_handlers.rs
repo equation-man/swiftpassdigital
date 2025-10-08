@@ -86,6 +86,22 @@ pub async fn org_update(payload: web::Json<OrgPayload>, params: web::Path<String
 }
 
 // ================== WALLETS =====================
+pub async fn new_mpesa_wallet(wallet_details: web::Json<NewUserWalletData>, org_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
+    let o_id: Uuid = Uuid::parse_str(&org_id.into_inner()).unwrap();
+    let mpesa_wallet = CreateWallet {
+        owner_id: o_id,
+        business_name: wallet_details.business_name.clone(),
+        settlement_bank: wallet_details.settlement_bank.clone(),
+        account_number: wallet_details.account_number.clone(),
+        percentage_charge: "6".to_string(),
+        subaccount_code: "NO_SUBACCOUNT_CODE".to_string(),
+        currency: "KES".to_string(),
+        wallet_email: wallet_details.wallet_email.clone(),
+    };
+    let m_wallet = create_org_wallet(&app_state.db, o_id, mpesa_wallet).await;
+    HttpResponse::Ok().json(m_wallet)
+}
+
 pub async fn new_wallet(wallet_details: web::Json<NewUserWalletData>, org_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
     let details = SubAccount {
         business_name: wallet_details.business_name.clone(),

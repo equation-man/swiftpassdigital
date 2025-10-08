@@ -34,6 +34,11 @@ export async function purchaseTicketFn({orderDet, ticketId}: OrdDet): Promise<Or
     return response.data;
 }
 
+export async function mpesaTicketPurchaseFn({orderDet, ticketId}: OrdDet): Promise<OrderDetails | unknown> {
+    const response = await axios.post(`${API_URL}/events/ticket/mpesa/purchase/${ticketId}`, orderDet);
+    return response.data
+}
+
 export async function createEventFn(evntDetails: CreateEvent): Promise<Event | unknown> {
     const response = await axios.post(`${API_URL}/events/create`, evntDetails);
     return response.data;

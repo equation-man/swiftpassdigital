@@ -5,7 +5,7 @@ import { toast } from "react-hot-toast";
 import PhoneInput from "react-phone-input-2";
 import { useSelector, useDispatch } from "react-redux";
 import { updatePaymentModalState } from "@/redux/reducers/generalReducer";
-import { singleTicketInfoFn, purchaseTicketFn } from "@/app/event/actions";
+import { singleTicketInfoFn, purchaseTicketFn, mpesaTicketPurchaseFn } from "@/app/event/actions";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Event } from "@/types/types";
 import { formatCurrency } from "@/lib/helpers";
@@ -44,7 +44,7 @@ const TicketPaymentModal = ({ ticketId, eventDetails }: PayemntModalProps) => {
 
     const mutation = useMutation({
         mutationKey: ['purchaseOrder'],
-        mutationFn: (orderInputData) => purchaseTicketFn(orderInputData),
+        mutationFn: (orderInputData) => mpesaTicketPurchaseFn(orderInputData),
         onSuccess: (data) => {
             toast.success("Checkout initiated redirecting to payments page", {
                 iconTheme: {
@@ -52,11 +52,12 @@ const TicketPaymentModal = ({ ticketId, eventDetails }: PayemntModalProps) => {
                     secondary: "#047857",
                 },
             })
-            //console.log("The payment result will be", data)
-            window.location.href = data.authorization_url;
+            console.log("The mpesa payment result will be", data)
+            //window.location.href = data.authorization_url;
             dispatch(updatePaymentModalState(false));
         },
         onError: (err: Error) => {
+            console.log("The mpesa payment error is", err);
             toast.error("Failed initiating payments processing")
         }
     });
