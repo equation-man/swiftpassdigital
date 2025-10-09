@@ -13,6 +13,7 @@ use crate::helpers::{
     parse_email_html_content, send_email,
     ConfirmStkTransaction, StkPushRequest,
     mpesa_stk_push, stk_push_status, generate_daraja_password,
+    DarajaCallback,
 };
 use nanoid::nanoid;
 use std::{thread, time::Duration, str::FromStr};
@@ -123,6 +124,61 @@ pub async fn ticket_info(ticket_id: web::Path<String>, app_state: web::Data<AppS
 }
 
 // ============================== ORDER TICKETS =========================
+/// Mpesa order confirmation, callback.
+pub async fn mpesa_callback(payload: web::Json<DarajaCallback>, ticket_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
+    let callBack = &payload.Body.stkCallback;
+    // Check if the callback had already been called
+    let target_ticket_id = Uuid::parse_str(&ticket_id.into_inner()).unwrap();
+    let order_payload: OrderPayload = OrderPayload {
+        order_id: None,
+        ticket_id: None,
+        user_id: None,
+        user_email: None,
+        user_contact: None,
+        ticket_price: None,
+        promo_code: None,
+        ticket_status: None,
+        entrance_code: None,
+        order_limit: None,
+        paystack_reference: Some(callBack.CheckoutRequestID.clone()),
+    };
+    if get_orders(&app_state.db, target_ticket_id.clone(), order_payload.clone()).await.len() != 0 {
+        return HttpResponse::InternalServerError().body("Order added");
+    }
+    println!("The order is not available");
+
+    // Add the order reference into the db since payment is successful.
+    if callBack.ResultCode == 0 {
+        // Create ticket, Payment was successfull.
+        let alphabet: [char; 32] = [
+            'A','B','C','D','E','F','G','H','J','K','L','M',
+            'N','P','Q','R','S','T','U','V','W','X','Y','Z',
+            '2', '3', '4', '5', '6', '7', '8', '9'
+        ];
+        let entrance_pass = format!("SWPD-{}", nanoid!(8, &alphabet));
+        let ticket_price_obj = callBack.CallbackMetadata.as_ref().unwrap().Item
+            .iter().filter(|itm| itm.Name == "Amount").collect::<Vec<_>>()[0];
+        let ticket_price: Decimal = serde_json::from_value(ticket_price_obj.Value.clone().unwrap()).unwrap();
+        let order_details = OrderDetails {
+            ticket_id: target_ticket_id,
+            user_email: "NOT_SET".to_string(),
+            user_contact: "NOT_SET".to_string(),
+            ticket_status: TickStatus::Pending,
+            order_limit: 0,
+            ticket_price: ticket_price,
+            paystack_reference: callBack.CheckoutRequestID.clone(),
+        };
+        println!("The entrance pass is {}", &entrance_pass);
+        println!("The callback result before add is {:#?}", callBack);
+        println!("The data to be added is {:#?}", &order_details);
+        let new_order = add_order(&app_state.db, entrance_pass, order_details).await;
+        println!("Created ticket order {:#?}", &new_order);
+        return HttpResponse::Ok().json(new_order);
+    }
+    println!("The callback error response is {:#?}", callBack);
+    HttpResponse::InternalServerError().body("Error adding order")
+}
+
 /// Mpesa ordering and payment.
 pub async fn mpesa_order(payload: web::Json<CreateOrder>, ticket_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
     let order_payload: CreateOrder = payload.into();
@@ -142,7 +198,7 @@ pub async fn mpesa_order(payload: web::Json<CreateOrder>, ticket_id: web::Path<S
         PhoneNumber: order_payload.user_contact.clone(),
         TransactionDesc: "Test".to_string(),//"SwiftPassDigital Event Ticket".to_string(),
         AccountReference: "Test".to_string(),
-        CallBackURL: "https://mydomain.com/mpesa-express-simulate".to_string(),
+        CallBackURL: format!("https://unnational-intervocalic-lilia.ngrok-free.dev/events/ticket/callback/{}", t_id.to_string()),
     };
     match mpesa_stk_push(stkPushRequest).await {
         Ok(push_res) => {
@@ -159,62 +215,64 @@ pub async fn mpesa_order(payload: web::Json<CreateOrder>, ticket_id: web::Path<S
                 order_limit: None,
                 paystack_reference: Some(push_res.CheckoutRequestID.clone()),
             };
-            // Check if the referece exists.
+            // Check if the order has been created and update it.
+            let mut delay = 30.0;
+            let mut jitter: f64 = rand::thread_rng().gen_range(0.7..1.3);
+            let waiting = delay * jitter;
+            thread::sleep(Duration::from_secs_f64(waiting));
             if get_orders(&app_state.db, t_id, order_payload.clone()).await.len() != 0{
-                return HttpResponse::InternalServerError().body("Error order exists");
-            }
-            // Exponential backoff algorithm with jitters.
-            let confirmStkTransaction = ConfirmStkTransaction {
-                BusinessShortCode: target_wallet.account_number.clone(),
-                Password: my_password.clone(),
-                Timestamp: timestamp.clone(),
-                CheckoutRequestID: push_res.CheckoutRequestID.clone(),
-            };
-            let max_retries = 5;
-            let mut attempts = 0;
-            let mut delay = 1.0;
-            while let Ok(status_resp) = stk_push_status(confirmStkTransaction.clone()).await {
-                if status_resp.ResultCode == "0".to_string() {
-                    // Create ticket, Payment was successfull.
-                    let alphabet: [char; 32] = [
-                        'A','B','C','D','E','F','G','H','J','K','L','M',
-                        'N','P','Q','R','S','T','U','V','W','X','Y','Z',
-                        '2', '3', '4', '5', '6', '7', '8', '9'
-                    ];
-                    let code_gen = nanoid!(8, &alphabet);
-                    let entrance_pass = format!("SWPD-{}", code_gen);
-                    let order_details = OrderDetails {
-                        ticket_id: t_id,
-                        user_email: order_payload.user_email.clone().unwrap(),
-                        user_contact: order_payload.user_contact.clone().unwrap(),
-                        ticket_status: TickStatus::Pending,
-                        order_limit: ticket_det.capacity,
-                        ticket_price: Decimal::from_str(&ticket_det.base_price.clone()).unwrap(),
-                        paystack_reference: status_resp.CheckoutRequestID.clone(),
-                    };
-                    let new_order = add_order(&app_state.db, entrance_pass, order_details).await;
-                    // Send the ticket to the email here.
-                    let sender = "swiftpassdigital@drugsverse.com".to_string();
-                    let subject = "SwiftPassDigital Ticket Confirmation".to_string();
-                    let target_name = "SwiftPassDigital User".to_string();
-                    let text = format!("Your event spot created successfully via SwiftPassDigital. Your ticket id is: {}. Enjoy the event", new_order.entrance_code);
-                    let html = parse_email_html_content(
-                        new_order.entrance_code.clone(), new_order.ticket_status.clone().to_string(),
-                        target_event.title, target_event.start_date
-                        ).await;
-                    let _ = send_email(sender, new_order.user_email.clone(), subject, target_name, text, Some(html)).await;
-                    return HttpResponse::Ok().json(new_order);
-                } else if attempts == max_retries {
-                    break;
-                } else {
-                    attempts += 1;
-                    let jitter: f64 = rand::thread_rng().gen_range(0.7..1.3);
-                    let sleep_time = delay * jitter;
-                    thread::sleep(Duration::from_secs_f64(sleep_time)); // Backoff before retrying. 
-                    delay *= 2.0;// exponential increase
+                let confirmStkTransaction = ConfirmStkTransaction {
+                    BusinessShortCode: target_wallet.account_number.clone(),
+                    Password: my_password.clone(),
+                    Timestamp: timestamp.clone(),
+                    CheckoutRequestID: push_res.CheckoutRequestID.clone(),
+                };
+                // Exponential backoff algorithm with jitters.
+                let max_retries = 2;
+                let mut attempts = 0;
+                println!("Check transaction status: {:#?}", &confirmStkTransaction);
+                while let Ok(stk_status) = stk_push_status(confirmStkTransaction.clone()).await {
+                    if stk_status.ResultCode == "0".to_string() {
+                        let upd_payload: OrderPayload = OrderPayload {
+                            order_id: None,
+                            ticket_id: Some(ticket_det.ticket_id.clone()),
+                            user_id: None,
+                            user_email: order_payload.user_email.clone(),
+                            user_contact: order_payload.user_contact.clone(),
+                            ticket_price: None,
+                            promo_code: None,
+                            ticket_status: None,
+                            entrance_code: None,
+                            order_limit: Some(ticket_det.capacity.clone()),
+                            paystack_reference: None,
+                        };
+                        println!("We are about to update order");
+                        let upd = update_order(&app_state.db, push_res.CheckoutRequestID.clone(), upd_payload).await;
+                        println!("Updated ticket ourder {:#?}", &upd);
+                        // Send the ticket to the email here.
+                        let sender = "swiftpassdigital@drugsverse.com".to_string();
+                        let subject = "SwiftPassDigital Ticket Confirmation".to_string();
+                        let target_name = "SwiftPassDigital User".to_string();
+                        let text = format!("Your event spot created successfully via SwiftPassDigital. Your ticket id is: {}. Enjoy the event", upd.entrance_code);
+                        let html = parse_email_html_content(
+                            upd.entrance_code.clone(), upd.ticket_status.clone().to_string(),
+                            target_event.title, target_event.start_date
+                            ).await;
+                        let _ = send_email(sender, upd.user_email.clone(), subject, target_name, text, Some(html)).await;
+                        return HttpResponse::Ok().json(upd);
+                    } else if attempts == max_retries {
+                        break;
+                    } else {
+                        attempts += 1;
+                        let status_jitter: f64 = rand::thread_rng().gen_range(0.7..1.3);
+                        let sleep_time = delay * status_jitter;
+                        thread::sleep(Duration::from_secs_f64(sleep_time)); // Backoff before retrying. 
+                        delay *= 2.0;// exponential increase
+                    }
                 }
+                return HttpResponse::InternalServerError().body("Payment status check failed")
             }
-            return HttpResponse::InternalServerError().body("Payment verification failed.");
+            return HttpResponse::InternalServerError().body("Payment processing failed.");
         },
         Err(err) => {
             HttpResponse::InternalServerError().body("Error processing payment")

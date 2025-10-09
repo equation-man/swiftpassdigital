@@ -326,6 +326,7 @@ pub async fn add_order(db_pool: &PgPool, entrance_code: String, new_order: Order
     new_order.user_email, new_order.paystack_reference).fetch_one(db_pool).await.unwrap();
     let added_at_str = n_order.added_at.to_rfc3339();
     let order_price = n_order.ticket_price.unwrap().to_string();
+    println!("The added order is {:#?}", n_order);
     Order {
         order_id: n_order.order_id,
         ticket_id: n_order.ticket_id.unwrap(),
@@ -392,7 +393,7 @@ pub async fn get_orders(db_pool: &PgPool, ticket_id: Uuid, filters: OrderPayload
     }).collect()
 }
 
-pub async fn update_order(db_pool: &PgPool, owner_id: Uuid, order_id: Uuid, payload: OrderPayload) -> Order {
+pub async fn admin_update_order(db_pool: &PgPool, owner_id: Uuid, order_id: Uuid, payload: OrderPayload) -> Order {
     let upd_order = sqlx::query(r#"
         UPDATE ticket_market.orders o
         SET ticket_status = COALESCE($1, ticket_status)
@@ -408,6 +409,47 @@ pub async fn update_order(db_pool: &PgPool, owner_id: Uuid, order_id: Uuid, payl
     "#).bind(Some(payload.ticket_status)).bind(owner_id)
     .bind(order_id)
     .fetch_one(db_pool).await.expect("Failed updateing event");
+
+    let added_at_str = upd_order.get::<DateTime<Utc>, &str>("added_at").to_rfc3339();
+    let o_price = upd_order.get::<Decimal, &str>("ticket_price").to_string();
+    Order {
+        order_id: upd_order.get("order_id"),
+        ticket_id: upd_order.get("ticket_id"),
+        //user_id: order.get("user_id"),
+        user_email: upd_order.get("user_email"),
+        user_contact: upd_order.get("user_contact"),
+        ticket_price: o_price,
+        added_at: added_at_str,
+        //promo_code: order.get("promo_code"),
+        ticket_status: upd_order.get("ticket_status"),
+        entrance_code: upd_order.get("entrance_code"),
+        order_limit: upd_order.get("order_limit"),
+        paystack_reference: upd_order.get("paystack_reference")
+    }
+}
+
+pub async fn update_order(db_pool: &PgPool, payment_reference: String, payload: OrderPayload) -> Order {
+    let upd_order = sqlx::query(r#"
+        UPDATE ticket_market.orders
+            SET ticket_id = COALESCE($1, ticket_id),
+                user_id = COALESCE($2, user_id),
+                user_email = COALESCE($3, user_email),
+                user_contact = COALESCE($4, user_contact),
+                ticket_price = COALESCE($5, ticket_price),
+                promo_code = COALESCE($6, promo_code),
+                ticket_status = COALESCE($7, ticket_status),
+                entrance_code = COALESCE($8, entrance_code),
+                order_limit = COALESCE($9, order_limit)
+            WHERE paystack_reference = $10
+        RETURNING order_id, ticket_id, user_id, user_email,
+            user_contact, ticket_price, added_at, promo_code,
+            ticket_status, entrance_code, order_limit, paystack_reference
+    "#).bind(Some(payload.ticket_id)).bind(Some(payload.user_id))
+    .bind(Some(payload.user_email)).bind(Some(payload.user_contact))
+    .bind(Some(payload.ticket_price)).bind(Some(payload.promo_code))
+    .bind(Some(payload.ticket_status)).bind(Some(payload.entrance_code))
+    .bind(Some(payload.order_limit)).bind(payment_reference)
+    .fetch_one(db_pool).await.expect("Failed updating event");
 
     let added_at_str = upd_order.get::<DateTime<Utc>, &str>("added_at").to_rfc3339();
     let o_price = upd_order.get::<Decimal, &str>("ticket_price").to_string();

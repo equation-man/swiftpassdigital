@@ -96,6 +96,38 @@ pub struct ConfirmStkTransactionResponse {
     pub ResultDesc: String,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct DarajaCallback {
+    pub Body: Body,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Body {
+    pub stkCallback: StkCallback,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct StkCallback {
+    pub MerchantRequestID: String,
+    pub CheckoutRequestID: String,
+    pub ResultCode: i32,
+    pub ResultDesc: String,
+    #[serde(default)]
+    pub CallbackMetadata: Option<CallbackMetadata>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct CallbackMetadata {
+    pub Item: Vec<CallbackItem>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct CallbackItem {
+    pub Name: String,
+    #[serde(default)]
+    pub Value: Option<serde_json::Value>,
+}
+
 /// Generating daraja password.
 pub async fn generate_daraja_password(till_or_paybill: String) -> (String, String) {
     dotenv().ok();
@@ -181,8 +213,9 @@ pub async fn stk_push_status(stk_status_request: ConfirmStkTransaction) -> Resul
         .header("Content-Type", "application/json")
         .json(&stk_status_request)
         .send().await?;
-    let res = stk_status.json().await?;
-    Ok(res)
+    let text = stk_status.text().await?;
+    let json_res: ConfirmStkTransactionResponse = serde_json::from_str(&text).unwrap();
+    Ok(json_res)
 }
 
 
