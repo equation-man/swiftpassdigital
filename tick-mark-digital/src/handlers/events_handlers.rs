@@ -145,7 +145,6 @@ pub async fn mpesa_callback(payload: web::Json<DarajaCallback>, ticket_id: web::
     if get_orders(&app_state.db, target_ticket_id.clone(), order_payload.clone()).await.len() != 0 {
         return HttpResponse::InternalServerError().body("Order added");
     }
-    println!("The order is not available");
 
     // Add the order reference into the db since payment is successful.
     if callBack.ResultCode == 0 {
@@ -168,14 +167,9 @@ pub async fn mpesa_callback(payload: web::Json<DarajaCallback>, ticket_id: web::
             ticket_price: ticket_price,
             paystack_reference: callBack.CheckoutRequestID.clone(),
         };
-        println!("The entrance pass is {}", &entrance_pass);
-        println!("The callback result before add is {:#?}", callBack);
-        println!("The data to be added is {:#?}", &order_details);
         let new_order = add_order(&app_state.db, entrance_pass, order_details).await;
-        println!("Created ticket order {:#?}", &new_order);
         return HttpResponse::Ok().json(new_order);
     }
-    println!("The callback error response is {:#?}", callBack);
     HttpResponse::InternalServerError().body("Error adding order")
 }
 
@@ -202,7 +196,7 @@ pub async fn mpesa_order(payload: web::Json<CreateOrder>, ticket_id: web::Path<S
     };
     match mpesa_stk_push(stkPushRequest).await {
         Ok(push_res) => {
-            let order_payload: OrderPayload = OrderPayload {
+            let order_p: OrderPayload = OrderPayload {
                 order_id: None,
                 ticket_id: None,
                 user_id: None,
@@ -220,7 +214,7 @@ pub async fn mpesa_order(payload: web::Json<CreateOrder>, ticket_id: web::Path<S
             let mut jitter: f64 = rand::thread_rng().gen_range(0.7..1.3);
             let waiting = delay * jitter;
             thread::sleep(Duration::from_secs_f64(waiting));
-            if get_orders(&app_state.db, t_id, order_payload.clone()).await.len() != 0{
+            if get_orders(&app_state.db, t_id, order_p.clone()).await.len() != 0{
                 let confirmStkTransaction = ConfirmStkTransaction {
                     BusinessShortCode: target_wallet.account_number.clone(),
                     Password: my_password.clone(),
@@ -230,15 +224,14 @@ pub async fn mpesa_order(payload: web::Json<CreateOrder>, ticket_id: web::Path<S
                 // Exponential backoff algorithm with jitters.
                 let max_retries = 2;
                 let mut attempts = 0;
-                println!("Check transaction status: {:#?}", &confirmStkTransaction);
                 while let Ok(stk_status) = stk_push_status(confirmStkTransaction.clone()).await {
                     if stk_status.ResultCode == "0".to_string() {
                         let upd_payload: OrderPayload = OrderPayload {
                             order_id: None,
                             ticket_id: Some(ticket_det.ticket_id.clone()),
                             user_id: None,
-                            user_email: order_payload.user_email.clone(),
-                            user_contact: order_payload.user_contact.clone(),
+                            user_email: Some(order_payload.user_email.clone()),
+                            user_contact: Some(order_payload.user_contact.clone()),
                             ticket_price: None,
                             promo_code: None,
                             ticket_status: None,
@@ -246,9 +239,7 @@ pub async fn mpesa_order(payload: web::Json<CreateOrder>, ticket_id: web::Path<S
                             order_limit: Some(ticket_det.capacity.clone()),
                             paystack_reference: None,
                         };
-                        println!("We are about to update order");
                         let upd = update_order(&app_state.db, push_res.CheckoutRequestID.clone(), upd_payload).await;
-                        println!("Updated ticket ourder {:#?}", &upd);
                         // Send the ticket to the email here.
                         let sender = "swiftpassdigital@drugsverse.com".to_string();
                         let subject = "SwiftPassDigital Ticket Confirmation".to_string();
@@ -319,9 +310,33 @@ pub struct VerificationQuery {
     pub event_id: Option<String>
 }
 
+/// Verify Mpesa ticket purchase.
+pub async fn verify_order(ticket_id: web::Path<String>, v_query: web::Query<VerificationQuery>, app_state: web::Data<AppState>) -> HttpResponse {
+    let q = v_query.into_inner();
+    let ticket_id: Uuid = Uuid::parse_str(&ticket_id.into_inner()).unwrap();
+    let order_payload: OrderPayload = OrderPayload {
+        order_id: None,
+        ticket_id: None,
+        user_id: None,
+        user_email: None,
+        user_contact: None,
+        ticket_price: None,
+        promo_code: None,
+        ticket_status: None,
+        entrance_code: None,
+        order_limit: None,
+        paystack_reference: Some(q.reference.clone().unwrap()),
+    };
+    let orders = get_orders(&app_state.db, ticket_id, order_payload).await;
+    if orders.len() > 0 {
+        return HttpResponse::Ok().json(&orders[0]);
+    }
+    HttpResponse::InternalServerError().body("Order does not exists")
+}
+
 /// Verify order purchase. Checking or confirming the ticket goes here, we also send the ticket to
 /// the email.
-pub async fn verify_order(ticket_id: web::Path<String>, verif_query: web::Query<VerificationQuery>, app_state: web::Data<AppState>) -> HttpResponse {
+pub async fn verify_paystack_order(ticket_id: web::Path<String>, verif_query: web::Query<VerificationQuery>, app_state: web::Data<AppState>) -> HttpResponse {
     let q = verif_query.into_inner();
     let ticket_id: Uuid = Uuid::parse_str(&ticket_id.into_inner()).unwrap();
     let order_payload: OrderPayload = OrderPayload {

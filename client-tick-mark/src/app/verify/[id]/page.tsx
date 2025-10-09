@@ -1,5 +1,6 @@
 // Transaction verification page
 "use client";
+import Link from "next/link";
 import { useSearchParams, useParams } from "next/navigation";
 import { fetchOrderFn } from "../actions";
 import { useQuery } from "@tanstack/react-query";
@@ -32,7 +33,7 @@ const SuccessStatus = ({ order }: OrderProps) => {
                     <rect width={24} height={24} fill="currentColor" mask="url(#SVGkzXYXbbR)"></rect>
                 </svg>
             </div>
-            <h1 className="text-emerald-800 text-center">Payment Successful. Entrance code sent to your email</h1>
+            <h1 className="text-emerald-800 text-center px-4">Transaction completed successfully. Ticket processed sent to the email you provided</h1>
             <div>
                 <p className="text-center text-sm text-emerald-600"><ClientOnly><EventDate iso={order.added_at} /></ClientOnly></p>
                 <p className="text-center text-sm">Amount: {formatCurrency(Number(order.ticket_price))}</p>
@@ -58,7 +59,7 @@ const ErrorStatus = () => {
                     </g>
                 </svg>
             </div>
-            <h1 className="text-emerald-800 text-center text-rose-500">Transaction was not successful!</h1>
+            <h1 className="text-emerald-800 text-center text-rose-500 px-4">Ticket processing failed! If you're seeing this but your payment was processed successfully, email support <Link href="mailto:bigtechguyz@gmail.com?subject=Ticket%20processing%20failure" className="underline hover:pointer" target="blank">here.</Link></h1>
         </div>
     )
 }

@@ -30,12 +30,12 @@ type OrdDet = {
     ticketId: string;
 }
 export async function purchaseTicketFn({orderDet, ticketId}: OrdDet): Promise<OrderDetails | unknown> {
-    const response = await axios.post(`${API_URL}/events/ticket/order/purchase/${ticketId}`, orderDet);
+    const response = await axios.post(`${API_URL}/events/ticket/order/purchase/${ticketId}`, orderDet, { timeout: 30000});
     return response.data;
 }
 
 export async function mpesaTicketPurchaseFn({orderDet, ticketId}: OrdDet): Promise<OrderDetails | unknown> {
-    const response = await axios.post(`${API_URL}/events/ticket/mpesa/purchase/${ticketId}`, orderDet);
+    const response = await axios.post(`${API_URL}/events/ticket/mpesa/purchase/${ticketId}`, orderDet, { timeout: 60000});
     return response.data
 }
 

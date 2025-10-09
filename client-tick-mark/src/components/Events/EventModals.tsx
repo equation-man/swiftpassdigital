@@ -2,6 +2,7 @@
 "use client";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
 import PhoneInput from "react-phone-input-2";
 import { useSelector, useDispatch } from "react-redux";
 import { updatePaymentModalState } from "@/redux/reducers/generalReducer";
@@ -42,23 +43,26 @@ const TicketPaymentModal = ({ ticketId, eventDetails }: PayemntModalProps) => {
         }
     });
 
+    const router = useRouter();
     const mutation = useMutation({
         mutationKey: ['purchaseOrder'],
         mutationFn: (orderInputData) => mpesaTicketPurchaseFn(orderInputData),
         onSuccess: (data) => {
-            toast.success("Checkout initiated redirecting to payments page", {
+            toast.success("Ticket payment processing was successfull", {
                 iconTheme: {
                     primary: "#ecfdf5",
                     secondary: "#047857",
                 },
             })
             console.log("The mpesa payment result will be", data)
+            // Redirect to ticket page with query params of reference, ticket_id dynamic url.
             //window.location.href = data.authorization_url;
+            router.push(`/verify/${data.ticket_id}?reference=${data.paystack_reference}`)
             dispatch(updatePaymentModalState(false));
         },
         onError: (err: Error) => {
-            console.log("The mpesa payment error is", err);
-            toast.error("Failed initiating payments processing")
+            router.push(`/verify/failed`)
+            toast.error("Payment processing for the ticket failed")
         }
     });
     const handleContactSubmission = async (event) => {
@@ -81,11 +85,11 @@ const TicketPaymentModal = ({ ticketId, eventDetails }: PayemntModalProps) => {
                             <div className="px-2">
                                 <form id="contactForm" onSubmit={handleContactSubmission}>
                                     <div>
-                                        <label className="font-medium text-gray-600">Email</label>
+                                        <label className="font-medium text-gray-600">Email(Ticket delivered here)</label>
                                         <input onChange={handleChange} id="user_email" name="user_email" className="input validator w-full" type="email" required placeholder="mail@gmail.com" />
                                     </div>
                                     <div>
-                                        <label className="font-medium text-gray-600">Phone (with country code)</label>
+                                        <label className="font-medium text-gray-600">Mpesa Contact (with country code)</label>
                                         <PhoneInput
                                             country={"ke"}
                                             value={phone}
@@ -99,10 +103,36 @@ const TicketPaymentModal = ({ ticketId, eventDetails }: PayemntModalProps) => {
                                 </form>
                             </div>
                         </div>
+                        <div>
+                            {mutation.isPending && (
+                                <div className="flex flex-row items-center justify-center text-emerald-600 gap-x-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width={28} height={28} viewBox="0 0 24 24">
+                                        <rect width={6} height={14} x={1} y={4} fill="currentColor">
+                                            <animate id="SVGBoZ3Ab9F" fill="freeze" attributeName="y" begin="0;SVG0XJl4OCs.end-0.25s" dur="0.75s" values="1;5"></animate>
+                                            <animate fill="freeze" attributeName="height" begin="0;SVG0XJl4OCs.end-0.25s" dur="0.75s" values="22;14"></animate>
+                                            <animate fill="freeze" attributeName="opacity" begin="0;SVG0XJl4OCs.end-0.25s" dur="0.75s" values="1;0.2"></animate>
+                                        </rect>
+                                        <rect width={6} height={14} x={9} y={4} fill="currentColor" opacity={0.4}>
+                                            <animate fill="freeze" attributeName="y" begin="SVGBoZ3Ab9F.begin+0.15s" dur="0.75s" values="1;5"></animate>
+                                            <animate fill="freeze" attributeName="height" begin="SVGBoZ3Ab9F.begin+0.15s" dur="0.75s" values="22;14"></animate>
+                                            <animate fill="freeze" attributeName="opacity" begin="SVGBoZ3Ab9F.begin+0.15s" dur="0.75s" values="1;0.2"></animate>
+                                        </rect>
+                                        <rect width={6} height={14} x={17} y={4} fill="currentColor" opacity={0.3}>
+                                            <animate id="SVG0XJl4OCs" fill="freeze" attributeName="y" begin="SVGBoZ3Ab9F.begin+0.3s" dur="0.75s" values="1;5"></animate>
+                                            <animate fill="freeze" attributeName="height" begin="SVGBoZ3Ab9F.begin+0.3s" dur="0.75s" values="22;14"></animate>
+                                            <animate fill="freeze" attributeName="opacity" begin="SVGBoZ3Ab9F.begin+0.3s" dur="0.75s" values="1;0.2"></animate>
+                                        </rect>
+                                    </svg>
+                                    <span className="text-sm">Good things take time! Wait a minute...</span>
+                                </div>
+                            )}
+                            {mutation.isError && (<p className="text-rose-500">Error! Failed processing ticket</p>)}
+                        </div>
                         <div className="text-white flex flex-row gap-x-3 w-full p-2">
                             <button
                                 onClick={e => handlePaymentModDisp(e, false)}
                                 className="bg-emerald-500 btn-block p-2 hover:cursor-pointer"
+                                disabled={mutation.isPending}
                             >
                                 Cancel
                             </button>
@@ -110,6 +140,7 @@ const TicketPaymentModal = ({ ticketId, eventDetails }: PayemntModalProps) => {
                                 type="submit"
                                 form="contactForm"
                                 className="bg-emerald-800 btn-block p-2 hover:cursor-pointer"
+                                disabled={mutation.isPending}
                             >
                                 Continue
                             </button>
