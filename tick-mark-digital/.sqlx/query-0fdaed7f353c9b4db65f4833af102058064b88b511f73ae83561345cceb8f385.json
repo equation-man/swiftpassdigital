@@ -1,0 +1,132 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO ticket_market.tickets\n            (event_id, base_price, capacity, ticket_type, start_time, finish_time, description, ticket_class, discount_time)\n        VALUES\n            ($1, $2, $3, $4, $5, $6, $7, $8, $9)\n        RETURNING ticket_id, event_id, base_price,\n            capacity, ticket_type as \"tick_type: TickType\", start_time, finish_time,\n            added_at, description, ticket_class as \"tick_class: TickClass\", discount_time\n    ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "ticket_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "event_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "base_price",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 3,
+        "name": "capacity",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "tick_type: TickType",
+        "type_info": {
+          "Custom": {
+            "name": "tick_type",
+            "kind": {
+              "Enum": [
+                "discount",
+                "regular",
+                "vip"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "start_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "finish_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "added_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "tick_class: TickClass",
+        "type_info": {
+          "Custom": {
+            "name": "tick_class",
+            "kind": {
+              "Enum": [
+                "individual",
+                "group"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "discount_time",
+        "type_info": "Interval"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Numeric",
+        "Int8",
+        {
+          "Custom": {
+            "name": "tick_type",
+            "kind": {
+              "Enum": [
+                "discount",
+                "regular",
+                "vip"
+              ]
+            }
+          }
+        },
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        {
+          "Custom": {
+            "name": "tick_class",
+            "kind": {
+              "Enum": [
+                "individual",
+                "group"
+              ]
+            }
+          }
+        },
+        "Interval"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "0fdaed7f353c9b4db65f4833af102058064b88b511f73ae83561345cceb8f385"
+}

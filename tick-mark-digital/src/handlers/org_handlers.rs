@@ -406,7 +406,6 @@ mod tests {
             "42381125-eedc-4be8-b5eb-17ee67aa2ad3".to_string(),
         ));
         let del = delete_contact(params, test_state).await;
-        println!("The deleted contact is {:#?}", del.body());
         assert_eq!(del.status(), StatusCode::OK);
     }
 

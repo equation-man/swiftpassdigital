@@ -1,0 +1,87 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        DELETE FROM ticket_market.discount_rules\n        WHERE discount_id=$1 AND ticket_id=$2\n        RETURNING discount_id, ticket_id, name,\n            discount_type as \"disc_type: DiscType\", value,\n            start_date, end_date, added_at, max_users, active\n    ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "discount_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "ticket_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "disc_type: DiscType",
+        "type_info": {
+          "Custom": {
+            "name": "disc_type",
+            "kind": {
+              "Enum": [
+                "percentage",
+                "fixed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "value",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 5,
+        "name": "start_date",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "end_date",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "added_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "max_users",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "active",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "95241abe25f4a09c34b15cd4eec26efba8a42089dadd4c6543bfa165ee3201f4"
+}

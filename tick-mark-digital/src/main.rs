@@ -22,6 +22,7 @@ use std::io;
 
 #[actix_web::main]
 async fn main() -> io::Result<()> {
+    dotenv().ok();
     let secret_key = Key::generate(); //Generate secret key for session encryption.
 
     // Initilize the logger from the environment.
@@ -46,5 +47,9 @@ async fn main() -> io::Result<()> {
             .configure(orgs_routes)
             .configure(events_routes)
     };
-    HttpServer::new(app).bind(("0.0.0.0", 5000))?.run().await
+
+    let host = env::var("HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
+    let port = env::var("PORT").unwrap_or_else(|_| "5000".to_string());
+    println!("Server running at http://{}:{}", host, port);
+    HttpServer::new(app).bind(format!("{}:{}", host, port))?.run().await
 }

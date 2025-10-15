@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        DELETE FROM ticket_market.permissions\n        WHERE permission_id=$1\n        RETURNING permission_id, user_access_role_id, permission as \"permission_type: PermissionType\"\n    ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "permission_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_access_role_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "permission_type: PermissionType",
+        "type_info": {
+          "Custom": {
+            "name": "permission_type",
+            "kind": {
+              "Enum": [
+                "read",
+                "write",
+                "update",
+                "remove"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "cea58f30d9bb916498fb771cb563d92a443b953a27cf690345ecf3f489de0c6b"
+}

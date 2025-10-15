@@ -86,7 +86,7 @@ pub struct ConfirmStkTransaction {
     pub CheckoutRequestID: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ConfirmStkTransactionResponse {
     pub ResponseCode: String,
     pub ResponseDescription: String,
@@ -128,6 +128,28 @@ pub struct CallbackItem {
     pub Value: Option<serde_json::Value>,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct FaultDetail {
+    pub fault: Fault,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Fault {
+    pub faultstring: String,
+    pub detail: FaultCode,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct FaultCode {
+    errorcode: String,
+}
+
+#[derive(Debug, Clone)]
+pub enum StkDarajaResponse {
+    Success(ConfirmStkTransactionResponse),
+    Fault(FaultDetail)
+}
+
 /// Generating daraja password.
 pub async fn generate_daraja_password(till_or_paybill: String) -> (String, String) {
     dotenv().ok();
@@ -161,7 +183,7 @@ pub async fn mpesa_auth_details() -> (String, String) {
 }
 
 /// Calculating the commission amount
-pub async fn commission_amount(amount: String) -> u64 {
+pub async fn commission_amnt_calc(amount: String) -> u64 {
     (6*amount.parse::<u64>().unwrap())/100
 }
 
@@ -205,7 +227,7 @@ pub async fn stk_c2b_status(c2b_trans_status: C2BTransactionStatus) -> Result<C2
 }
 
 /// Confirm stk push transaction query.
-pub async fn stk_push_status(stk_status_request: ConfirmStkTransaction) -> Result<ConfirmStkTransactionResponse, Error> {
+pub async fn stk_push_status(stk_status_request: ConfirmStkTransaction) -> Result<StkDarajaResponse, Error> {
     let (url, bearer_token) = mpesa_auth_details().await;
     let client = reqwest::Client::new();
     let stk_status = client.post(format!("{}/mpesa/stkpushquery/v1/query", &url))
@@ -214,8 +236,14 @@ pub async fn stk_push_status(stk_status_request: ConfirmStkTransaction) -> Resul
         .json(&stk_status_request)
         .send().await?;
     let text = stk_status.text().await?;
-    let json_res: ConfirmStkTransactionResponse = serde_json::from_str(&text).unwrap();
-    Ok(json_res)
+    let value: serde_json::Value = serde_json::from_str(&text).unwrap();
+    // Detect rate limitting.
+    if value.get("fault").is_some() {
+        let fault: FaultDetail = serde_json::from_value(value).unwrap();
+        return Ok(StkDarajaResponse::Fault(fault));
+    }
+    let json_res: ConfirmStkTransactionResponse = serde_json::from_value(value).unwrap();
+    Ok(StkDarajaResponse::Success(json_res))
 }
 
 
@@ -251,7 +279,7 @@ mod tests {
             InitiatorName: "testapi".to_string(),
             SecurityCredential: sec_credentials,
             CommandID: "SalaryPayment".to_string(),
-            Amount: commission_amount("1000".to_string()).await,
+            Amount: commission_amnt_calc("1000".to_string()).await,
             PartyA: 600998,
             PartyB: 254708374149,
             Remarks: "Test remarks".to_string(),
@@ -332,7 +360,7 @@ mod tests {
     #[tokio::test]
     #[ignore]
     async fn commission_test() {
-        let comm_amount = commission_amount("1000".to_string()).await;
+        let comm_amount = commission_amnt_calc("1000".to_string()).await;
         println!("The commission amount is: {:#?}", comm_amount);
     }
 }

@@ -315,18 +315,21 @@ pub async fn add_order(db_pool: &PgPool, entrance_code: String, new_order: Order
     let n_order = sqlx::query!(r#"
         INSERT INTO ticket_market.orders
             (ticket_id, user_contact, ticket_price, ticket_status,
-            entrance_code, order_limit, user_email, paystack_reference)
+            entrance_code, order_limit, user_email, paystack_reference,
+            commission_amount, order_currency)
         VALUES
-            ($1, $2, $3, $4, $5, $6, $7, $8)
+            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         RETURNING order_id, ticket_id, user_id, user_email,
             user_contact, ticket_price, added_at, paystack_reference,
-            ticket_status as "tick_status: TickStatus", entrance_code, order_limit
+            ticket_status as "tick_status: TickStatus",
+            entrance_code, order_limit, commission_amount, order_currency
     "#, new_order.ticket_id, new_order.user_contact, new_order.ticket_price,
     new_order.ticket_status as TickStatus, entrance_code, new_order.order_limit,
-    new_order.user_email, new_order.paystack_reference).fetch_one(db_pool).await.unwrap();
+    new_order.user_email, new_order.paystack_reference,
+    new_order.commission_amount, new_order.order_currency).fetch_one(db_pool).await.unwrap();
     let added_at_str = n_order.added_at.to_rfc3339();
     let order_price = n_order.ticket_price.unwrap().to_string();
-    println!("The added order is {:#?}", n_order);
+    let commission_amnt = n_order.commission_amount.unwrap().to_string();
     Order {
         order_id: n_order.order_id,
         ticket_id: n_order.ticket_id.unwrap(),
@@ -340,16 +343,45 @@ pub async fn add_order(db_pool: &PgPool, entrance_code: String, new_order: Order
         entrance_code: n_order.entrance_code.unwrap(),
         order_limit: n_order.order_limit.unwrap(),
         paystack_reference: n_order.paystack_reference.unwrap(),
+        commission_amount: commission_amnt,
+        order_currency: n_order.order_currency.unwrap()
     }
 }
 
-//pub async fn get_order(db_pool: &PgPool, filters: OrderPayload) -> Order {
-    //let order = sqlx::query(r#"
-        //SELECT * FROM ticket_market.orders
-        //WHERE entrance_code=$1
-    //"#).bind(Some(filters.entrance_code))
-    //.find_one(db_pool).await.expect("Can't fetch single order");
-//}
+pub async fn get_single_order(db_pool: &PgPool, ticket_id: Uuid, payment_reference: String) -> Result<Option<Order>, sqlx::Error> {
+    let order = sqlx::query(r#"
+        SELECT * FROM ticket_market.orders
+        WHERE paystack_reference=$1 AND ticket_id=$2
+    "#).bind(payment_reference).bind(ticket_id)
+    .fetch_optional(db_pool).await?;
+
+    let order_res = match order {
+        Some(order_) => {
+            let added_at_str = order_.get::<DateTime<Utc>, &str>("added_at").to_rfc3339();
+            let order_price = order_.get::<Decimal, &str>("ticket_price").to_string();
+            let commission_amnt = order_.get::<Decimal, &str>("commission_amount").to_string();
+            Some(Order {
+                order_id: order_.get("order_id"),
+                ticket_id: order_.get("ticket_id"),
+                //user_id: n_order.user_id.unwrap(),
+                user_email: order_.get("user_email"),
+                user_contact: order_.get("user_contact"),
+                ticket_price: order_price,
+                added_at: added_at_str,
+                //promo_code: n_order.promo_code.unwrap(),
+                ticket_status: order_.get("ticket_status"),
+                entrance_code: order_.get("entrance_code"),
+                order_limit: order_.get("order_limit"),
+                paystack_reference: order_.get("paystack_reference"),
+                commission_amount: commission_amnt,
+                order_currency: order_.get("order_currency")
+            })
+        },
+        _ => None
+    };
+
+    Ok(order_res)
+}
 
 pub async fn get_orders(db_pool: &PgPool, ticket_id: Uuid, filters: OrderPayload) -> Vec<Order> {
     let orders = sqlx::query(r#"
@@ -365,17 +397,19 @@ pub async fn get_orders(db_pool: &PgPool, ticket_id: Uuid, filters: OrderPayload
             AND ($9 IS NULL OR entrance_code=$9)
             AND ($10 IS NULL OR order_limit=$10)
             AND ($11 IS NULL OR paystack_reference=$11)
+            AND ($12 IS NULL OR order_currency=$12)
     "#).bind(Some(ticket_id)).bind(Some(filters.order_id))
     .bind(Some(filters.user_id)).bind(Some(filters.user_email))
     .bind(Some(filters.user_contact)).bind(Some(filters.ticket_price))
     .bind(Some(filters.promo_code)).bind(Some(filters.ticket_status))
     .bind(Some(filters.entrance_code)).bind(Some(filters.order_limit))
-    .bind(Some(filters.paystack_reference))
+    .bind(Some(filters.paystack_reference)).bind(Some(filters.order_currency))
     .fetch_all(db_pool).await.expect("Failed fetching orders");
 
     orders.iter().map(|order| {
         let added_at_str = order.get::<DateTime<Utc>, &str>("added_at").to_rfc3339();
         let o_price = order.get::<Decimal, &str>("ticket_price").to_string();
+        let c_amount = order.get::<Decimal, &str>("commission_amount").to_string();
         Order {
             order_id: order.get("order_id"),
             ticket_id: order.get("ticket_id"),
@@ -388,7 +422,9 @@ pub async fn get_orders(db_pool: &PgPool, ticket_id: Uuid, filters: OrderPayload
             ticket_status: order.get("ticket_status"),
             entrance_code: order.get("entrance_code"),
             order_limit: order.get("order_limit"),
-            paystack_reference: order.get("paystack_reference")
+            paystack_reference: order.get("paystack_reference"),
+            commission_amount: c_amount,
+            order_currency: order.get("order_currency")
         }
     }).collect()
 }
@@ -404,7 +440,8 @@ pub async fn admin_update_order(db_pool: &PgPool, owner_id: Uuid, order_id: Uuid
             AND o.order_id=$3
         RETURNING o.order_id, o.ticket_id, o.user_id, o.user_email,
             o.user_contact, o.ticket_price, o.added_at, o.promo_code,
-            o.ticket_status, o.entrance_code, o.order_limit
+            o.ticket_status, o.entrance_code, o.order_limit, o.order_currency,
+            o.commission_amount
 
     "#).bind(Some(payload.ticket_status)).bind(owner_id)
     .bind(order_id)
@@ -412,6 +449,8 @@ pub async fn admin_update_order(db_pool: &PgPool, owner_id: Uuid, order_id: Uuid
 
     let added_at_str = upd_order.get::<DateTime<Utc>, &str>("added_at").to_rfc3339();
     let o_price = upd_order.get::<Decimal, &str>("ticket_price").to_string();
+    let c_amount = upd_order.get::<Decimal, &str>("commission_amount").to_string();
+
     Order {
         order_id: upd_order.get("order_id"),
         ticket_id: upd_order.get("ticket_id"),
@@ -424,7 +463,9 @@ pub async fn admin_update_order(db_pool: &PgPool, owner_id: Uuid, order_id: Uuid
         ticket_status: upd_order.get("ticket_status"),
         entrance_code: upd_order.get("entrance_code"),
         order_limit: upd_order.get("order_limit"),
-        paystack_reference: upd_order.get("paystack_reference")
+        paystack_reference: upd_order.get("paystack_reference"),
+        commission_amount: c_amount,
+        order_currency: upd_order.get("order_currency")
     }
 }
 
@@ -442,8 +483,9 @@ pub async fn update_order(db_pool: &PgPool, payment_reference: String, payload: 
                 order_limit = COALESCE($9, order_limit)
             WHERE paystack_reference = $10
         RETURNING order_id, ticket_id, user_id, user_email,
-            user_contact, ticket_price, added_at, promo_code,
-            ticket_status, entrance_code, order_limit, paystack_reference
+            user_contact, ticket_price, added_at,
+            promo_code, commission_amount, ticket_status, entrance_code,
+            order_limit, paystack_reference, order_currency
     "#).bind(Some(payload.ticket_id)).bind(Some(payload.user_id))
     .bind(Some(payload.user_email)).bind(Some(payload.user_contact))
     .bind(Some(payload.ticket_price)).bind(Some(payload.promo_code))
@@ -453,6 +495,8 @@ pub async fn update_order(db_pool: &PgPool, payment_reference: String, payload: 
 
     let added_at_str = upd_order.get::<DateTime<Utc>, &str>("added_at").to_rfc3339();
     let o_price = upd_order.get::<Decimal, &str>("ticket_price").to_string();
+    let c_amount = upd_order.get::<Decimal, &str>("commission_amount").to_string();
+
     Order {
         order_id: upd_order.get("order_id"),
         ticket_id: upd_order.get("ticket_id"),
@@ -465,7 +509,9 @@ pub async fn update_order(db_pool: &PgPool, payment_reference: String, payload: 
         ticket_status: upd_order.get("ticket_status"),
         entrance_code: upd_order.get("entrance_code"),
         order_limit: upd_order.get("order_limit"),
-        paystack_reference: upd_order.get("paystack_reference")
+        paystack_reference: upd_order.get("paystack_reference"),
+        commission_amount: c_amount,
+        order_currency: upd_order.get("order_currency")
     }
 }
 

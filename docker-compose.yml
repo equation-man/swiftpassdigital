@@ -1,0 +1,53 @@
+services:
+  db:
+    container_name: tickmark-postgres
+    restart: always
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - tickmark-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5433:5432"
+    networks:
+      - tickmark-network
+  api:
+    restart: on-failure
+    container_name: tickmarkdigital-webservice
+    build:
+      context: ./tick-mark-digital
+      dockerfile: Dockerfile-tickmark-api
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      SECRET_KEY: ${SECRET_KEY}
+      HOST: ${HOST}
+      PORT: ${PORT}
+      MAIL_SENDER_API: ${MAIL_SENDER_API}
+      MAIL_SENDER_API_KEY: ${MAIL_SENDER_API_KEY}
+      MPESA_PAYMENT_URL: ${MPESA_PAYMENT_URL}
+      MPESA_DARAJA_CONSUMER_SECRET: ${MPESA_DARAJA_CONSUMER_SECRET}
+      MPESA_DARAJA_CONSUMER_KEY: ${MPESA_DARAJA_CONSUMER_KEY}
+      MPESA_DARAJA_PASSKEY: ${MPESA_DARAJA_PASSKEY}
+      MPESA_B2C_SECURITY_CRED: ${MPESA_B2C_SECURITY_CRED}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - ":5000:5000"
+    networks:
+      - tickmark-network
+
+volumes:
+  tickmark-data:
+    driver: local
+
+networks:
+  tickmark-network:
+    driver: bridge

@@ -4,6 +4,8 @@ FROM rust as build
 COPY . /app
 # Setting working directory
 WORKDIR /app
+# Ensure SQLX builds in offline mode.
+ENV SQLX_OFFLINE=true
 # Build the app
 RUN cargo build --release
 # use google distroless as runtime image.

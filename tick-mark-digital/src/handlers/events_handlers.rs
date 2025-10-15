@@ -13,7 +13,8 @@ use crate::helpers::{
     parse_email_html_content, send_email,
     ConfirmStkTransaction, StkPushRequest,
     mpesa_stk_push, stk_push_status, generate_daraja_password,
-    DarajaCallback,
+    DarajaCallback, commission_amnt_calc,
+    StkDarajaResponse,
 };
 use nanoid::nanoid;
 use std::{thread, time::Duration, str::FromStr};
@@ -118,9 +119,13 @@ pub async fn tickets_display(event_id: web::Path<String>, app_state: web::Data<A
 
 /// Getting a ticket.
 pub async fn ticket_info(ticket_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
-    let t_id: Uuid = Uuid::parse_str(&ticket_id.into_inner()).unwrap();
-    let ticket = get_single_ticket(&app_state.db, t_id).await;
-    HttpResponse::Ok().json(ticket)
+    match Uuid::parse_str(&ticket_id.into_inner()) {
+        Ok(t_id) => {
+            let ticket = get_single_ticket(&app_state.db, t_id).await;
+            HttpResponse::Ok().json(ticket)
+        },
+        Err(_) => return HttpResponse::BadRequest().body("Invalid UUID")
+    }
 }
 
 // ============================== ORDER TICKETS =========================
@@ -129,21 +134,9 @@ pub async fn mpesa_callback(payload: web::Json<DarajaCallback>, ticket_id: web::
     let callBack = &payload.Body.stkCallback;
     // Check if the callback had already been called
     let target_ticket_id = Uuid::parse_str(&ticket_id.into_inner()).unwrap();
-    let order_payload: OrderPayload = OrderPayload {
-        order_id: None,
-        ticket_id: None,
-        user_id: None,
-        user_email: None,
-        user_contact: None,
-        ticket_price: None,
-        promo_code: None,
-        ticket_status: None,
-        entrance_code: None,
-        order_limit: None,
-        paystack_reference: Some(callBack.CheckoutRequestID.clone()),
-    };
-    if get_orders(&app_state.db, target_ticket_id.clone(), order_payload.clone()).await.len() != 0 {
-        return HttpResponse::InternalServerError().body("Order added");
+    if let Ok(Some(order)) = get_single_order(&app_state.db, target_ticket_id.clone(), callBack.CheckoutRequestID.clone()).await {
+        // Prevent double booking of tickets
+        return HttpResponse::InternalServerError().body("Order already exists");
     }
 
     // Add the order reference into the db since payment is successful.
@@ -158,6 +151,7 @@ pub async fn mpesa_callback(payload: web::Json<DarajaCallback>, ticket_id: web::
         let ticket_price_obj = callBack.CallbackMetadata.as_ref().unwrap().Item
             .iter().filter(|itm| itm.Name == "Amount").collect::<Vec<_>>()[0];
         let ticket_price: Decimal = serde_json::from_value(ticket_price_obj.Value.clone().unwrap()).unwrap();
+        let my_comm = commission_amnt_calc(ticket_price.to_string()).await;
         let order_details = OrderDetails {
             ticket_id: target_ticket_id,
             user_email: "NOT_SET".to_string(),
@@ -165,6 +159,8 @@ pub async fn mpesa_callback(payload: web::Json<DarajaCallback>, ticket_id: web::
             ticket_status: TickStatus::Pending,
             order_limit: 0,
             ticket_price: ticket_price,
+            commission_amount: Decimal::from(my_comm),
+            order_currency: "KES".to_string(),
             paystack_reference: callBack.CheckoutRequestID.clone(),
         };
         let new_order = add_order(&app_state.db, entrance_pass, order_details).await;
@@ -207,61 +203,77 @@ pub async fn mpesa_order(payload: web::Json<CreateOrder>, ticket_id: web::Path<S
                 ticket_status: None,
                 entrance_code: None,
                 order_limit: None,
+                commission_amount: None,
+                order_currency: None,
                 paystack_reference: Some(push_res.CheckoutRequestID.clone()),
             };
-            // Check if the order has been created and update it.
-            let mut delay = 30.0;
-            let mut jitter: f64 = rand::thread_rng().gen_range(0.7..1.3);
-            let waiting = delay * jitter;
-            thread::sleep(Duration::from_secs_f64(waiting));
-            if get_orders(&app_state.db, t_id, order_p.clone()).await.len() != 0{
+            // Check if the order has been created on payment and update it.
+            let mut delay = 5.0;
+            let mut attempts = 0;
+            let max_attempts = 7;
+            let mut order_value = None;
+            while let None = order_value {
+                attempts += 1;
+                order_value = get_single_order(&app_state.db, t_id, push_res.CheckoutRequestID.clone()).await.unwrap();
+                if attempts == max_attempts {
+                    //Stop
+                    break;
+                }
+                if order_value.is_none() {
+                    let jitter: f64 = rand::thread_rng().gen_range(0.7..1.3);
+                    let waiting = delay * jitter;
+                    thread::sleep(Duration::from_secs_f64(waiting));
+                    delay *= 2.0;
+                    continue;
+                }
                 let confirmStkTransaction = ConfirmStkTransaction {
                     BusinessShortCode: target_wallet.account_number.clone(),
                     Password: my_password.clone(),
                     Timestamp: timestamp.clone(),
                     CheckoutRequestID: push_res.CheckoutRequestID.clone(),
                 };
-                // Exponential backoff algorithm with jitters.
-                let max_retries = 2;
-                let mut attempts = 0;
-                while let Ok(stk_status) = stk_push_status(confirmStkTransaction.clone()).await {
-                    if stk_status.ResultCode == "0".to_string() {
-                        let upd_payload: OrderPayload = OrderPayload {
-                            order_id: None,
-                            ticket_id: Some(ticket_det.ticket_id.clone()),
-                            user_id: None,
-                            user_email: Some(order_payload.user_email.clone()),
-                            user_contact: Some(order_payload.user_contact.clone()),
-                            ticket_price: None,
-                            promo_code: None,
-                            ticket_status: None,
-                            entrance_code: None,
-                            order_limit: Some(ticket_det.capacity.clone()),
-                            paystack_reference: None,
-                        };
-                        let upd = update_order(&app_state.db, push_res.CheckoutRequestID.clone(), upd_payload).await;
-                        // Send the ticket to the email here.
-                        let sender = "swiftpassdigital@drugsverse.com".to_string();
-                        let subject = "SwiftPassDigital Ticket Confirmation".to_string();
-                        let target_name = "SwiftPassDigital User".to_string();
-                        let text = format!("Your event spot created successfully via SwiftPassDigital. Your ticket id is: {}. Enjoy the event", upd.entrance_code);
-                        let html = parse_email_html_content(
-                            upd.entrance_code.clone(), upd.ticket_status.clone().to_string(),
-                            target_event.title, target_event.start_date
-                            ).await;
-                        let _ = send_email(sender, upd.user_email.clone(), subject, target_name, text, Some(html)).await;
-                        return HttpResponse::Ok().json(upd);
-                    } else if attempts == max_retries {
-                        break;
-                    } else {
-                        attempts += 1;
-                        let status_jitter: f64 = rand::thread_rng().gen_range(0.7..1.3);
-                        let sleep_time = delay * status_jitter;
-                        thread::sleep(Duration::from_secs_f64(sleep_time)); // Backoff before retrying. 
-                        delay *= 2.0;// exponential increase
+                if let Ok(pay_status) = stk_push_status(confirmStkTransaction.clone()).await {
+                    match pay_status {
+                        StkDarajaResponse::Success(stk_status) => {
+                            if stk_status.ResultCode == "0".to_string() {
+                                let upd_payload: OrderPayload = OrderPayload {
+                                    order_id: None,
+                                    ticket_id: Some(ticket_det.ticket_id.clone()),
+                                    user_id: None,
+                                    user_email: Some(order_payload.user_email.clone()),
+                                    user_contact: Some(order_payload.user_contact.clone()),
+                                    ticket_price: None,
+                                    promo_code: None,
+                                    ticket_status: None,
+                                    entrance_code: None,
+                                    order_limit: Some(ticket_det.capacity.clone()),
+                                    commission_amount: None,
+                                    order_currency: None,
+                                    paystack_reference: None,
+                                };
+                                let upd = update_order(&app_state.db, push_res.CheckoutRequestID.clone(), upd_payload).await;
+                                // Send the ticket to the email here.
+                                let sender = "swiftpassdigital@drugsverse.com".to_string();
+                                let subject = "SwiftPassDigital Ticket Confirmation".to_string();
+                                let target_name = "SwiftPassDigital User".to_string();
+                                let text = format!("Your event spot created successfully via SwiftPassDigital. Your ticket id is: {}. Enjoy the event", upd.entrance_code);
+                                let html = parse_email_html_content(
+                                    upd.entrance_code.clone(), upd.ticket_status.clone().to_string(),
+                                    target_event.title, target_event.start_date
+                                    ).await;
+                                let _ = send_email(sender, upd.user_email.clone(), subject, target_name, text, Some(html)).await;
+                                return HttpResponse::Ok().json(upd);
+                            }
+                            return HttpResponse::InternalServerError().body("Error processing ticket");
+                        },
+                        StkDarajaResponse::Fault(f_status) => {
+                            // Handling rate limiting.
+                            //thread::sleep(Duration::from_secs_f64(waiting)); // Backoff before retrying. 
+                            //continue;
+                            return HttpResponse::InternalServerError().body("Handling rate limiting");
+                        },
                     }
                 }
-                return HttpResponse::InternalServerError().body("Payment status check failed")
             }
             return HttpResponse::InternalServerError().body("Payment processing failed.");
         },
@@ -312,26 +324,16 @@ pub struct VerificationQuery {
 
 /// Verify Mpesa ticket purchase.
 pub async fn verify_order(ticket_id: web::Path<String>, v_query: web::Query<VerificationQuery>, app_state: web::Data<AppState>) -> HttpResponse {
-    let q = v_query.into_inner();
-    let ticket_id: Uuid = Uuid::parse_str(&ticket_id.into_inner()).unwrap();
-    let order_payload: OrderPayload = OrderPayload {
-        order_id: None,
-        ticket_id: None,
-        user_id: None,
-        user_email: None,
-        user_contact: None,
-        ticket_price: None,
-        promo_code: None,
-        ticket_status: None,
-        entrance_code: None,
-        order_limit: None,
-        paystack_reference: Some(q.reference.clone().unwrap()),
-    };
-    let orders = get_orders(&app_state.db, ticket_id, order_payload).await;
-    if orders.len() > 0 {
-        return HttpResponse::Ok().json(&orders[0]);
+    match Uuid::parse_str(&ticket_id.into_inner()) {
+        Ok(ticket_id) => {
+            let q = v_query.into_inner();
+            if let Some(order) = get_single_order(&app_state.db, ticket_id, q.reference.clone().unwrap()).await.unwrap() {
+                return HttpResponse::Ok().json(order);
+            }
+            HttpResponse::InternalServerError().body("Order does not exists")
+        },
+        Err(_) => return HttpResponse::BadRequest().body("Invalid UUID")
     }
-    HttpResponse::InternalServerError().body("Order does not exists")
 }
 
 /// Verify order purchase. Checking or confirming the ticket goes here, we also send the ticket to
@@ -350,6 +352,8 @@ pub async fn verify_paystack_order(ticket_id: web::Path<String>, verif_query: we
         ticket_status: None,
         entrance_code: None,
         order_limit: None,
+        commission_amount: None,
+        order_currency: None,
         paystack_reference: Some(q.reference.clone().unwrap()),
     };
     // Check if the referece exists.
@@ -370,6 +374,7 @@ pub async fn verify_paystack_order(ticket_id: web::Path<String>, verif_query: we
             let code_gen = nanoid!(8, &alphabet);
             let entrance_pass = format!("SWPD-{}", code_gen);
             let ticket = get_single_ticket(&app_state.db, ticket_id).await;
+            let comm_amnt = commission_amnt_calc(res.amount.to_string()).await;
             let order_details = OrderDetails {
                 ticket_id: ticket_id,
                 user_email: q.email.unwrap(),
@@ -377,6 +382,8 @@ pub async fn verify_paystack_order(ticket_id: web::Path<String>, verif_query: we
                 ticket_status: TickStatus::Pending,
                 order_limit: ticket.capacity,
                 ticket_price: Decimal::from(res.amount),
+                order_currency: "KES".to_string(),
+                commission_amount: Decimal::from(comm_amnt),
                 paystack_reference: res.reference,
             };
             let new_order = add_order(&app_state.db, entrance_pass, order_details).await;
@@ -428,6 +435,8 @@ pub async fn orders_list(params: web::Path<String>, query: web::Query<OrderQuery
         ticket_status: None,
         entrance_code: q.entrance_code,
         order_limit: None,
+        commission_amount: None,
+        order_currency: None,
         paystack_reference: None,
     };
     let orders_list = get_orders(&app_state.db, ticket_id, filters).await;

@@ -7,7 +7,7 @@ import PhoneInput from "react-phone-input-2";
 import { useSelector, useDispatch } from "react-redux";
 import { updatePaymentModalState } from "@/redux/reducers/generalReducer";
 import { singleTicketInfoFn, purchaseTicketFn, mpesaTicketPurchaseFn } from "@/app/event/actions";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Event } from "@/types/types";
 import { formatCurrency } from "@/lib/helpers";
 
@@ -44,17 +44,18 @@ const TicketPaymentModal = ({ ticketId, eventDetails }: PayemntModalProps) => {
     });
 
     const router = useRouter();
+    const queryClient = useQueryClient();
     const mutation = useMutation({
         mutationKey: ['purchaseOrder'],
         mutationFn: (orderInputData) => mpesaTicketPurchaseFn(orderInputData),
         onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ["ticket", ticketId]});
             toast.success("Ticket payment processing was successfull", {
                 iconTheme: {
                     primary: "#ecfdf5",
                     secondary: "#047857",
                 },
             })
-            console.log("The mpesa payment result will be", data)
             // Redirect to ticket page with query params of reference, ticket_id dynamic url.
             //window.location.href = data.authorization_url;
             router.push(`/verify/${data.ticket_id}?reference=${data.paystack_reference}`)
@@ -62,7 +63,8 @@ const TicketPaymentModal = ({ ticketId, eventDetails }: PayemntModalProps) => {
         },
         onError: (err: Error) => {
             router.push(`/verify/failed`)
-            toast.error("Payment processing for the ticket failed")
+            //toast.error("")
+            dispatch(updatePaymentModalState(false));
         }
     });
     const handleContactSubmission = async (event) => {
@@ -88,7 +90,7 @@ const TicketPaymentModal = ({ ticketId, eventDetails }: PayemntModalProps) => {
                                         <label className="font-medium text-gray-600">Email(Ticket delivered here)</label>
                                         <input onChange={handleChange} id="user_email" name="user_email" className="input validator w-full" type="email" required placeholder="mail@gmail.com" />
                                     </div>
-                                    <div>
+                                    <div className="w-full">
                                         <label className="font-medium text-gray-600">Mpesa Contact (with country code)</label>
                                         <PhoneInput
                                             country={"ke"}
@@ -123,7 +125,7 @@ const TicketPaymentModal = ({ ticketId, eventDetails }: PayemntModalProps) => {
                                             <animate fill="freeze" attributeName="opacity" begin="SVGBoZ3Ab9F.begin+0.3s" dur="0.75s" values="1;0.2"></animate>
                                         </rect>
                                     </svg>
-                                    <span className="text-sm">Good things take time! Wait a minute...</span>
+                                    <span className="text-sm">Processing payment! Wait a minute...</span>
                                 </div>
                             )}
                             {mutation.isError && (<p className="text-rose-500">Error! Failed processing ticket</p>)}

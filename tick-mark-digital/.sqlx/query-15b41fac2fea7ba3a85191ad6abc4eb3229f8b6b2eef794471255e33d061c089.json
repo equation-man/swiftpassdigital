@@ -1,0 +1,62 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO ticket_market.org_contacts \n            (organization_id, contact_type, contact)\n        VALUES\n            ($1, $2, $3)\n        RETURNING\n            contact_id, organization_id, contact_type as \"contact_type: ContactType\", contact\n    ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "contact_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "organization_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "contact_type: ContactType",
+        "type_info": {
+          "Custom": {
+            "name": "contact_type",
+            "kind": {
+              "Enum": [
+                "email",
+                "telephone"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "contact",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        {
+          "Custom": {
+            "name": "contact_type",
+            "kind": {
+              "Enum": [
+                "email",
+                "telephone"
+              ]
+            }
+          }
+        },
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "15b41fac2fea7ba3a85191ad6abc4eb3229f8b6b2eef794471255e33d061c089"
+}

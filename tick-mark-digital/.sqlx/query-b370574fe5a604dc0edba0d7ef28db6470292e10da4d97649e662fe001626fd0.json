@@ -1,0 +1,102 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO ticket_market.discount_rules\n            (ticket_id, name, discount_type, value, start_date, end_date, max_users)\n        VALUES\n            ($1, $2, $3, $4, $5, $6, $7)\n        RETURNING discount_id, ticket_id, name,\n            discount_type as \"disc_type: DiscType\", value, start_date,\n            end_date, added_at, max_users, active\n    ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "discount_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "ticket_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "disc_type: DiscType",
+        "type_info": {
+          "Custom": {
+            "name": "disc_type",
+            "kind": {
+              "Enum": [
+                "percentage",
+                "fixed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "value",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 5,
+        "name": "start_date",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "end_date",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "added_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "max_users",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "active",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        {
+          "Custom": {
+            "name": "disc_type",
+            "kind": {
+              "Enum": [
+                "percentage",
+                "fixed"
+              ]
+            }
+          }
+        },
+        "Numeric",
+        "Timestamptz",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "b370574fe5a604dc0edba0d7ef28db6470292e10da4d97649e662fe001626fd0"
+}

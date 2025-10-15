@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT permission_id, user_access_role_id, permission as \"permission_type: PermissionType\"\n        FROM ticket_market.permissions\n        WHERE user_access_role_id=$1\n    ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "permission_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_access_role_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "permission_type: PermissionType",
+        "type_info": {
+          "Custom": {
+            "name": "permission_type",
+            "kind": {
+              "Enum": [
+                "read",
+                "write",
+                "update",
+                "remove"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "4201a5f81652bfa7b08d456863eae1a48e08a81e6db1f0ac3b4977497a5f199c"
+}

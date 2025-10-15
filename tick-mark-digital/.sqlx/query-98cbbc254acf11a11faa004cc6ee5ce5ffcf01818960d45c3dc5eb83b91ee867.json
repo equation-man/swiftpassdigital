@@ -1,0 +1,59 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO ticket_market.permissions\n            (user_access_role_id, permission)\n        VALUES\n            ($1, $2)\n        RETURNING permission_id, user_access_role_id, permission as \"permission_type: PermissionType\"\n    ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "permission_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_access_role_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "permission_type: PermissionType",
+        "type_info": {
+          "Custom": {
+            "name": "permission_type",
+            "kind": {
+              "Enum": [
+                "read",
+                "write",
+                "update",
+                "remove"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        {
+          "Custom": {
+            "name": "permission_type",
+            "kind": {
+              "Enum": [
+                "read",
+                "write",
+                "update",
+                "remove"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "98cbbc254acf11a11faa004cc6ee5ce5ffcf01818960d45c3dc5eb83b91ee867"
+}

@@ -10,7 +10,6 @@ export async function eventInfoFn(e_id: string): Promise<Event | unknown>{
 }
 
 export async function createTicketFn(ticketDet: CreateTicket): Promise<Ticket | unknown> {
-    console.log("The ticket creation input is", ticketDet);
     const response = await axios.post(`${API_URL}/events/ticket/create`, ticketDet);
     return response.data;
 }
@@ -35,7 +34,7 @@ export async function purchaseTicketFn({orderDet, ticketId}: OrdDet): Promise<Or
 }
 
 export async function mpesaTicketPurchaseFn({orderDet, ticketId}: OrdDet): Promise<OrderDetails | unknown> {
-    const response = await axios.post(`${API_URL}/events/ticket/mpesa/purchase/${ticketId}`, orderDet, { timeout: 60000});
+    const response = await axios.post(`${API_URL}/events/ticket/mpesa/purchase/${ticketId}`, orderDet, { timeout: 40000});
     return response.data
 }
 

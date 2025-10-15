@@ -59,7 +59,14 @@ const ErrorStatus = () => {
                     </g>
                 </svg>
             </div>
-            <h1 className="text-emerald-800 text-center text-rose-500 px-4">Ticket processing failed! If you're seeing this but your payment was processed successfully, email support <Link href="mailto:bigtechguyz@gmail.com?subject=Ticket%20processing%20failure" className="underline hover:pointer" target="blank">here.</Link></h1>
+            <h1 className="text-emerald-800 text-center text-rose-600 px-4 text-sm">Ticket processing failed! If you're seeing this but your payment was processed successfully, email support <Link href="mailto:bigtechguyz@gmail.com?subject=Ticket%20processing%20failure" className="underline hover:pointer" target="blank">here.</Link></h1>
+            <h3 className="text-center text-rose-500 font-semibold">Possible causes</h3>
+            <div className="flex justify-center">
+                <ul className="list-disc list-inside text-sm">
+                    <li>Network or internet connectivity issues.</li>
+                    <li>Payments processing failure.</li>
+                </ul>
+            </div>
         </div>
     )
 }
@@ -87,7 +94,7 @@ const PaymentStatusPage = () => {
             //console.log("The err result when fetching order is", err);
         },
     });
-    if (isLoading) return <div className="font-semibold font-gray-600 flex flex-row items-center justify-center">
+    if (isLoading) return <div className="flex flex-col items-center justify-center text-emerald-500">
             <svg xmlns="http://www.w3.org/2000/svg" width={34} height={34} viewBox="0 0 24 24">
                 <rect width={6} height={14} x={1} y={4} fill="currentColor">
                     <animate id="SVG9ovaHbIP" fill="freeze" attributeName="opacity" begin="0;SVGa89dAd4w.end-0.25s" dur="0.75s" values="1;0.2"></animate>
@@ -99,6 +106,9 @@ const PaymentStatusPage = () => {
                     <animate id="SVGa89dAd4w" fill="freeze" attributeName="opacity" begin="SVG9ovaHbIP.begin+0.3s" dur="0.75s" values="1;0.2"></animate>
                 </rect>
             </svg>
+            <div>
+                <p className="text-center">Good things take time! Hang tight as we process your ticket...</p>
+            </div>
         </div>
 
     return (

@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        DELETE FROM ticket_market.org_access_codes\n        WHERE access_code_id = $1\n        RETURNING \n            access_code_id, organization_id, access_code,\n            user_id, access_username\n    ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "access_code_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "organization_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "access_code",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "access_username",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "e0d31ab827c126b7816e8baefc0a2cf7b2ae4a1f64d19d661cedcb24113726fc"
+}

@@ -1,0 +1,125 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO ticket_market.orders\n            (ticket_id, user_contact, ticket_price, ticket_status,\n            entrance_code, order_limit, user_email, paystack_reference,\n            commission_amount, order_currency)\n        VALUES\n            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)\n        RETURNING order_id, ticket_id, user_id, user_email,\n            user_contact, ticket_price, added_at, paystack_reference,\n            ticket_status as \"tick_status: TickStatus\",\n            entrance_code, order_limit, commission_amount, order_currency\n    ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "order_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "ticket_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "user_email",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "user_contact",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "ticket_price",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 6,
+        "name": "added_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "paystack_reference",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "tick_status: TickStatus",
+        "type_info": {
+          "Custom": {
+            "name": "tick_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "checked",
+                "expired"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "entrance_code",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "order_limit",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 11,
+        "name": "commission_amount",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 12,
+        "name": "order_currency",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Numeric",
+        {
+          "Custom": {
+            "name": "tick_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "checked",
+                "expired"
+              ]
+            }
+          }
+        },
+        "Text",
+        "Int8",
+        "Text",
+        "Text",
+        "Numeric",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "aea186fc6820384b42d8bce7195d0532bf6d92dfc5942c1d94099344d3cea628"
+}

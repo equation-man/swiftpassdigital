@@ -4,7 +4,7 @@ use chrono::{Duration, DateTime, Utc};
 use sqlx::postgres::types::PgInterval;
 use rust_decimal::Decimal;
 use actix_web::web;
-use sqlx::Type;
+use sqlx::{Type, FromRow};
 use uuid::Uuid;
 use std::fmt;
 
@@ -269,7 +269,7 @@ impl fmt::Display for TickStatus {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, FromRow)]
 pub struct Order {
     pub order_id: Uuid,
     pub ticket_id: Uuid,
@@ -282,6 +282,8 @@ pub struct Order {
     pub entrance_code: String,
     pub ticket_status: TickStatus,
     pub order_limit: i64,
+    pub commission_amount: String,
+    pub order_currency: String,
     pub paystack_reference: String,
 }
 
@@ -300,6 +302,8 @@ impl From<web::Json<Order>> for Order {
             ticket_status: order.ticket_status.clone(),
             order_limit: order.order_limit.clone(),
             paystack_reference: order.paystack_reference.clone(),
+            commission_amount: order.commission_amount.clone(),
+            order_currency: order.order_currency.clone(),
         }
     }
 }
@@ -340,6 +344,8 @@ pub struct OrderDetails {
     pub order_limit: i64,
     pub ticket_price: Decimal,
     pub paystack_reference: String,
+    pub commission_amount: Decimal,
+    pub order_currency: String,
 }
 
 impl From<web::Json<OrderDetails>> for OrderDetails {
@@ -352,6 +358,8 @@ impl From<web::Json<OrderDetails>> for OrderDetails {
             order_limit: order_det.order_limit.clone(),
             ticket_price: order_det.ticket_price.clone(),
             paystack_reference: order_det.paystack_reference.clone(),
+            commission_amount: order_det.commission_amount.clone(),
+            order_currency: order_det.order_currency.clone()
         }
     }
 }
@@ -369,6 +377,8 @@ pub struct OrderPayload {
     pub entrance_code: Option<String>,
     pub order_limit: Option<i64>,
     pub paystack_reference: Option<String>,
+    pub commission_amount: Option<Decimal>,
+    pub order_currency: Option<String>,
 }
 
 impl From<web::Json<OrderPayload>> for OrderPayload {
@@ -385,6 +395,8 @@ impl From<web::Json<OrderPayload>> for OrderPayload {
             entrance_code: order_payload.entrance_code.clone(),
             order_limit: order_payload.order_limit.clone(),
             paystack_reference: order_payload.paystack_reference.clone(),
+            commission_amount: order_payload.commission_amount.clone(),
+            order_currency: order_payload.order_currency.clone(),
         }
     }
 }

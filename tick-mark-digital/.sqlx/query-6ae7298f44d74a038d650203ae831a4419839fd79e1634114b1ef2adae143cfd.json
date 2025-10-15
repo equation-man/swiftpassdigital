@@ -1,0 +1,103 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        DELETE FROM ticket_market.tickets\n        WHERE event_id=$1\n        RETURNING ticket_id, event_id, capacity,\n            ticket_type as \"tick_type: TickType\", \n            ticket_class as \"tick_class: TickClass\",\n            discount_time, start_time, finish_time,\n            added_at, description, base_price\n    ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "ticket_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "event_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "capacity",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "tick_type: TickType",
+        "type_info": {
+          "Custom": {
+            "name": "tick_type",
+            "kind": {
+              "Enum": [
+                "discount",
+                "regular",
+                "vip"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "tick_class: TickClass",
+        "type_info": {
+          "Custom": {
+            "name": "tick_class",
+            "kind": {
+              "Enum": [
+                "individual",
+                "group"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "discount_time",
+        "type_info": "Interval"
+      },
+      {
+        "ordinal": 6,
+        "name": "start_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "finish_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "added_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "base_price",
+        "type_info": "Numeric"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "6ae7298f44d74a038d650203ae831a4419839fd79e1634114b1ef2adae143cfd"
+}
