@@ -10,12 +10,14 @@ mod state;
 use state::AppState;
 
 use actix_web::{cookie::Key, App, HttpServer, web, middleware::Logger};
-use actix_identity::IdentityMiddleware;
 use actix_session::{SessionMiddleware, storage::CookieSessionStore};
+use sqlx::{PgPool, migrate::MigrateDatabase};
+use tokio::time::{sleep, Duration};
+use actix_identity::IdentityMiddleware;
 use actix_cors::Cors;
 use env_logger::Env;
-use log::info;
 use dotenvy::dotenv;
+use log::info;
 use std::env;
 use std::io;
 
@@ -24,12 +26,16 @@ use std::io;
 async fn main() -> io::Result<()> {
     dotenv().ok();
     let secret_key = Key::generate(); //Generate secret key for session encryption.
-
     // Initilize the logger from the environment.
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
 
     // Database connections
     let shared_data = AppState::new().await;
+
+    // Load migrations
+    let migrations = sqlx::migrate!("./migrations");
+    // Run migrations.
+    migrations.run(&shared_data.db).await.unwrap();
 
     // Construct app and configure routes
     let app = move || {

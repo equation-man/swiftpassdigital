@@ -112,7 +112,7 @@ impl From<web::Json<EventPayload>> for EventPayload {
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, sqlx::Type)]
-#[sqlx(type_name="tick_type", rename_all="lowercase")]
+#[sqlx(type_name="ticket_market.tick_type", rename_all="lowercase")]
 pub enum TickType {
     Discount,
     Regular,
@@ -132,7 +132,7 @@ impl From<web::Json<&str>> for TickType {
 
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, sqlx::Type)]
-#[sqlx(type_name="tick_class", rename_all="lowercase")]
+#[sqlx(type_name="ticket_market.tick_class", rename_all="lowercase")]
 pub enum TickClass {
     Individual,
     Group,
@@ -240,7 +240,7 @@ impl From<web::Json<TicketPayload>> for TicketPayload {
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, sqlx::Type)]
-#[sqlx(type_name="tick_status", rename_all="lowercase")]
+#[sqlx(type_name="ticket_market.tick_status", rename_all="lowercase")]
 pub enum TickStatus {
     Pending,
     Checked,
@@ -402,7 +402,7 @@ impl From<web::Json<OrderPayload>> for OrderPayload {
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, sqlx::Type)]
-#[sqlx(type_name="disc_type", rename_all="lowercase")]
+#[sqlx(type_name="ticket_market.disc_type", rename_all="lowercase")]
 pub enum DiscType {
     Percentage,
     Fixed,

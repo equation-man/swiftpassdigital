@@ -98,7 +98,7 @@ impl From<web::Json<OrgPayload>> for OrgPayload {
 }
 
 #[derive(Clone, Debug, Copy, Deserialize, Serialize, sqlx::Type)]
-#[sqlx(type_name="contact_type", rename_all="lowercase")]
+#[sqlx(type_name="ticket_market.contact_type", rename_all="lowercase")]
 pub enum ContactType {
     Email,
     Telephone,
@@ -227,7 +227,7 @@ impl From<web::Json<AccessCodesPayload>> for AccessCodesPayload {
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, sqlx::Type)]
-#[sqlx(type_name="access_role_type", rename_all="lowercase")]
+#[sqlx(type_name="ticket_market.access_role_type", rename_all="lowercase")]
 pub enum RoleType {
     Admin,
     Manager,
@@ -299,7 +299,7 @@ impl From<web::Json<RolePayload>> for RolePayload {
 }
 
 #[derive(Clone, Debug, Copy, Deserialize, Serialize, sqlx::Type)]
-#[sqlx(type_name="permission_type", rename_all="lowercase")]
+#[sqlx(type_name="ticket_market.permission_type", rename_all="lowercase")]
 pub enum PermissionType {
     Basic,
     Moderate,
@@ -427,6 +427,7 @@ impl From<web::Json<WalletPayload>> for WalletPayload {
         }
     }
 }
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CreateWallet {
     pub owner_id: Uuid,

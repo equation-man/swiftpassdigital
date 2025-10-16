@@ -9,9 +9,12 @@ ENV SQLX_OFFLINE=true
 # Build the app
 RUN cargo build --release
 # use google distroless as runtime image.
-FROM gcr.io/distroless/cc-debian11
+FROM gcr.io/distroless/cc-debian12
 # Copy app from builder
 COPY --from=build /app/target/release/tick-mark-digital /app/tick-mark-digital
+# Copy migration script
+COPY migrations ./migrations
 WORKDIR /app
 # Starting the application
+#ENTRYPOINT ["./tick-mark-digital"]
 CMD ["./tick-mark-digital"]

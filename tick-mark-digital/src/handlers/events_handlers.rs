@@ -192,21 +192,6 @@ pub async fn mpesa_order(payload: web::Json<CreateOrder>, ticket_id: web::Path<S
     };
     match mpesa_stk_push(stkPushRequest).await {
         Ok(push_res) => {
-            let order_p: OrderPayload = OrderPayload {
-                order_id: None,
-                ticket_id: None,
-                user_id: None,
-                user_email: None,
-                user_contact: None,
-                ticket_price: None,
-                promo_code: None,
-                ticket_status: None,
-                entrance_code: None,
-                order_limit: None,
-                commission_amount: None,
-                order_currency: None,
-                paystack_reference: Some(push_res.CheckoutRequestID.clone()),
-            };
             // Check if the order has been created on payment and update it.
             let mut delay = 5.0;
             let mut attempts = 0;
