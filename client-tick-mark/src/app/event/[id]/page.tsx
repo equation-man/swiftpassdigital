@@ -19,7 +19,7 @@ type TicketProps = {
 
 const Info = ({ ticketDetails, ticketIdViewFn }: TicketProps ) => {
     const dispatch = useDispatch();
-    const handleTicketPurchase = (e, state) => {
+    const handleTicketPurchase = (e: React.MouseEvent<HTMLButtonElement>, state: boolean) => {
         e.preventDefault();
         ticketIdViewFn(ticketDetails.ticket_id);
         dispatch(updatePaymentModalState(state))
@@ -33,7 +33,7 @@ const Info = ({ ticketDetails, ticketIdViewFn }: TicketProps ) => {
               alt="Shoes" />
           </figure>
           <div className="card-body">
-            <h2 className="card-title">{formatCurrency(ticketDetails.base_price)}</h2>
+            <h2 className="card-title">{formatCurrency(Number(ticketDetails.base_price))}</h2>
             <p className="text-xs text-emerald-200 font-medium">{ticketDetails.ticket_class} {ticketDetails.ticket_type}</p>
             <p>{ticketDetails.description}</p>
             <div>
@@ -54,8 +54,8 @@ const Info = ({ ticketDetails, ticketIdViewFn }: TicketProps ) => {
 };
 
 const EventInfo = () => {
-    const [currentTicketId, setCurrentTicketId] = useState(null);
-    const handleShowTicketPaymentModal = (value) => {
+    const [currentTicketId, setCurrentTicketId] = useState<string>();
+    const handleShowTicketPaymentModal = (value: string) => {
         setCurrentTicketId(value)
     }
     const params=useParams<{ event_id: string}>(); // typed params
@@ -64,9 +64,11 @@ const EventInfo = () => {
     const { data, isLoading, error } = useQuery({
         queryKey: ['tickets', ev_id],
         queryFn: () => ticketInfoFn(ev_id),
-        onSuccess: () => {
+        onSuccess: (data) => {
+            console.log("Success", data)
         },
-        onError: () => {
+        onError: (err) => {
+            console.log("Error", err)
         }
     });
 

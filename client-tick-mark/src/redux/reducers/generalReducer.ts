@@ -25,7 +25,7 @@ export const modalSlice = createSlice({
     }
 });
 
-const generalReducer = (state: ModalState=modalInitialState, action: bool) => {
+const generalReducer = (state: ModalState=modalInitialState, action: boolean) => {
     switch (action) {
         case true:
             return {...state, error: null};

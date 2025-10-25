@@ -1,0 +1,80 @@
+# Make sure we are using up to date nodejs version.
+FROM node:23-alpine AS base
+
+FROM base AS build-deps
+RUN apk add --no-cache libc6-compat
+
+# Activate pnpm and set environment
+# variables so as the installed packages can be cached
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="PNPM_HOME:$PATH"
+
+RUN corepack enable
+RUN corepack prepare pnpm@latest --activate
+
+# Setting a working directory.
+WORKDIR /app
+# We copy the files containing the project dependencies
+# information and install them
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --prefer-frozen-lockfile
+# Add sharp library to optimize images in a production environment.
+# RUN pnpm add sharp
+
+# BUILDING THE APPLICATION
+FROM base AS builder
+
+ARG NEXT_PUBLIC_BACKEND_URL
+ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
+
+ARG FRONTEND_URL
+ENV FRONTEND_URL=$FRONTEND_URL
+
+ARG JWT_SECRET
+ENV JWT_SECRET=$JWT_SECRET
+
+# Activating pnpm, the work directory is set, all the application
+# files are copied and build is generated.
+RUN corepack enable
+RUN corepack prepare pnpm@latest --activate
+
+WORKDIR /app
+COPY --from=build-deps /app/node_modules ./node_modules
+COPY . .
+RUN pnpm build
+
+# RUNNING THE APPLICATION.
+FROM base AS runner
+ENV NODE_ENV=production
+
+# Adding non root user.
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
+
+# Copying the files created by the standalone build
+COPY --from=builder --chown=nextjs:nodejs /app/ .next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/ .next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+# Specifying the user to use
+USER nextjs
+
+# Specifying exposed ports and hosts.
+EXPOSE 3000
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+
+# Specifying environment variables for the application.
+ARG NEXT_PUBLIC_BACKEND_URL
+ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
+
+ARG FRONTEND_URL
+ENV FRONTEND_URL=$FRONTEND_URL
+
+ARG JWT_SECRET
+ENV JWT_SECRET=$JWT_SECRET
+
+CMD ["node", "server.js"]

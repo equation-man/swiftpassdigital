@@ -30,7 +30,7 @@ const AdminInfo = ({ org }: Props) => {
         }
     }
 
-    const handleWalletCreation = (e, value) => {
+    const handleWalletCreation = (e: React.MouseEvent<HTMLButtonElement>, value) => {
         e.preventDefault();
         setCreateWallet(value);
     }

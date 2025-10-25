@@ -17,13 +17,13 @@ const OrgHeader = ({ org }: Props) => {
     const { data: session, status } = useSession();
 
     const dispatch = useDispatch();
-    const handleCreateEventModDisp = (e, state) => {
+    const handleCreateEventModDisp = (e: React.MouseEvent<HTMLButtonElement>, state) => {
         e.preventDefault();
         dispatch(createEventModalState(state))
     }
 
     const router = useRouter();
-    const handleManageAccount = (e) => {
+    const handleManageAccount = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
         if (!!session) {
             router.push(`/organizations/profile/${session.user.organization_id}`)

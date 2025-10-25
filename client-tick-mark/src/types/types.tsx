@@ -130,3 +130,15 @@ export interface Order {
     discount_time: string;
     paystack_reference: string;
 }
+
+export type QRTicketValidation = {
+    ok: boolean;
+    event_id?: string;
+    ticket_id?: string;
+    entrace_code?: string;
+    ticket_type?: string;
+    ticket_status?: string;
+    start_time?: string;
+    finish_time?: string;
+    message?: string;
+}

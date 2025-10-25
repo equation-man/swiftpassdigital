@@ -432,7 +432,7 @@ pub async fn get_orders(db_pool: &PgPool, ticket_id: Uuid, filters: OrderPayload
 pub async fn admin_update_order(db_pool: &PgPool, owner_id: Uuid, order_id: Uuid, payload: OrderPayload) -> Order {
     let upd_order = sqlx::query(r#"
         UPDATE ticket_market.orders o
-        SET ticket_status = COALESCE($1, ticket_status)
+        SET ticket_status = $1
         FROM ticket_market.tickets t
         JOIN ticket_market.events e ON e.event_id=t.event_id
         WHERE o.ticket_id = t.ticket_id
@@ -441,7 +441,7 @@ pub async fn admin_update_order(db_pool: &PgPool, owner_id: Uuid, order_id: Uuid
         RETURNING o.order_id, o.ticket_id, o.user_id, o.user_email,
             o.user_contact, o.ticket_price, o.added_at, o.promo_code,
             o.ticket_status, o.entrance_code, o.order_limit, o.order_currency,
-            o.commission_amount
+            o.commission_amount, o.paystack_reference
 
     "#).bind(Some(payload.ticket_status)).bind(owner_id)
     .bind(order_id)

@@ -33,6 +33,7 @@ pub async fn parse_email_html_content(entrance_code: String, ticket_status: Stri
                       <h2 style="color: #333;">SwiftPassDigital Ticket Confirmation</h2>
                       <h3 style="color: #333;">{}</h3>
                       <p>Event date: <time ditetime="{}">{}</time></p>
+                      <p>Your can download or screenshot the QR code file to be presented at the gate has been attached in this email</p>
                       <p style="font-size: 18px; color: #333; margin-top: 20px;">Ticket Code:</p>
                       <div style="font-family: 'Courier New', monospace; font-size: 28px; letter-spacing: 2px; font-weight: bold; color: #0078d4; background: #f0f0f0; display: inline-block; padding: 12px 24px; border-radius: 6px; margin: 10px 0;">
                       {}
@@ -51,14 +52,23 @@ pub async fn parse_email_html_content(entrance_code: String, ticket_status: Stri
 
 /// Sending emails.
 pub async fn send_email(from: String, to: String, subject: String,
-    target_name: String, text: String, html: Option<String>) -> Result<BrevoResponse, Error> {
+    target_name: String, target_qr_attachment: String, text: String,
+    html: Option<String>) -> Result<BrevoResponse, Error> {
     let ( email_url, api_key ) = mail_cred().await;
     let payload = json!({
         "sender": {"name": "SwiftPassDigital", "email": &from},
         "to": [{"name": &target_name, "email": &to}],
         "subject": &subject,
         "textContent": &text,
-        "htmlContent": Some(html)
+        "htmlContent": Some(html),
+        "attachment": [
+            {
+                "content": target_qr_attachment,
+                "name": "swpd_ticket_qr.png",
+                "contentId": "swpd_ticket_qr",
+                "mimeType": "image/png",
+            }
+        ]
     });
     let client = reqwest::Client::new();
     let res = client.post(format!("{}/v3/smtp/email",&email_url))
@@ -86,13 +96,13 @@ mod tests {
     #[tokio::test]
     #[ignore]
     async fn test_send_mail() {
-        let from = "swiftpassdigital@drugsverse.com".to_string();
-        let to = "bigtechguyz@gmail.com".to_string();
-        let target_name = "Big Tech".to_string();
-        let subject = "SwiftPassDigital event ticket".to_string();
-        let text = "Your event spot has been secured successfully via SwiftPassDigital. Your ticket id is: #89341. Enjoy your event. ".to_string();
-        let html = parse_email_html_content("SWP-UTYX4572".to_string(), "Pending".to_string(), "SwiftPassDigital".to_string(), "2025".to_string()).await;
-        let email_sent = send_email(from, to, subject, target_name, text, Some(html)).await;
-        println!("The email send response is {:#?}", email_sent);
+        //let from = "swiftpassdigital@drugsverse.com".to_string();
+        //let to = "bigtechguyz@gmail.com".to_string();
+        //let target_name = "Big Tech".to_string();
+        //let subject = "SwiftPassDigital event ticket".to_string();
+        //let text = "Your event spot has been secured successfully via SwiftPassDigital. Your ticket id is: #89341. Enjoy your event. ".to_string();
+        //let html = parse_email_html_content("SWP-UTYX4572".to_string(), "Pending".to_string(), "SwiftPassDigital".to_string(), "2025".to_string()).await;
+        //let email_sent = send_email(from, to, subject, target_name, text, Some(html)).await;
+        //println!("The email send response is {:#?}", email_sent);
     }
 }

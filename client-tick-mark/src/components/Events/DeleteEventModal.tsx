@@ -11,7 +11,7 @@ const DeleteEventModal = ({ eventDetails }: Props) => {
     const fetch_state = useSelector((state) => state.generalModal.del_event);
 
     const dispatch = useDispatch();
-    const handleDisplayDelModal = (e, state) => {
+    const handleDisplayDelModal = (e: React.MouseEvent<HTMLButtonElement>, state: boolean) => {
         e.preventDefault();
         dispatch(deleteModalState(state));
     }

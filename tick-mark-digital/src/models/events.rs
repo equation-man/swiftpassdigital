@@ -1,6 +1,7 @@
 //! Events and tickets models
 use serde::{Deserialize, Serialize};
 use chrono::{Duration, DateTime, Utc};
+use strum_macros::Display;
 use sqlx::postgres::types::PgInterval;
 use rust_decimal::Decimal;
 use actix_web::web;
@@ -127,6 +128,17 @@ impl From<web::Json<&str>> for TickType {
             web::Json("Vip") => TickType::Vip,
             web::Json(&_) => unimplemented!("No other imlementation for the trait")
         }
+    }
+}
+
+impl fmt::Display for TickType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let text = match self {
+            TickType::Discount => "Discount",
+            TickType::Regular => "Regular",
+            TickType::Vip => "Vip",
+        };
+        write!(f, "{}", text)
     }
 }
 
@@ -364,7 +376,7 @@ impl From<web::Json<OrderDetails>> for OrderDetails {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct OrderPayload {
     pub order_id: Option<Uuid>,
     pub ticket_id: Option<Uuid>,

@@ -1,7 +1,7 @@
 //! Defining application state.
 use std::env;
 use dotenvy::dotenv;
-use sqlx::postgres::PgPool;
+use sqlx::postgres::{PgPoolOptions, PgPool};
 
 #[derive(Debug, Clone)]
 pub struct AppState {
@@ -18,7 +18,10 @@ impl AppState {
             Err(_) => format!("Error failed retrieving db connection.")
         };
         // Creating a new sqlx connection pool.
-        let db_pool = PgPool::connect(&db_url).await.unwrap();
+        let db_pool = PgPoolOptions::new()
+            .max_connections(20)
+            .min_connections(5)
+            .connect(&db_url).await.unwrap();
         Self { db: db_pool }
     }
 }

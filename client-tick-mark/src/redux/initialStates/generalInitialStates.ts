@@ -2,8 +2,8 @@
 
 // Defining the modals interface.
 export interface ModalState {
-    payment: bool | null;
-    createTicket: bool | null;
+    payment: boolean | null;
+    createTicket: boolean | null;
 }
 
 type eventDetails = {

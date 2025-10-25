@@ -26,7 +26,7 @@ const CreateTicketModal = ({ eventDetails }: Props) => {
     }
 
     const dispatch = useDispatch();
-    const handleCreateTicketModDisp = (e, state) => {
+    const handleCreateTicketModDisp = (e: React.MouseEvent<HTMLButtonElement>, state: boolean) => {
         e.preventDefault();
         dispatch(createTicketModalState(state))
     }

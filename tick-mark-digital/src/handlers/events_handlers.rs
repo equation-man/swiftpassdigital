@@ -15,11 +15,12 @@ use crate::helpers::{
     mpesa_stk_push, stk_push_status, generate_daraja_password,
     DarajaCallback, commission_amnt_calc,
     StkDarajaResponse,
+    TicketQRData, qr_code_gen,
 };
 use nanoid::nanoid;
 use std::{thread, time::Duration, str::FromStr};
 use rust_decimal::Decimal;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use rand::Rng;
 
@@ -236,7 +237,21 @@ pub async fn mpesa_order(payload: web::Json<CreateOrder>, ticket_id: web::Path<S
                                     order_currency: None,
                                     paystack_reference: None,
                                 };
+                                // Order is the ticket.
                                 let upd = update_order(&app_state.db, push_res.CheckoutRequestID.clone(), upd_payload).await;
+                                let qr_ticket: TicketQRData = TicketQRData {
+                                    order_id: upd.order_id.clone().to_string(),
+                                    entrance_code: upd.entrance_code.clone(),
+                                    organization_id: target_event.owner_id.clone().to_string(),
+                                    event_id: target_event.event_id.clone().to_string(),
+                                    ticket_type: ticket_det.ticket_type.clone().to_string(),
+                                    ticket_status: upd.ticket_status.clone().to_string(),
+                                    start_time: target_event.start_date.clone(),
+                                    finish_time: target_event.finish_date.clone(),
+                                    paystack_reference: push_res.CheckoutRequestID.clone(),
+                                    ticket_id: ticket_det.ticket_id.clone().to_string(),
+                                };
+                                let qr_code_tag = qr_code_gen(qr_ticket).await.unwrap();
                                 // Send the ticket to the email here.
                                 let sender = "swiftpassdigital@drugsverse.com".to_string();
                                 let subject = "SwiftPassDigital Ticket Confirmation".to_string();
@@ -246,7 +261,7 @@ pub async fn mpesa_order(payload: web::Json<CreateOrder>, ticket_id: web::Path<S
                                     upd.entrance_code.clone(), upd.ticket_status.clone().to_string(),
                                     target_event.title, target_event.start_date
                                     ).await;
-                                let _ = send_email(sender, upd.user_email.clone(), subject, target_name, text, Some(html)).await;
+                                let _ = send_email(sender, upd.user_email.clone(), subject, target_name, qr_code_tag, text, Some(html)).await;
                                 return HttpResponse::Ok().json(upd);
                             }
                             return HttpResponse::InternalServerError().body("Error processing ticket");
@@ -321,6 +336,51 @@ pub async fn verify_order(ticket_id: web::Path<String>, v_query: web::Query<Veri
     }
 }
 
+
+
+
+
+
+#[derive(Serialize)]
+struct VerificationResponse<T> {
+    ok: bool,
+    data: T,
+    message: String,
+}
+
+pub async fn qr_verify(target_ids: web::Path<(String, String)>, qr_payld: web::Json<OrderPayload>, app_state: web::Data<AppState>) -> HttpResponse {
+    let (org_id, event_id) = target_ids.into_inner();
+    let qr_data: OrderPayload = qr_payld.into();
+    let uuid_org_id: Uuid = Uuid::parse_str(&org_id).unwrap();
+    match get_single_order(&app_state.db, qr_data.ticket_id.clone().unwrap(), qr_data.paystack_reference.clone().unwrap()).await {
+        Ok(order) => {
+            match order {
+                Some(order) => {
+                    // Match and update the ticket here.
+                    match order.ticket_status {
+                        TickStatus::Pending => {
+                            // Update the ticket in the database.
+                            let upd_order = OrderPayload {ticket_status: Some(TickStatus::Checked), ..Default::default()};
+                            let ver_order = admin_update_order(&app_state.db, uuid_org_id, qr_data.order_id.clone().unwrap(), upd_order).await;
+                            let response = VerificationResponse {
+                                ok: true,
+                                data: ver_order,
+                                message: "Ticket checked".into(),
+                            };
+                            return HttpResponse::Ok().json(response);
+                        },
+                        TickStatus::Checked => return HttpResponse::BadRequest().body("Ticket already checked"),
+                        TickStatus::Expired => return HttpResponse::BadRequest().body("Ticket already expired"),
+                    }
+                },
+                None => return HttpResponse::BadRequest().body("Invalid Ticket")
+            }
+        },
+        Err(_) => return HttpResponse::BadRequest().body("Invalid Ticket")
+    }
+    HttpResponse::Ok().json("qr code verified")
+}
+
 /// Verify order purchase. Checking or confirming the ticket goes here, we also send the ticket to
 /// the email.
 pub async fn verify_paystack_order(ticket_id: web::Path<String>, verif_query: web::Query<VerificationQuery>, app_state: web::Data<AppState>) -> HttpResponse {
@@ -369,7 +429,7 @@ pub async fn verify_paystack_order(ticket_id: web::Path<String>, verif_query: we
                 ticket_price: Decimal::from(res.amount),
                 order_currency: "KES".to_string(),
                 commission_amount: Decimal::from(comm_amnt),
-                paystack_reference: res.reference,
+                paystack_reference: res.reference.clone(),
             };
             let new_order = add_order(&app_state.db, entrance_pass, order_details).await;
             // Retrieve the info to the target event using q.event_id.clone().
@@ -377,6 +437,19 @@ pub async fn verify_paystack_order(ticket_id: web::Path<String>, verif_query: we
             let event = get_event(&app_state.db, evnt_id).await;
             let ev_title = &event.title;
             let start = &event.start_date;
+            let qr_ticket: TicketQRData = TicketQRData {
+                order_id: new_order.order_id.clone().to_string(),
+                entrance_code: new_order.entrance_code.clone(),
+                organization_id: event.owner_id.clone().to_string(),
+                event_id: evnt_id.clone().to_string(),
+                ticket_type: "Regular".to_string(), // Fix ticket type enum conversion to string.
+                ticket_status: new_order.ticket_status.clone().to_string(),
+                start_time: start.to_string(),
+                finish_time: event.finish_date.clone(),
+                paystack_reference: res.reference.clone(),
+                ticket_id: new_order.ticket_id.clone().to_string(),
+            };
+            let qr_code_tag = qr_code_gen(qr_ticket).await.unwrap();
             // Send the ticket to the email here.
             let sender = "swiftpassdigital@drugsverse.com".to_string();
             let subject = "SwiftPassDigital Ticket Confirmation".to_string();
@@ -386,7 +459,7 @@ pub async fn verify_paystack_order(ticket_id: web::Path<String>, verif_query: we
                 new_order.entrance_code.clone(), new_order.ticket_status.clone().to_string(),
                 ev_title.to_string(), start.to_string()
                 ).await;
-            let _ = send_email(sender, new_order.user_email.clone(), subject, target_name, text, Some(html)).await;
+            let _ = send_email(sender, new_order.user_email.clone(), subject, target_name, qr_code_tag, text, Some(html)).await;
             return HttpResponse::Ok().json(new_order);
         } else if attempts == max_retries {
             break;

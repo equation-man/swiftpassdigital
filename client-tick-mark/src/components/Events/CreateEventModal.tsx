@@ -29,7 +29,7 @@ const EventCreationModal = ({ eventOwner }: Props) => {
     }
 
     const dispatch = useDispatch();
-    const handleCreateEventModDisp = (e, state) => {
+    const handleCreateEventModDisp = (e: React.MouseEvent<HTMLButtonElement>, state: boolean) => {
         e.preventDefault();
         dispatch(createEventModalState(state))
     }

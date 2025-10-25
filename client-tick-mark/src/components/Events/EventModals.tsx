@@ -29,7 +29,7 @@ const TicketPaymentModal = ({ ticketId, eventDetails }: PayemntModalProps) => {
     }
 
     const dispatch = useDispatch();
-    const handlePaymentModDisp = (e, state) => {
+    const handlePaymentModDisp = (e: React.MouseEvent<HTMLButtonElement>, state: boolean) => {
         e.preventDefault();
         dispatch(updatePaymentModalState(state))
     }
@@ -63,7 +63,7 @@ const TicketPaymentModal = ({ ticketId, eventDetails }: PayemntModalProps) => {
         },
         onError: (err: Error) => {
             router.push(`/verify/failed`)
-            //toast.error("")
+            toast.error("Ticket payment confirmation failed.")
             dispatch(updatePaymentModalState(false));
         }
     });
