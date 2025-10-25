@@ -191,6 +191,7 @@ pub async fn delete_contacts(db_pool: &PgPool, org_id: Uuid, contact_id: Uuid) -
 
 // ======================== ACCESS CODES ==============================
 pub async fn add_access_code(db_pool: &PgPool, org_id: Uuid, access_code: String, create_access: CreateAccess) -> OrganizationAccessCodes {
+    let org_user_id: Uuid = Uuid::parse_str(&create_access.user_id).unwrap();
     let add_access = sqlx::query!(r#"
         INSERT INTO ticket_market.org_access_codes
             (user_id, organization_id, access_username, access_code)
@@ -199,9 +200,21 @@ pub async fn add_access_code(db_pool: &PgPool, org_id: Uuid, access_code: String
         RETURNING
             access_code_id, organization_id,
             access_code, user_id, access_username
-    "#, create_access.user_id, org_id,
+    "#, org_user_id, org_id,
     create_access.access_username,access_code
     ).fetch_one(db_pool).await.unwrap();
+
+    let newRole = CreateRole {
+        user_id: add_access.user_id,
+        access_code_id: add_access.access_code_id,
+        role: RoleType::Manager,
+    };
+    let access_role = add_access_roles(db_pool, org_id, newRole).await;
+    let newPermission = CreatePermission {
+        role_id: access_role.role_id,
+        permission: PermissionType::Update,
+    };
+    let perm = add_permission(db_pool, access_role.role_id, newPermission).await;
 
     OrganizationAccessCodes {
         access_code_id: add_access.access_code_id,
@@ -209,6 +222,8 @@ pub async fn add_access_code(db_pool: &PgPool, org_id: Uuid, access_code: String
         access_code: add_access.access_code,
         user_id: add_access.user_id,
         access_username: add_access.access_username.unwrap(),
+        access_role: None,
+        permissions: None,
     }
 }
 
@@ -226,7 +241,35 @@ pub async fn get_access_codes(db_pool: &PgPool, org_id: Uuid, access_payload: Ac
         access_code: access_code.get("access_code"),
         user_id: access_code.get("user_id"),
         access_username: access_code.get("access_username"),
+        access_role: None,
+        permissions: None,
     }).collect()
+}
+
+pub async fn org_manage_access(db_pool: &PgPool, access: AccessCodesPayload) -> OrganizationAccessCodes {
+    let org = sqlx::query(r#"
+        SELECT * FROM ticket_market.org_access_codes
+        WHERE access_username=$1 AND access_code=$2
+    "#).bind(Some(access.access_username)).bind(Some(access.access_code))
+    .fetch_one(db_pool).await.unwrap();
+
+    let rolepld = RolePayload {
+        user_id: None,
+        access_code_id: org.get("access_code_id"),
+        role: None,
+    };
+    let role = get_access_roles(db_pool, org.get("org_id"), rolepld).await;
+    let permissions = list_permissions(db_pool, role[0].role_id).await;
+
+    OrganizationAccessCodes {
+        access_code_id: org.get("access_code_id"),
+        organization_id: org.get("organization_id"),
+        access_code: org.get("access_code"),
+        user_id: org.get("user_id"),
+        access_username: org.get("access_username"),
+        access_role: Some(role),
+        permissions: Some(permissions),
+    }
 }
 
 pub async fn org_access(db_pool: &PgPool, access: AccessCodesPayload) -> Organization {
@@ -269,6 +312,8 @@ pub async fn delete_access_code(db_pool: &PgPool, access_id: Uuid) -> Organizati
         user_id: del_access.user_id,
         access_code: del_access.access_code,
         access_username: del_access.access_username.unwrap(),
+        access_role: None,
+        permissions: None,
     }
 }
 

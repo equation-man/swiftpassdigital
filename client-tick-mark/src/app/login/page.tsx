@@ -1,7 +1,7 @@
 /// The login page
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { loginUserFn, loginOrgFn } from "./actions";
@@ -103,42 +103,46 @@ const LoginPage = () => {
         setInputs(values => ({...values, [name]:value}));
     }
 
-    const handleSubmit = async (event) => {
-        event.preventDefault();
-        try {
-            toast.loading("Signing you in...", {
-                style: {
-                    background: "#ecfdf5",
-                    color: "#047857",
-                },
+    const mutation = useMutation({
+        mutationFn: async ({email, password} : {email: string, password: string}) => {
+            const res = await signIn("credentials", {redirect: false, org_email: email, org_pwd: password});
+            if (!res?.ok) throw new Error(res?.error || "Invalid credentials");
+
+            const sessionRes = await fetch("/api/auth/session", { cache: "no-store" });
+            const session = await sessionRes.json();
+
+            if (!session?.user?.organization_id) throw new Error("Session missing user id");
+
+            return session;
+        },
+        onSuccess: (session) => {
+            toast.dismiss();
+            toast.success("Welcome back! Redirecting...", {
                 iconTheme: {
                     primary: "#ecfdf5",
                     secondary: "#047857",
                 },
             });
-
-            const res = await signIn("credentials", {
-                redirect: false, // Prevents redirects
-                org_email: inputs.email,
-                org_pwd: inputs.password,
-            });
-
-            toast.dismiss();
-            if (res?.error) {
-                toast.error("Invalid credentials");
-            } else {
-                toast.success("Welcome back! Redirecting...", {
-                    iconTheme: {
-                        primary: "#ecfdf5",
-                        secondary: "#047857",
-                    },
-                });
-                router.push(`/organizations/${session.user.organization_id}`)
-            }
-        } catch (err) {
-            toast.dismiss();
-            toast.error("Something went wrong, try again!")
+            router.push(`/organizations/${session?.user?.organization_id}`)
+        },
+        onError: (error) => {
+            toast.error("Invalid credentials");
         }
+    });
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        toast.loading("Signing you in...", {
+            style: {
+                background: "#ecfdf5",
+                color: "#047857",
+            },
+            iconTheme: {
+                primary: "#ecfdf5",
+                secondary: "#047857",
+            },
+        });
+        mutation.mutate({email: inputs.email, password: inputs.password});
     }
 
     return (

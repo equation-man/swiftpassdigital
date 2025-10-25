@@ -378,7 +378,6 @@ pub async fn qr_verify(target_ids: web::Path<(String, String)>, qr_payld: web::J
         },
         Err(_) => return HttpResponse::BadRequest().body("Invalid Ticket")
     }
-    HttpResponse::Ok().json("qr code verified")
 }
 
 /// Verify order purchase. Checking or confirming the ticket goes here, we also send the ticket to

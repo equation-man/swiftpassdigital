@@ -176,6 +176,8 @@ pub struct OrganizationAccessCodes {
     pub user_id: Uuid,
     pub access_username: String,
     pub access_code: String,
+    pub access_role: Option<Vec<Role>>,
+    pub permissions: Option<Vec<Permission>>,
 }
 
 impl From<web::Json<OrganizationAccessCodes>> for OrganizationAccessCodes {
@@ -186,13 +188,15 @@ impl From<web::Json<OrganizationAccessCodes>> for OrganizationAccessCodes {
             user_id: access_payload.user_id.clone(),
             access_username: access_payload.access_username.clone(),
             access_code: access_payload.access_code.clone(),
+            access_role: access_payload.access_role.clone(),
+            permissions: access_payload.permissions.clone(),
         }
     }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CreateAccess {
-    pub user_id: Uuid,
+    pub user_id: String,
     pub access_username: String,
 }
 
@@ -301,17 +305,19 @@ impl From<web::Json<RolePayload>> for RolePayload {
 #[derive(Clone, Debug, Copy, Deserialize, Serialize, sqlx::Type)]
 #[sqlx(type_name="ticket_market.permission_type", rename_all="lowercase")]
 pub enum PermissionType {
-    Basic,
-    Moderate,
-    SuperUser
+    Read,
+    Write,
+    Update,
+    Remove,
 }
 
 impl From<web::Json<&str>> for PermissionType {
     fn from(permission_type: web::Json<&str>) -> Self {
         match permission_type {
-            web::Json("Basic") => PermissionType::Basic,
-            web::Json("Moderate") => PermissionType::Moderate,
-            web::Json("SuperUser") => PermissionType::SuperUser,
+            web::Json("Read") => PermissionType::Read,
+            web::Json("Write") => PermissionType::Write,
+            web::Json("Update") => PermissionType::Update,
+            web::Json("Remove") => PermissionType::Remove,
             web::Json(&_) => unimplemented!("No implementation for this permission"),
         }
     }

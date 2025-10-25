@@ -193,30 +193,23 @@ pub async fn create_access_code(access_pld: web::Json<CreateAccess>, param: web:
 }
 
 /// Getting access codes
-pub async fn list_access_codes(filter: Option<web::Json<AccessCodesPayload>>, param: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
+pub async fn list_access_codes(param: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
     let org_id: Uuid = Uuid::parse_str(&param.into_inner()).unwrap();
-    match filter {
-        Some(filter) => {
-            let lst_codes = get_access_codes(&app_state.db, org_id, filter.into()).await;
-            HttpResponse::Ok().json(lst_codes)
-        },
-        None => {
-            let access_payload = AccessCodesPayload {
-                access_code_id: None,
-                organization_id: None,
-                user_id: None,
-                access_username: None,
-                access_code: None,
-            };
-            let lst = get_access_codes(&app_state.db, org_id, access_payload).await;
-            HttpResponse::Ok().json(lst)
-        }
-    }
+    let access_payload = AccessCodesPayload {
+        access_code_id: None,
+        organization_id: None,
+        user_id: None,
+        access_username: None,
+        access_code: None,
+    };
+    println!("The org id is {}", &org_id);
+    let lst = get_access_codes(&app_state.db, org_id, access_payload).await;
+    HttpResponse::Ok().json(lst)
 }
 
 /// Get an organization via access code
 pub async fn get_org_via_code(filter: web::Json<AccessCodesPayload>, app_state: web::Data<AppState>) -> HttpResponse {
-    let access_pld = org_access(&app_state.db, filter.into()).await;
+    let access_pld = org_manage_access(&app_state.db, filter.into()).await;
     HttpResponse::Ok().json(access_pld)
 }
 

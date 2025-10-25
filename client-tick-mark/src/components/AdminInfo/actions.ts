@@ -34,3 +34,18 @@ export async function createMpesaWalletFn(walletData: Wallet): Promise<Wallet | 
     const response = await axios.post(`${API_URL}/organization/wallet/mpesa/create/${walletData.owner_id}`, payload);
     return response.data;
 }
+
+type UserAccess = {
+    user_id?: string,
+    access_username?: string,
+}
+export async function createUserAccessFn(accessData: UserAccess): Promise<unknown> {
+    const response = await axios.post(`${API_URL}/organization/access/create/${accessData.org_id}`, {user_id: accessData.user_id, access_username: accessData.access_username});
+    return response.data;
+}
+
+export async function getUserAccessListFn(org_id: string): Promise<unkwon> {
+    const response = await axios.get(`${API_URL}/organization/access/list/${org_id}`);
+    console.log("The server response for listing access logs is", response)
+    return response.data;
+}

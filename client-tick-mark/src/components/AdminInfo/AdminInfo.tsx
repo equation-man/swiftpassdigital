@@ -4,15 +4,75 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useSession } from "next-auth/react";
-import { myWalletFn, createMpesaWalletFn } from "./actions";
+import { getUserAccessListFn, myWalletFn, createMpesaWalletFn, createUserAccessFn } from "./actions";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 type Props = {
     org: Organization;
 };
 
+const AddUserAccess = ({ o_id }: { o_id: string }) => {
+    const [inputs, setInputs] = useState<CreateEvent | {}>({});
+
+    const handleChange = (event) => {
+        const name = event.target.name;
+        const value = event.target.value;
+        setInputs(values => ({...values, [name]:value}));
+    }
+
+    const mutation = useMutation({
+        mutationKey: ['createAccess'],
+        mutationFn: (inputs) => createUserAccessFn(inputs),
+        onSuccess: (data) => {
+            toast.dismiss();
+            toast.success("Congratulations your event has been created!", {
+                iconTheme: {
+                    primary: "#ecfdf5",
+                    secondary: "#047857",
+                },
+            })
+        },
+        onError: (err: Error) => {
+            toast.dismiss();
+            toast.error("Failed granting access!");
+        }
+    });
+
+    const handleUserAccessSubmit = async (event) => {
+        event.preventDefault();
+        inputs.user_id = o_id
+        inputs.org_id = o_id
+        toast.loading("Adding swifter...", {
+            style: {
+                background: "#ecfdf5",
+                color: "#047857",
+            },
+            iconTheme: {
+                primary: "#ecfdf5",
+                secondary: "#047857",
+            },
+        });
+        mutation.mutate(inputs);
+    }
+
+    return (
+        <div className="max-w-xs md:max-w-sm p-1 shadow-xl">
+            <form id="createWalletForm" onSubmit={handleUserAccessSubmit}>
+                <div className=" py-2">
+                    <label className="font-medium text-gray-600">Enter access Name</label>
+                    <input id="access_username" name="access_username" onChange={handleChange} className="input validator w-full" type="text" required placeholder="Enter Access Name, e.g SwifterA" />
+                </div>
+                <button type="submit" className="hover:cursor-pointer bg-emerald-800 text-white btn-block p-1">
+                    Add swifter
+                </button>
+            </form>
+        </div>
+    );
+}
+
 const AdminInfo = ({ org }: Props) => {
     const [createWallet, setCreateWallet] = useState(false);
+    const [addAccess, setAddAccess] = useState(false);
     const [inputs, setInputs] = useState();
     const handleChange = (event) => {
         const name = event.target.name;
@@ -70,6 +130,18 @@ const AdminInfo = ({ org }: Props) => {
             console.llg("Wallet fetch error is", error)
         }
     });
+
+    const accessList = useQuery({
+        queryKey: ['accessors', org.organization_id],
+        queryFn: () => getUserAccessListFn(org.organization_id),
+        onSuccess: (data) => {
+            console.log("The access liset is", data);
+        },
+        onError: (error) => {
+            console.log("The error for access is", error);
+        }
+    });
+    console.log("The query res for access list is", accessList);
 
     return (
         <div>
@@ -163,18 +235,32 @@ const AdminInfo = ({ org }: Props) => {
             <div className="pt-5">
                 <div>
                     <div className="flex flex-row gap-x-2">
-                        <h3 className="font-bold text-gray-600 text-2xl">Access</h3>
-                        <button
-                            className="bg-white text-emerald-700 px-1 text-xs rounded-sm flex flex-row gap-x-1 items-center hover:cursor-pointer border border-emerald-700"
-                        >
-                            Grant access
-                            <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24">
-                                <path fill="currentColor" d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10s10-4.477 10-10S17.523 2 12 2m5 11h-4v4h-2v-4H7v-2h4V7h2v4h4z"></path>
-                            </svg> 
-                        </button>
+                        <h3 className="font-bold text-gray-600 text-2xl">Swifter Access</h3>
+                        {addAccess ? (
+                            <button
+                                onClick={() => setAddAccess(false)}
+                                className="bg-white text-emerald-700 px-1 text-xs rounded-sm flex flex-row gap-x-1 items-center hover:cursor-pointer border border-emerald-700"
+                            >
+                                Cancel process
+                                <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} viewBox="0 0 20 20">
+                                    <path fill="currentColor" d="M2.93 17.07A10 10 0 1 1 17.07 2.93A10 10 0 0 1 2.93 17.07m1.41-1.41A8 8 0 1 0 15.66 4.34A8 8 0 0 0 4.34 15.66m9.9-8.49L11.41 10l2.83 2.83l-1.41 1.41L10 11.41l-2.83 2.83l-1.41-1.41L8.59 10L5.76 7.17l1.41-1.41L10 8.59l2.83-2.83z"></path>
+                                </svg>
+                            </button>
+                        ):(
+                            <button
+                                onClick={() => setAddAccess(true)}
+                                className="bg-white text-emerald-700 px-1 text-xs rounded-sm flex flex-row gap-x-1 items-center hover:cursor-pointer border border-emerald-700"
+                            >
+                                Generate swifter access
+                                <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24">
+                                    <path fill="currentColor" d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10s10-4.477 10-10S17.523 2 12 2m5 11h-4v4h-2v-4H7v-2h4V7h2v4h4z"></path>
+                                </svg> 
+                            </button>
+                        )}
                     </div>
                 </div>
                 <div>
+                    {addAccess && (<AddUserAccess o_id={org.organization_id}/>)}
                     <p className="font-semibold text-gray-800">No external access granted</p>
                 </div>
             </div>
