@@ -59,7 +59,7 @@ const AddUserAccess = ({ o_id }: { o_id: string }) => {
     }
 
     return (
-        <div className="max-w-xs md:max-w-sm p-1 shadow-xl">
+        <div className="w-90 p-1 shadow-xl">
             <form id="createWalletForm" onSubmit={handleUserAccessSubmit}>
                 <div className=" py-2">
                     <label className="font-medium text-gray-600">Enter access Name</label>
@@ -110,7 +110,7 @@ const UsersAccess = ({user_access}: {user_access: UsersAccessInfo}) => {
     }
 
     return (
-        <div className="max-w-xs md:max-w-sm p-2 shadow-xl flex flex-row items-center gap-x-4">
+        <div className="w-90 p-2 shadow-xl flex flex-row items-center gap-x-4 justify-between">
             <div>
                 <h3 className="font-semibold">Access Name</h3>
                 <p>{user_access.access_username}</p>
@@ -119,12 +119,14 @@ const UsersAccess = ({user_access}: {user_access: UsersAccessInfo}) => {
                 <h3 className="font-semibold">Access Code</h3>
                 <p>{user_access.access_code}</p>
             </div>
-            <button
-                onClick={handleDeleteAccess}
-                className="text-rose-50 bg-rose-500 p-1 btn-block hover:cursor-pointer"
-            >
-                Revoke
-            </button>
+            <div>
+                <button
+                    onClick={handleDeleteAccess}
+                    className="text-rose-50 bg-rose-500 p-1 btn-block hover:cursor-pointer"
+                >
+                    Revoke
+                </button>
+            </div>
         </div>
     );
 }
