@@ -97,7 +97,7 @@ export default function QRScanner() {
     }
 
     return (
-        <div className="flex flex-col items-center space-y-6 py-10">
+        <div className="flex flex-col items-center space-b-6 space-t-3 pb-10 pt-5">
             <h1 className="text-2xl font-semibold">Scan Ticket QR code</h1>
             <div id={readerId}
                 className="rounded-sm border border-gray-300 shadow-inner w-[320px] h-[320px] bg-gray-50 flex items-center justify-center"
@@ -108,7 +108,7 @@ export default function QRScanner() {
             </div>
             <div className="flex gap-4 py-4 mt-6">
                 <button onClick={startScanner} disabled={scanning}
-                    className={`px-5 py-2 rounded-sm text-white font-medium transition ${
+                    className={`px-5 py-2 rounded-sm text-white font-medium transition hover:bg-emerald-800 ${
                         scanning ? "bg-gray-400 cursor-not-allowed": "bg-emerald-700 hover:bg-indigo-700"
                     }`}
                 >

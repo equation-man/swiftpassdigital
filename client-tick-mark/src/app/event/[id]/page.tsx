@@ -1,15 +1,16 @@
 // Individual event.
 "use client";
 import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { useQuery } from "@tanstack/react-query";
 import { eventInfoFn, ticketInfoFn } from "../actions";
 import { EventDate, ClientOnly } from "@/components/Events/EventDateTime";
-import TicketPaymentModal from "@/components/Events/EventModals";
 import { updatePaymentModalState } from "@/redux/reducers/generalReducer";
 import { Ticket } from "@/types/types";
 import { formatCurrency } from "@/lib/helpers";
+import { useSession } from "next-auth/react";
+import TicketPaymentModal from "@/components/Events/EventModals";
 
 type TicketProps = {
     ticketDetails: Ticket;
@@ -55,10 +56,12 @@ const Info = ({ ticketDetails, ticketIdViewFn }: TicketProps ) => {
 
 const EventInfo = () => {
     const [currentTicketId, setCurrentTicketId] = useState<string>();
+    const { data: session, status } = useSession();
     const handleShowTicketPaymentModal = (value: string) => {
         setCurrentTicketId(value)
     }
     const params=useParams<{ event_id: string}>(); // typed params
+    const router=useRouter();
     const ev_id = params.id;
 
     const { data, isLoading, error } = useQuery({
@@ -103,6 +106,18 @@ const EventInfo = () => {
                 <div className="py-3 flex flex-col justify-center items-center">
                     <h1 className="text-emrald-800 text-2xl font-bold text-center">{currentEvent?.title}</h1>
                     <h3 className="text-gray-600 font-bold text-lg">tickets</h3>
+                    {session?.user && (
+                        <div>
+                            {session?.user.organization_id === currentEvent?.owner_id && (
+                                <button
+                                    onClick={() => router.push(`/qrscan/${currentEvent.owner_id}/event/${currentEvent.event_id}`)}
+                                    className="bg-emerald-700 text-emerald-50 p-1 hover:cursor-pointer rounded-xs text-sm"
+                                >
+                                    Scan ticket
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
                 {data ? (
                     <div className="flex flex-col gap-y-4 justify-center items-center">
