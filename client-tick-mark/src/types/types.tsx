@@ -142,3 +142,13 @@ export type QRTicketValidation = {
     finish_time?: string;
     message?: string;
 }
+
+export type UsersAccessInfo = {
+    access_code?: string;
+    access_code_id?: string;
+    access_role?: string;
+    access_username?: string;
+    organization_id?: string;
+    permissions?: string;
+    user_id?: string;
+}

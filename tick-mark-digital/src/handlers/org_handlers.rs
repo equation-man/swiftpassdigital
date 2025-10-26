@@ -202,7 +202,6 @@ pub async fn list_access_codes(param: web::Path<String>, app_state: web::Data<Ap
         access_username: None,
         access_code: None,
     };
-    println!("The org id is {}", &org_id);
     let lst = get_access_codes(&app_state.db, org_id, access_payload).await;
     HttpResponse::Ok().json(lst)
 }
@@ -211,6 +210,15 @@ pub async fn list_access_codes(param: web::Path<String>, app_state: web::Data<Ap
 pub async fn get_org_via_code(filter: web::Json<AccessCodesPayload>, app_state: web::Data<AppState>) -> HttpResponse {
     let access_pld = org_manage_access(&app_state.db, filter.into()).await;
     HttpResponse::Ok().json(access_pld)
+}
+
+/// Delete access or code access.
+pub async fn revoke_access(ids: web::Path<(String, String)>, app_state: web::Data<AppState>) -> HttpResponse {
+    let (org_id, access_code_id) = ids.into_inner();
+    let org_uuid: Uuid = Uuid::parse_str(&org_id).unwrap();
+    let access_uuid: Uuid = Uuid::parse_str(&access_code_id).unwrap();
+    let remove_access = delete_access_code(&app_state.db, org_uuid, access_uuid).await;
+    HttpResponse::Ok().json(remove_access)
 }
 
 #[cfg(test)]

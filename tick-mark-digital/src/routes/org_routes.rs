@@ -6,7 +6,7 @@ use crate::{
         add_contact, contact_list, contact_update,
         delete_contact, create_access_code, list_access_codes,
         new_wallet, get_wallet, delete_wallet, new_mpesa_wallet,
-        get_org_via_code
+        get_org_via_code, revoke_access,
     },
 };
 
@@ -29,5 +29,6 @@ pub fn orgs_routes(cfg: &mut web::ServiceConfig) {
         .route("/contact/delete/{org_id}/{contact_id}", web::delete().to(delete_contact))
         .route("/access/create/{org_id}", web::post().to(create_access_code))
         .route("/access/list/{org_id}", web::get().to(list_access_codes))
+        .route("/access/revoke/{org_id}/{access_id}", web::delete().to(revoke_access))
     );
 }

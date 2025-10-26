@@ -49,7 +49,8 @@ export async function getUserAccessListFn(org_id: string): Promise<unkwon> {
     return response.data;
 }
 
-export async function deleteUserAccessFn(organization_id: string, access_code_id: sring): Promise<unknown> {
-    const response = await axios.delete(`${API_URL}/organization/access/revoke/${organization_id}/${access_code_id}`);
-    return response.data;
+export async function deleteUserAccessFn({org_id, access_id} : {org_id: string, access_id: string}): Promise<unknown> {
+    const reponse = await axios.delete();
+    console.log("The delete access error is", response);
+    return response;
 }

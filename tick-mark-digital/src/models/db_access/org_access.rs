@@ -297,14 +297,14 @@ pub async fn org_access(db_pool: &PgPool, access: AccessCodesPayload) -> Organiz
     }).collect::<Vec<Organization>>()[0].clone()
 }
 
-pub async fn delete_access_code(db_pool: &PgPool, access_id: Uuid) -> OrganizationAccessCodes {
+pub async fn delete_access_code(db_pool: &PgPool, org_id: Uuid, access_id: Uuid) -> OrganizationAccessCodes {
     let del_access = sqlx::query!(r#"
         DELETE FROM ticket_market.org_access_codes
-        WHERE access_code_id = $1
+        WHERE organization_id = $1 AND access_code_id = $2 
         RETURNING 
             access_code_id, organization_id, access_code,
             user_id, access_username
-    "#, access_id).fetch_one(db_pool).await.unwrap();
+    "#, org_id, access_id).fetch_one(db_pool).await.unwrap();
 
     OrganizationAccessCodes {
         access_code_id: del_access.access_code_id,

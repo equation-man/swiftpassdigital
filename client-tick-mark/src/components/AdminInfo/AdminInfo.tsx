@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useSession } from "next-auth/react";
-import { getUserAccessListFn, myWalletFn, createMpesaWalletFn, createUserAccessFn } from "./actions";
+import { UsersAccessInfo, Organization } from "@/types/types";
+import { deleteUserAccessFn, getUserAccessListFn, myWalletFn, createMpesaWalletFn, createUserAccessFn } from "./actions";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 type Props = {
@@ -20,12 +21,14 @@ const AddUserAccess = ({ o_id }: { o_id: string }) => {
         setInputs(values => ({...values, [name]:value}));
     }
 
+    const queryClient = useQueryClient();
     const mutation = useMutation({
         mutationKey: ['createAccess'],
         mutationFn: (inputs) => createUserAccessFn(inputs),
         onSuccess: (data) => {
+            queryClient.invalidateQueries({queryKey: ["accessors"]});
             toast.dismiss();
-            toast.success("Congratulations your event has been created!", {
+            toast.success("New access granted!", {
                 iconTheme: {
                     primary: "#ecfdf5",
                     secondary: "#047857",
@@ -66,6 +69,62 @@ const AddUserAccess = ({ o_id }: { o_id: string }) => {
                     Add swifter
                 </button>
             </form>
+        </div>
+    );
+}
+
+const UsersAccess = ({user_access}: {user_access: UsersAccessInfo}) => {
+    const queryClient = useQueryClient();
+    const mutation = useMutation({
+        mutationKey: ['deleteAccess'],
+        mutationFn: ({organization_id, access_code_id}:{organization_id: string, access_code_id: string}) => deleteUserAccessFn(organization_id, access_code_id),
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({queryKey: ["accessors"]});
+            toast.dismiss();
+            toast.success("Access revoked!", {
+                iconTheme: {
+                    primary: "#ecfdf5",
+                    secondary: "#047857",
+                },
+            })
+        },
+        onError: (err: Error) => {
+            toast.dismiss();
+            toast.error("Failed revoking access!");
+        }
+    });
+    
+    const handleDeleteAccess = async (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+        toast.loading("Revoking swifter...", {
+            style: {
+                background: "#ecfdf5",
+                color: "#047857",
+            },
+            iconTheme: {
+                primary: "#ecfdf5",
+                secondary: "#047857",
+            },
+        });
+        mutation.mutate({organization_id: user_access.organization_id, access_code_id: user_access.access_code_id});
+    }
+
+    return (
+        <div className="max-w-xs md:max-w-sm p-2 shadow-xl flex flex-row items-center gap-x-4">
+            <div>
+                <h3 className="font-semibold">Access Name</h3>
+                <p>{user_access.access_username}</p>
+            </div>
+            <div>
+                <h3 className="font-semibold">Access Code</h3>
+                <p>{user_access.access_code}</p>
+            </div>
+            <button
+                onClick={handleDeleteAccess}
+                className="text-rose-50 bg-rose-500 p-1 btn-block hover:cursor-pointer"
+            >
+                Revoke
+            </button>
         </div>
     );
 }
@@ -141,7 +200,6 @@ const AdminInfo = ({ org }: Props) => {
             console.log("The error for access is", error);
         }
     });
-    console.log("The query res for access list is", accessList);
 
     return (
         <div>
@@ -261,7 +319,14 @@ const AdminInfo = ({ org }: Props) => {
                 </div>
                 <div>
                     {addAccess && (<AddUserAccess o_id={org.organization_id}/>)}
-                    <p className="font-semibold text-gray-800">No external access granted</p>
+                    {accessList.isLoading && (<p>Loading Swifter access</p>)}
+                    {accessList.isSuccess ? (
+                        <div>
+                            {accessList.data.map((usr) => <UsersAccess key={usr.access_code_id} user_access={usr}/>)}
+                        </div>
+                    ):(
+                        <p className="font-semibold text-gray-800">No external access granted</p>
+                    )}
                 </div>
             </div>
         </div>
