@@ -1,6 +1,6 @@
 import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials";
-import { loginUserFn, loginOrgFn } from "@/app/login/actions";
+import { loginUserFn, loginOrgFn, defloginOrgFn} from "@/app/login/actions";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
     secret: process.env.AUTH_SECRET,
@@ -33,19 +33,34 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 type: "text",
                 placeholder: "*******"
             },
+            access_username: {
+                label: "access_username",
+                type: "text",
+                placeholder: "Access Username",
+            },
+            access_code: {
+                label: "access_code",
+                type: "password",
+                placeholder: "******",
+            },
         },
         authorize: async (credentials) => {
             let user = null
 
             // fetch user from backend API.
-            user = await loginOrgFn(credentials);
-
+            if (credentials?.access_code && credentials?.access_username) {
+                user = await defloginOrgFn(credentials);
+                // return user object with their profile data
+                return user
+            } else {
+                user = await loginOrgFn(credentials);
+                // return user object with their profile data
+                return user
+            }
             if (!user) {
                 // No user is found.
                 throw new Error("Invalid credentials.")
             }
-            // return user object with their profile data
-            return user
         },
     })],
 

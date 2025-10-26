@@ -12,3 +12,14 @@ export async function loginOrgFn(loginOrg: LoginOrg): Promise<Organization | unk
     const response = await axios.post(`${API_URL}/organization/admin`, loginOrg);
     return response.data;
 }
+
+type DerOrgLogin = {
+    access_username: string;
+    access_code: string;
+}
+
+export async function defloginOrgFn(defOrgLogin: DefOrgLogin): Promise<unkwon> {
+    const response = await axios.post(`${API_URL}/organization/login`, defOrgLogin);
+    console.log("The default login response is", response)
+    return response.data;
+}

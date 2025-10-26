@@ -207,9 +207,23 @@ pub async fn list_access_codes(param: web::Path<String>, app_state: web::Data<Ap
 }
 
 /// Get an organization via access code
-pub async fn get_org_via_code(filter: web::Json<AccessCodesPayload>, app_state: web::Data<AppState>) -> HttpResponse {
+pub async fn get_org_via_code(filter: web::Json<AccessCodesPayload>, app_state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
     let access_pld = org_manage_access(&app_state.db, filter.into()).await;
-    HttpResponse::Ok().json(access_pld)
+    if let Some(org_acc) = access_pld {
+        let logged_acc = org_acc.clone();
+        let token = match generate_jwt(&logged_acc.access_username.clone(), &load_secret_key().await).await {
+            Ok(token) => token,
+            Err(_) => return HttpResponse::InternalServerError().body("Failed to generate token")
+        };
+        Identity::login(&mut req.extensions_mut(), logged_acc.access_username.clone()).unwrap();
+        let response = AuthResponse { token, user: logged_acc };
+        return HttpResponse::Ok().json(response)
+    } else {
+        HttpResponse::NotFound().json(NotfoundErrorResponse {
+            error: "User not found".into(),
+            code: 404
+        })
+    }
 }
 
 /// Delete access or code access.

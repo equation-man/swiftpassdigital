@@ -246,7 +246,7 @@ pub async fn get_access_codes(db_pool: &PgPool, org_id: Uuid, access_payload: Ac
     }).collect()
 }
 
-pub async fn org_manage_access(db_pool: &PgPool, access: AccessCodesPayload) -> OrganizationAccessCodes {
+pub async fn org_manage_access(db_pool: &PgPool, access: AccessCodesPayload) -> Option<OrganizationAccessCodes> {
     let org = sqlx::query(r#"
         SELECT * FROM ticket_market.org_access_codes
         WHERE access_username=$1 AND access_code=$2
@@ -258,10 +258,10 @@ pub async fn org_manage_access(db_pool: &PgPool, access: AccessCodesPayload) -> 
         access_code_id: org.get("access_code_id"),
         role: None,
     };
-    let role = get_access_roles(db_pool, org.get("org_id"), rolepld).await;
+    let role = get_access_roles(db_pool, org.get("organization_id"), rolepld).await;
     let permissions = list_permissions(db_pool, role[0].role_id).await;
 
-    OrganizationAccessCodes {
+    Some(OrganizationAccessCodes {
         access_code_id: org.get("access_code_id"),
         organization_id: org.get("organization_id"),
         access_code: org.get("access_code"),
@@ -269,7 +269,7 @@ pub async fn org_manage_access(db_pool: &PgPool, access: AccessCodesPayload) -> 
         access_username: org.get("access_username"),
         access_role: Some(role),
         permissions: Some(permissions),
-    }
+    })
 }
 
 pub async fn org_access(db_pool: &PgPool, access: AccessCodesPayload) -> Organization {
@@ -321,13 +321,13 @@ pub async fn delete_access_code(db_pool: &PgPool, org_id: Uuid, access_id: Uuid)
 pub async fn add_access_roles(db_pool: &PgPool, org_id: Uuid, new_role: CreateRole) -> Role {
     let add_role = sqlx::query!(r#"
         INSERT INTO ticket_market.user_access_roles
-            (user_id, access_code_id, access_role)
+            (user_id, organization_id, access_code_id, access_role)
         VALUES
-            ($1, $2, $3)
+            ($1, $2, $3, $4)
         RETURNING
             role_id, organization_id, user_id,
             access_code_id, access_role as "access_role_type: RoleType"
-    "#, new_role.user_id, new_role.access_code_id,
+    "#, new_role.user_id, org_id, new_role.access_code_id,
     new_role.role as RoleType
     ).fetch_one(db_pool).await.unwrap();
 

@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
-import { loginUserFn, loginOrgFn } from "./actions";
+import { loginUserFn, loginOrgFn, defloginOrgFn } from "./actions";
 import { LoginUser, LoginOrg } from "@/types/types";
 import { useSession, signIn } from "next-auth/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Eye, EyeOff } from "lucide-react";
 
 const UserLoginPage = () => {
     const router = useRouter();
@@ -96,6 +97,7 @@ const OrgLoginPage = () => {
     const router = useRouter();
     const { data: session, status } = useSession();
     const [inputs, setInputs] = useState<LoginUser | {}>({});
+    const [showPass, setShowPass] = useState(false);
 
     const handleChange = (event) => {
         const name = event.target.name;
@@ -126,6 +128,8 @@ const OrgLoginPage = () => {
             router.push(`/organizations/${session?.user?.organization_id}`)
         },
         onError: (error) => {
+            console.log("The error on login access is", error);
+            toast.dismiss();
             toast.error("Invalid credentials");
         }
     });
@@ -157,7 +161,18 @@ const OrgLoginPage = () => {
                     </div>
                     <div>
                         <label className="font-medium text-gray-600">Password</label>
-                        <input onChange={handleChange} id="password" name="password" className="input validator w-full" type="password" required placeholder="********" />
+                        <div className="relative w-full">
+                            <input onChange={handleChange} id="password" name="password" className="input validator w-full" type={showPass ? "text" : "password"} required placeholder="********" />
+                            <button
+                                type="button"
+                                onMouseDown={() => setShowPass(true)}
+                                onMouseUp={() => setShowPass(false)}
+                                onMouseLeave={() => setShowPass(false)}
+                                className="absolute right-2 top-2 z-10 text-emerald-800 hover:cursor-pointer"
+                            >
+                                {showPass ? <EyeOff size={25} /> : <Eye size={25} />}
+                            </button>
+                        </div>
                     </div>
                     <button type="submit" className="btn btn-block mt-3 text-emerald-50 bg-emerald-800">
                         Login
@@ -183,6 +198,7 @@ const DefaultOrgAccess = () => {
     const router = useRouter();
     const { data: session, status } = useSession();
     const [inputs, setInputs] = useState<LoginUser | {}>({});
+    const [showPass, setShowPass] = useState(false);
 
     const handleChange = (event) => {
         const name = event.target.name;
@@ -191,8 +207,8 @@ const DefaultOrgAccess = () => {
     }
 
     const mutation = useMutation({
-        mutationFn: async ({email, password} : {email: string, password: string}) => {
-            const res = await signIn("credentials", {redirect: false, org_email: email, org_pwd: password});
+        mutationFn: async ({access_username, access_code} : {access_username: string, access_code: string}) => {
+            const res = await signIn("credentials", {redirect: false, access_username: access_username, access_code: access_code});
             if (!res?.ok) throw new Error(res?.error || "Invalid credentials");
 
             const sessionRes = await fetch("/api/auth/session", { cache: "no-store" });
@@ -213,6 +229,8 @@ const DefaultOrgAccess = () => {
             router.push(`/organizations/${session?.user?.organization_id}`)
         },
         onError: (error) => {
+            console.error("The error for def user access is", error);
+            toast.dismiss();
             toast.error("Invalid credentials");
         }
     });
@@ -229,7 +247,7 @@ const DefaultOrgAccess = () => {
                 secondary: "#047857",
             },
         });
-        mutation.mutate({email: inputs.email, password: inputs.password});
+        mutation.mutate({access_username: inputs.access_username, access_code: inputs.access_code});
     }
 
     return (
@@ -244,7 +262,24 @@ const DefaultOrgAccess = () => {
                     </div>
                     <div>
                         <label className="font-medium text-gray-600">Access Code</label>
-                        <input onChange={handleChange} id="access_code" name="access_code" className="input validator w-full" type="password" required placeholder="********" />
+                        <div className="relative w-full">
+                            <input
+                                onChange={handleChange}
+                                id="access_code" name="access_code"
+                                className="input validator w-full"
+                                type={showPass ? "text" : "password"}
+                                required placeholder="********"
+                            />
+                            <button
+                                type="button"
+                                onMouseDown={() => setShowPass(true)}
+                                onMouseUp={() => setShowPass(false)}
+                                onMouseLeave={() => setShowPass(false)}
+                                className="absolute right-2 top-2 z-10 text-emerald-800 hover:cursor-pointer"
+                            >
+                                {showPass ? <EyeOff size={25} /> : <Eye size={25} />}
+                            </button>
+                        </div>
                     </div>
                     <button type="submit" className="btn btn-block mt-3 text-emerald-50 bg-emerald-800">
                         Login
