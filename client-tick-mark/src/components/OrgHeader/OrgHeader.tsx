@@ -68,9 +68,6 @@ const OrgHeader = ({ org }: Props) => {
                         <h3 className="font-semibold"><span className="text-green-800">Net Total:</span> 54230</h3>
                 </div>
             </div>
-            <div className="my-2 flex flex-row gap-x-2">
-                <h3 className="font-bold text-emerald-800 text-2xl">My Events</h3>
-            </div>
         </div>
     );
 };

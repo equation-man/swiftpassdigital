@@ -229,7 +229,6 @@ const DefaultOrgAccess = () => {
             router.push(`/organizations/${session?.user?.organization_id}`)
         },
         onError: (error) => {
-            console.error("The error for def user access is", error);
             toast.dismiss();
             toast.error("Invalid credentials");
         }

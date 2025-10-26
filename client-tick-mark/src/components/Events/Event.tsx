@@ -111,18 +111,22 @@ const Event = ({ evnt }: Props) => {
                         </div>
                     </div>
                 </div>
-                <div className="flex flex-row items-center gap-x-2 items-center">
-                    {dispDelBtn && (<button onClick={e => showDelBtn(e, true)} className="bg-white-600 border border-rose-600 text-rose-600 px-4 py-1 font-semibold rounded-sm hover:cursor-pointer"> Delete Event</button>)}
-                    <button onClick={showEvent} className="px-4 py-1 bg-emerald-800 font-semibold rounded-sm hover:cursor-pointer text-white">View tickets</button>
-                </div>
-                {confirmDel && (
-                    <div>
-                        <h1 className="text-rose-600 text-sm text-center">Are you sure you want to delete this event?</h1>
-                        <p className="text-xs text-center text-rose-400">Event with booked tickets can't be deleted</p>
-                        <button onClick={e => showDelBtn(e, false)} className="btn-block bg-emerald-600 text-white py-1 mb-1 hover:cursor-pointer">Cancel</button>
-                        <button onClick={handleDelEvent} className="btn-block bg-rose-600 text-white py-1 hover:cursor-pointer">Continue</button>
+                <button onClick={showEvent} className="px-4 py-1 bg-emerald-800 font-semibold rounded-sm hover:cursor-pointer text-white">View/Scan tickets</button>
+                {session?.user.org_email && (
+                    <div className="w-full">
+                        <div className="flex flex-row items-center gap-x-2 items-center">
+                            {dispDelBtn && (<button onClick={e => showDelBtn(e, true)} className="bg-white-600 border border-rose-600 text-rose-600 px-4 py-1 font-semibold rounded-sm hover:cursor-pointer"> Delete Event</button>)}
+                        </div>
+                        {confirmDel && (
+                            <div>
+                                <h1 className="text-rose-600 text-sm text-center">Are you sure you want to delete this event?</h1>
+                                <p className="text-xs text-center text-rose-400">Event with booked tickets can't be deleted</p>
+                                <button onClick={e => showDelBtn(e, false)} className="btn-block bg-emerald-600 text-white py-1 mb-1 hover:cursor-pointer">Cancel</button>
+                                <button onClick={handleDelEvent} className="btn-block bg-rose-600 text-white py-1 hover:cursor-pointer">Continue</button>
+                            </div>
+                          )}
                     </div>
-                  )}
+                )}
               </div>
             </div>
         </div>

@@ -15,7 +15,8 @@ const OrganizationActivityPage = async () => {
 
     return (
         <div className="p-2">
-            <OrgHeader org={user}/>
+            {session?.user?.org_email && (<OrgHeader org={user}/>)}
+            <h3 className="text-emerald-800 font-semibold text-xl p-2">My Events</h3>
             <MyEvents owner={user}/>
             {/* MODALS */}
             <EventCreationModal eventOwner={user}/>

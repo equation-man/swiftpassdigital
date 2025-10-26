@@ -41,7 +41,7 @@ const NavBar = () => {
                         onClick={handleRouteToDashboard}
                         className="rounded-sm text-white bg-emerald-800 text-xs px-4 py-2 hover:cursor-pointer"
                     >
-                        Create Event
+                        Dashboard
                     </button>
                     {session && <LogoutButton />}
                 </div>
