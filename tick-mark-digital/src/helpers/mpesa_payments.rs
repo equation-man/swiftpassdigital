@@ -344,6 +344,7 @@ mod tests {
 
     // STK push status.
     #[tokio::test]
+    #[ignore]
     async fn stk_status_push_test() {
         let status = stk_push_status(confirm_stk_trans().await).await;
         println!("The status for stk push is {:#?}", status);

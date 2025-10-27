@@ -28,6 +28,27 @@ impl From<web::Json<Organization>> for Organization {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Report {
+    pub total_tickets: String,
+    pub tickets_sold: String,
+    pub total_sales: String,
+    pub service_fee: String,
+    pub net_total: String,
+}
+
+impl From<web::Json<Report>> for Report {
+    fn from(report: web::Json<Report>) -> Self {
+        Report {
+            total_tickets: report.total_tickets.clone(),
+            tickets_sold: report.tickets_sold.clone(),
+            total_sales: report.total_sales.clone(),
+            service_fee: report.service_fee.clone(),
+            net_total: report.net_total.clone()
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct LoggedOrganization {
     pub organization_id: Uuid,
     pub organization_name: String,

@@ -1,6 +1,6 @@
 //! DATABASE ACCESS UTILITIES FOR EVENTS AND TICKETS.
 use crate::models::{
-    Event, CreateEvent, EventPayload,
+    Event, CreateEvent, EventPayload, Report,
     TickType, Ticket, AddTicket, TicketPayload, TickStatus, TickClass,
     Order, CreateOrder, OrderPayload, OrderDetails,
     DiscType, Discount, AddDiscount, DiscountPayload,
@@ -8,6 +8,7 @@ use crate::models::{
     pg_interval_to_seconds,
 };
 use chrono::{Duration, DateTime, Utc};
+use futures::future;
 use sqlx::postgres::PgPool;
 use rust_decimal::Decimal;
 use std::str::FromStr;
@@ -116,6 +117,35 @@ pub async fn get_events(db_pool: &PgPool, owner_id: Option<Uuid>, filters: Event
             event_tag: event.get("event_tag"),
         }
     }).collect()
+}
+
+pub async fn generate_report(db_pool: &PgPool, event_id: Uuid, org_id: Option<Uuid>) -> Option<Report> {
+    let evnt = get_event(db_pool, event_id).await;
+    let tickets = get_tickets(db_pool, evnt.event_id).await;
+    let capacity = tickets.iter().try_fold(0i64, |acc, tk| acc.checked_add(tk.capacity));
+    let ords = tickets.iter().map(|tk| async move {
+        let order_payload = OrderPayload {
+            order_id: None, ticket_id: None, user_id: None,
+            user_email: None, user_contact: None, ticket_price: None,
+            promo_code: None, ticket_status: None, entrance_code: None,
+            order_limit: None, paystack_reference: None,
+            commission_amount: None, order_currency: None
+        };
+        get_orders(db_pool, tk.ticket_id, order_payload).await
+    });
+    let orders: Vec<_> = futures::future::join_all(ords).await.into_iter().flatten().collect();
+    let t_sales = orders.iter().try_fold(Decimal::ZERO, |acc, tp| acc.checked_add(tp.ticket_price.parse().expect("Invalid decimal for total sales"))).unwrap();
+    let total_commission = orders.iter().try_fold(Decimal::ZERO, |acc, tp| acc.checked_add(tp.commission_amount.parse().expect("Invalid decimal total commission"))).unwrap();
+    let t_sold = orders.len();
+    let n_total = t_sales.checked_sub(total_commission).unwrap();
+
+    Some(Report {
+        total_tickets: capacity.unwrap().to_string(),
+        tickets_sold: t_sold.to_string(),
+        total_sales: t_sales.to_string(),
+        service_fee: total_commission.to_string(),
+        net_total: n_total.to_string(),
+    })
 }
 
 pub async fn update_event(db_pool: &PgPool, event_id: Uuid, payload: EventPayload) -> Event {

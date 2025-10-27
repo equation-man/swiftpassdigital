@@ -500,6 +500,12 @@ pub async fn orders_list(params: web::Path<String>, query: web::Query<OrderQuery
     HttpResponse::Ok().json(orders_list)
 }
 
+pub async fn events_report(evnt_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
+    let event_id = Uuid::parse_str(&evnt_id.into_inner()).unwrap();
+    let ev_reps = generate_report(&app_state.db, event_id, None).await;
+    HttpResponse::Ok().json(ev_reps)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -606,6 +612,8 @@ mod tests {
             ticket_status: None,
             entrance_code: None,
             order_limit: None,
+            order_currency: None,
+            commission_amount: None,
             paystack_reference: None
         }
     }
@@ -684,7 +692,7 @@ mod tests {
     async fn create_order_test() {
         let test_state: web::Data<AppState> = web::Data::new(app_state().await);
         let order_payload = web::Json(create_order_info());
-        let ticket_id = web::Path::from("d98016ac-cf3c-4d67-bc2c-614bb3132d62".to_string());
+        let ticket_id = web::Path::from("9f9bf9f9-eb09-4b75-9a76-24bbeaee0b44".to_string());
         let ticket_order = create_order(order_payload, ticket_id, test_state).await;
         println!("The ticket order is {:#?}", ticket_order.body());
         assert_eq!(ticket_order.status(), StatusCode::OK);
@@ -700,5 +708,16 @@ mod tests {
         //let orders = orders_list(order_filters, ticket_id, test_state).await;
         //println!("The ticket list is {:#?}", orders.body());
         //assert_eq!(orders.status(), StatusCode::OK);
+    }
+
+    // =============== TEST GENERATING REPORT =================
+    #[actix_web::test]
+    async fn gen_rep_test() {
+        let e_id = web::Path::from("68a990f9-9ab3-4d42-9454-97cbc8b84bdd".to_string());
+        let test_state: web::Data<AppState> = web::Data::new(app_state().await);
+
+        //generate_report(db_pool, evnt_uid, None).await;
+        let report = events_report(e_id, test_state).await;
+        println!("The generated report is {:#?}", report.body());
     }
 }

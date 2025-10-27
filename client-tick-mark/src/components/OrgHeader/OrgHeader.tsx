@@ -56,18 +56,6 @@ const OrgHeader = ({ org }: Props) => {
                     </button>
                 </div>
             </div>
-            <div className="grid grid-cols-2 bg-emerald-100 rounded-xs p-1 text-green-7">
-                <div>
-                    <h3 className="font-semibold"><span className="text-green-800">Total Tickets:</span> 66</h3>
-                    <h3 className="font-semibold"><span className="text-green-800">Tickets Sold:</span> 58</h3>
-                    <h3 className="font-semibold"><span className="text-green-800">Amount:</span> 58000</h3>
-                </div>
-                <div>
-                    <h3 className="font-semibold"><span className="text-green-800">Payments processing fee:</span> 870</h3>
-                    <h3 className="font-semibold"><span className="text-green-800">Service fee:</span> 2900</h3>
-                        <h3 className="font-semibold"><span className="text-green-800">Net Total:</span> 54230</h3>
-                </div>
-            </div>
         </div>
     );
 };

@@ -111,11 +111,23 @@ const Event = ({ evnt }: Props) => {
                         </div>
                     </div>
                 </div>
+                {session?.user.org_email && (
+                    <div className="bg-emerald-100 rounded-xs p-1 text-green-7">
+                        <div>
+                            <h3 className="font-semibold"><span className="text-green-800">Total Tickets:</span> 66</h3>
+                            <h3 className="font-semibold"><span className="text-green-800">Tickets Sold:</span> 58</h3>
+                            <h3 className="font-semibold"><span className="text-green-800">Ticket price:</span> 1000</h3>
+                            <h3 className="font-semibold"><span className="text-green-800">Amount:</span> 58000</h3>
+                            <h3 className="font-semibold"><span className="text-green-800">Service fee:</span> 5800</h3>
+                            <h3 className="font-semibold"><span className="text-green-800">Net Total:</span> 52200</h3>
+                        </div>
+                    </div>
+                )}
                 <button onClick={showEvent} className="px-4 py-1 bg-emerald-800 font-semibold rounded-sm hover:cursor-pointer text-white">View/Scan tickets</button>
                 {session?.user.org_email && (
                     <div className="w-full">
-                        <div className="flex flex-row items-center gap-x-2 items-center">
-                            {dispDelBtn && (<button onClick={e => showDelBtn(e, true)} className="bg-white-600 border border-rose-600 text-rose-600 px-4 py-1 font-semibold rounded-sm hover:cursor-pointer"> Delete Event</button>)}
+                        <div className="flex flex-row items-center gap-x-2 items-center w-full">
+                            {dispDelBtn && (<button onClick={e => showDelBtn(e, true)} className="btn btn-block bg-white-600 border border-rose-600 text-rose-600 px-4 py-1 font-semibold rounded-sm hover:cursor-pointer"> Delete Event</button>)}
                         </div>
                         {confirmDel && (
                             <div>
