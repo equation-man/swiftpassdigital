@@ -14,4 +14,3 @@ CREATE TABLE ticket_market.wallets (
     wallet_email TEXT
 );
 
-ALTER DATABASE test_tickmark SET search_path TO ticket_market, public;

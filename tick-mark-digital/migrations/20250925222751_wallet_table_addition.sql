@@ -15,4 +15,3 @@ ADD COLUMN paystack_reference TEXT;
 ALTER TABLE ticket_market.events
 ADD COLUMN subaccount TEXT;
 
-ALTER DATABASE test_tickmark SET search_path TO ticket_market, public;

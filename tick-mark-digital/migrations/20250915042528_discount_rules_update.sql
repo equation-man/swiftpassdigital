@@ -13,5 +13,3 @@ CREATE TABLE ticket_market.discount_rules (
     active BOOLEAN DEFAULT true,
     FOREIGN KEY (ticket_id) REFERENCES ticket_market.tickets(ticket_id)
 );
-
-ALTER DATABASE test_tickmark SET search_path TO ticket_market, public;

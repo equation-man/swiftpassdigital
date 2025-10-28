@@ -162,6 +162,12 @@ pub async fn generate_daraja_password(till_or_paybill: String) -> (String, Strin
     (password, timestamp)
 }
 
+pub async fn get_daraja_callback() -> String {
+    dotenv().ok();
+    let url = env::var("MPESA_DARAJA_CALLBACK").expect("Provide callback url");
+    url
+}
+
 /// Generation bearer authorization token and api url.
 pub async fn mpesa_auth_details() -> (String, String) {
     dotenv().ok();

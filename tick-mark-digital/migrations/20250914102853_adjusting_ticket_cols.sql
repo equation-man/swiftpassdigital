@@ -16,4 +16,3 @@ ADD COLUMN ticket_class ticket_market.tick_class;
 ALTER TABLE ticket_market.tickets
 ADD COLUMN discount_time INTERVAL;
 
-ALTER DATABASE test_tickmark SET search_path TO ticket_market, public;

@@ -10,5 +10,3 @@ ADD UNIQUE (organization_name);
 
 ALTER TABLE ticket_market.users
 ADD UNIQUE (user_name, email, telephone);
-
-ALTER DATABASE test_tickmark SET search_path TO ticket_market, public;
