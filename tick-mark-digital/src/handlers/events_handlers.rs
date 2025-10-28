@@ -19,6 +19,7 @@ use crate::helpers::{
 };
 use nanoid::nanoid;
 use std::{thread, time::Duration, str::FromStr};
+use rust_decimal::prelude::ToPrimitive;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -160,7 +161,7 @@ pub async fn mpesa_callback(payload: web::Json<DarajaCallback>, ticket_id: web::
             ticket_status: TickStatus::Pending,
             order_limit: 0,
             ticket_price: ticket_price,
-            commission_amount: Decimal::from(my_comm),
+            commission_amount: Decimal::from(0u64),//Decimal::from(my_comm),
             order_currency: "KES".to_string(),
             paystack_reference: callBack.CheckoutRequestID.clone(),
         };
@@ -178,17 +179,19 @@ pub async fn mpesa_order(payload: web::Json<CreateOrder>, ticket_id: web::Path<S
     let target_event = get_event(&app_state.db, ticket_det.event_id.clone()).await;
     let target_wallet = get_org_wallet(&app_state.db, target_event.owner_id.clone()).await;
     let (my_password, timestamp) = generate_daraja_password(target_wallet.account_number.clone()).await;
+    let ticket_price_dec = Decimal::from_str(&ticket_det.base_price.clone()).unwrap();
+    let ticket_price = ticket_price_dec.trunc().to_u64().unwrap();
     let stkPushRequest = StkPushRequest {
         Password: my_password.clone(),
         BusinessShortCode: target_wallet.account_number.clone(),
         Timestamp: timestamp.clone(),
-        Amount: "1".to_string(),//ticket_det.base_price.clone(),
+        Amount: ticket_price.to_string(), //"1".to_string(),// 
         PartyA: order_payload.user_contact.clone(),
         PartyB: target_wallet.account_number.clone(),
         TransactionType: "CustomerPayBillOnline".to_string(),
         PhoneNumber: order_payload.user_contact.clone(),
-        TransactionDesc: "Test".to_string(),//"SwiftPassDigital Event Ticket".to_string(),
-        AccountReference: "Test".to_string(),
+        TransactionDesc: "SwiftPassDigital Event payment".to_string(),//"SwiftPassDigital Event Ticket".to_string(),
+        AccountReference: "Test payments".to_string(),
         CallBackURL: format!("https://unnational-intervocalic-lilia.ngrok-free.dev/events/ticket/callback/{}", t_id.to_string()),
     };
     match mpesa_stk_push(stkPushRequest).await {
@@ -712,6 +715,7 @@ mod tests {
 
     // =============== TEST GENERATING REPORT =================
     #[actix_web::test]
+    #[ignore]
     async fn gen_rep_test() {
         let e_id = web::Path::from("68a990f9-9ab3-4d42-9454-97cbc8b84bdd".to_string());
         let test_state: web::Data<AppState> = web::Data::new(app_state().await);

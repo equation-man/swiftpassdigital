@@ -120,9 +120,9 @@ pub async fn get_events(db_pool: &PgPool, owner_id: Option<Uuid>, filters: Event
 }
 
 pub async fn generate_report(db_pool: &PgPool, event_id: Uuid, org_id: Option<Uuid>) -> Option<Report> {
-    let evnt = get_event(db_pool, event_id).await;
-    let tickets = get_tickets(db_pool, evnt.event_id).await;
-    let capacity = tickets.iter().try_fold(0i64, |acc, tk| acc.checked_add(tk.capacity));
+    //let evnt = get_event(db_pool, event_id).await;
+    let tickets = get_tickets(db_pool, event_id).await;
+    let capacity = tickets.iter().try_fold(0i64, |acc, tk| acc.checked_add(tk.capacity)).unwrap();
     let ords = tickets.iter().map(|tk| async move {
         let order_payload = OrderPayload {
             order_id: None, ticket_id: None, user_id: None,
@@ -140,7 +140,7 @@ pub async fn generate_report(db_pool: &PgPool, event_id: Uuid, org_id: Option<Uu
     let n_total = t_sales.checked_sub(total_commission).unwrap();
 
     Some(Report {
-        total_tickets: capacity.unwrap().to_string(),
+        total_tickets: capacity.to_string(),
         tickets_sold: t_sold.to_string(),
         total_sales: t_sales.to_string(),
         service_fee: total_commission.to_string(),

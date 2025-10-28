@@ -8,8 +8,8 @@ import { Event as EventType } from "@/types/types";
 import { formatDateTime } from "@/lib/helpers";
 import { deleteModalState } from "@/redux/reducers/generalReducer";
 import { useSession } from "next-auth/react";
-import { deleteEventFn } from "./actions";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { deleteEventFn, fetchReportFn } from "./actions";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { EventDate, ClientOnly } from "@/components/Events/EventDateTime";
 
 type Props = {
@@ -29,6 +29,15 @@ const Event = ({ evnt }: Props) => {
         event.preventDefault();
         router.push(`/event/${evnt.event_id}`);
     }
+
+    const { data, isLoading, error } = useQuery({
+        queryKey: ['report', evnt.event_id],
+        queryFn: () => fetchReportFn(evnt.event_id),
+        onSuccess: () => {
+        },
+        onError: () => {
+        }
+    });
 
     const queryClient = useQueryClient();
     const mutation = useMutation({
@@ -111,15 +120,14 @@ const Event = ({ evnt }: Props) => {
                         </div>
                     </div>
                 </div>
-                {session?.user.org_email && (
+                {session?.user.organization_id == evnt.owner_id && (
                     <div className="bg-emerald-100 rounded-xs p-1 text-green-7">
                         <div>
-                            <h3 className="font-semibold"><span className="text-green-800">Total Tickets:</span> 66</h3>
-                            <h3 className="font-semibold"><span className="text-green-800">Tickets Sold:</span> 58</h3>
-                            <h3 className="font-semibold"><span className="text-green-800">Ticket price:</span> 1000</h3>
-                            <h3 className="font-semibold"><span className="text-green-800">Amount:</span> 58000</h3>
-                            <h3 className="font-semibold"><span className="text-green-800">Service fee:</span> 5800</h3>
-                            <h3 className="font-semibold"><span className="text-green-800">Net Total:</span> 52200</h3>
+                            <h3 className="font-semibold"><span className="text-green-800">Total Tickets:</span> {data?.total_tickets}</h3>
+                            <h3 className="font-semibold"><span className="text-green-800">Tickets Sold:</span> {data?.tickets_sold}</h3>
+                            <h3 className="font-semibold"><span className="text-green-800">Total sales:</span> {data?.total_sales}</h3>
+                            <h3 className="font-semibold text-teal-700"><span className="text-green-800">Service fee:</span> {data?.service_fee}</h3>
+                            <h3 className="font-semibold"><span className="text-green-800">Net Total:</span> {data?.net_total}</h3>
                         </div>
                     </div>
                 )}

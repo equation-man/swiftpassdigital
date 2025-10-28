@@ -10,6 +10,7 @@ import { updatePaymentModalState } from "@/redux/reducers/generalReducer";
 import { Ticket } from "@/types/types";
 import { formatCurrency } from "@/lib/helpers";
 import { useSession } from "next-auth/react";
+import { Event } from "@/types/types";
 import TicketPaymentModal from "@/components/Events/EventModals";
 
 type TicketProps = {
@@ -60,7 +61,7 @@ const EventInfo = () => {
     const handleShowTicketPaymentModal = (value: string) => {
         setCurrentTicketId(value)
     }
-    const params=useParams<{ event_id: string}>(); // typed params
+    const params=useParams<{ id: string}>(); // typed params
     const router=useRouter();
     const ev_id = params.id;
 
@@ -75,7 +76,7 @@ const EventInfo = () => {
         }
     });
 
-    const { data: currentEvent, isLoading: evLoading, error: evError } = useQuery({
+    const { data: currentEvent, isLoading: evLoading, error: evError } = useQuery<Event>({
         queryKey: ['event', ev_id],
         queryFn: () => eventInfoFn(ev_id),
         onSuccess: () => {

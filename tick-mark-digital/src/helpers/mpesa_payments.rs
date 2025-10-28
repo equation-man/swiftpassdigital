@@ -261,7 +261,7 @@ mod tests {
             BusinessShortCode: till_or_paybill.clone(),
             Timestamp: timestamp,
             Amount: "1".to_string(),
-            PartyA: "2547559009593".to_string(),
+            PartyA: "254759009593".to_string(),
             PartyB: till_or_paybill.clone(),
             TransactionType: "CustomerPayBillOnline".to_string(),
             PhoneNumber: "254759009593".to_string(),
@@ -328,7 +328,6 @@ mod tests {
 
     // Test sending stk push prompt.
     #[tokio::test]
-    #[ignore]
     async fn stk_push_mpesa() {
         let stk_push_res = mpesa_stk_push(generate_request().await).await;
         println!("The mpesa stk(c2b) push result is {:#?}", stk_push_res);
