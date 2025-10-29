@@ -449,19 +449,34 @@ pub async fn get_org_wallet(db_pool: &PgPool, org_id: Uuid) -> Wallet {
     let org_wallet = sqlx::query!(r#"
         SELECT * FROM ticket_market.wallets
         WHERE owner_id=$1
-    "#, org_id).fetch_one(db_pool).await.unwrap();
+    "#, org_id).fetch_optional(db_pool).await.unwrap();
 
-    Wallet {
-        wallet_id: org_wallet.wallet_id,
-        owner_id: org_wallet.owner_id,
-        business_name: org_wallet.business_name.unwrap(),
-        bank_code: "NOT_SET".to_string(),
-        account_number: org_wallet.account_number.unwrap(),
-        percentage_charge: org_wallet.percentage_charge.unwrap().to_string(),
-        settlement_bank: org_wallet.settlement_bank.unwrap(),
-        currency: org_wallet.currency.unwrap(),
-        subaccount_code: org_wallet.subaccount_code.unwrap(),
-        wallet_email: org_wallet.wallet_email.unwrap(),
+    if let Some(org_wallet) = org_wallet {
+        Wallet {
+            wallet_id: org_wallet.wallet_id,
+            owner_id: org_wallet.owner_id,
+            business_name: org_wallet.business_name.unwrap_or_default(),
+            bank_code: "NOT_SET".to_string(),
+            account_number: org_wallet.account_number.unwrap_or_default(),
+            percentage_charge: org_wallet.percentage_charge.unwrap_or_default().to_string(),
+            settlement_bank: org_wallet.settlement_bank.unwrap_or_default(),
+            currency: org_wallet.currency.unwrap_or_default(),
+            subaccount_code: org_wallet.subaccount_code.unwrap_or_default(),
+            wallet_email: org_wallet.wallet_email.unwrap_or_default(),
+        }
+    } else {
+        Wallet {
+            wallet_id: Uuid::new_v4(),
+            owner_id: org_id,
+            business_name: "Not Set".to_string(),
+            bank_code: "NOT_SET".to_string(),
+            account_number: "0000000000".to_string(),
+            percentage_charge: "0".to_string(),
+            settlement_bank: "Unknown".to_string(),
+            currency: "KES".to_string(),
+            subaccount_code: "".to_string(),
+            wallet_email: "none@notset.com".to_string(),
+        }
     }
 }
 

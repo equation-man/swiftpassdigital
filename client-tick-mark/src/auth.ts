@@ -2,7 +2,11 @@ import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials";
 import { loginUserFn, loginOrgFn, defloginOrgFn} from "@/app/login/actions";
 
+const isProd = process.env.NODE_ENV === "production";
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
+    //trustHost: true,
+    trustedHosts: process.env.AUTH_TRUST_HOSTS?.split(","),
     secret: process.env.AUTH_SECRET,
 
     session: {
@@ -65,29 +69,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     })],
 
     callbacks: {
-        authorized: async ({auth}) => {
-            //Logged in users are authenticated, otherwise redirect to login page.
-            return !!auth
-        },
         async jwt({ token, user }) {
             if (user) {
-                token.accessToken = user.token;
-                token.user = {...user.user}
+                token.user = user;
+                token.token = user.token
             }
             return token;
         },
 
         async session({ session, token }) {
-            if (token) {
-                session.token = token.accessToken
-                session.user = token.user
+            if (token?.user) {
+                session.user = token.user;
+                session.user.token = token.token;
             }
             return session;
         },
 
         async redirect({ baseUrl, token }) {
-            if (token?.id) {
-                return `${baseUrl}/organizations/${token.id}`;
+            const orgId = token?.user?.organization_id ;
+            if (orgId) {
+                return `${baseUrl}/organizations/${orgId}`;
             }
             return baseUrl;
         },

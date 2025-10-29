@@ -6,12 +6,12 @@ import LogoutButton from "./LogoutButton";
 import { useSession } from "next-auth/react";
 
 const NavBar = () => {
-    const { data: session, status } = useSession();
+    const { update, data: session, status } = useSession();
     const router = useRouter();
 
     const handleRouteToDashboard = () => {
         if (!!session) {
-            router.push(`/organizations/${session.user.organization_id}`)
+            router.push(`/organizations/${session.user.user.organization_id}`)
         } else {
             router.push("/login")
         }
@@ -43,7 +43,7 @@ const NavBar = () => {
                     >
                         Dashboard
                     </button>
-                    {session && <LogoutButton />}
+                    {!!session && (<LogoutButton />)}
                 </div>
             </div>
         </main>

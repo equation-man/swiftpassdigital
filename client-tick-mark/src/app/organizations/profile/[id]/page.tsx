@@ -7,7 +7,7 @@ const OrganizationProfilePage = async () => {
     let user = session;
 
     if (session?.user) {
-        user = session.user;
+        user = session.user.user;
     }
 
     return (

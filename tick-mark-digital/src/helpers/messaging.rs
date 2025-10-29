@@ -18,6 +18,16 @@ pub async fn mail_cred() -> (String, String) {
     (mail_url, api_key)
 }
 
+pub async fn mail_config(event_id: String) -> (String, String, String) {
+    dotenv().ok();
+    let sender = env::var("TICKET_MAIL_SENDER").expect("Mail sender expected");
+    let subject = env::var("TICKET_MAIL_SUBJECT").expect("Ticket subject expected");
+    let final_sub = format!("[{}] {}", event_id, subject);
+    let target_msg_tk_id = env::var("TARGET_TK_MSG").expect("Ticket message");
+    let final_message = format!("{}{}", target_msg_tk_id, event_id);
+    (sender, final_sub, final_message)
+}
+
 /// Format email html message.
 pub async fn parse_email_html_content(entrance_code: String, ticket_status: String, title: String, start: String) -> String {
     let dt: DateTime<Utc> = start.parse().unwrap();
@@ -91,6 +101,14 @@ mod tests {
     async fn test_mail_cred() {
         let creds = mail_cred().await;
         println!("The email api credentials are {:#?}", creds);
+    }
+
+    // TESTING MAIL CONFIG RETRIEVE.
+    #[tokio::test]
+    #[ignore]
+    async fn test_mail_config() {
+        let mail_conf = mail_config("SPWD-TE45DKE".to_string()).await;
+        println!("The mail config data is {:#?}", mail_conf);
     }
 
     #[tokio::test]

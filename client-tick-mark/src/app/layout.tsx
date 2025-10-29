@@ -5,6 +5,7 @@ import "react-phone-input-2/lib/style.css";
 import NavBar from "@/components/Navigation/NavBar";
 import Footer from "@/components/Footer/Footer";
 import Provider from "@/lib/queryClient";
+import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 import {ReduxProvider} from "@/redux/ReduxProvider";
 
 const outfit = Outfit({
@@ -14,7 +15,7 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: "SwiftPassDigital",
-  description: "Ticketing SaaS platform.",
+  description: "Event management and digital ticketing software platform.",
 };
 
 export default function RootLayout({
@@ -27,13 +28,15 @@ export default function RootLayout({
       <body
         className={`${outfit.className}`}
       >
-          <Provider>
-              <ReduxProvider>
-                <NavBar />
-                    {children}
-                <Footer />
-              </ReduxProvider>
-          </Provider>
+          <SessionProviderWrapper>
+              <Provider>
+                  <ReduxProvider>
+                    <NavBar />
+                        {children}
+                    <Footer />
+                  </ReduxProvider>
+              </Provider>
+          </SessionProviderWrapper>
       </body>
     </html>
   );

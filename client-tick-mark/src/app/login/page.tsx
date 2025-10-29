@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { loginUserFn, loginOrgFn, defloginOrgFn } from "./actions";
 import { LoginUser, LoginOrg } from "@/types/types";
-import { useSession, signIn } from "next-auth/react";
+import { useSession, signIn, getSession } from "next-auth/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -95,7 +95,7 @@ const UserLoginPage = () => {
 
 const OrgLoginPage = () => {
     const router = useRouter();
-    const { data: session, status } = useSession();
+    const { update, data: session, status } = useSession();
     const [inputs, setInputs] = useState<LoginUser | {}>({});
     const [showPass, setShowPass] = useState(false);
 
@@ -110,10 +110,8 @@ const OrgLoginPage = () => {
             const res = await signIn("credentials", {redirect: false, org_email: email, org_pwd: password});
             if (!res?.ok) throw new Error(res?.error || "Invalid credentials");
 
-            const sessionRes = await fetch("/api/auth/session", { cache: "no-store" });
-            const session = await sessionRes.json();
-
-            if (!session?.user?.organization_id) throw new Error("Session missing user id");
+            const session = await update();
+            if (!session?.user?.user?.organization_id) throw new Error("Session missing user id");
 
             return session;
         },
@@ -125,10 +123,9 @@ const OrgLoginPage = () => {
                     secondary: "#047857",
                 },
             });
-            router.push(`/organizations/${session?.user?.organization_id}`)
+            router.push(`/organizations/${session?.user?.user?.organization_id}`);
         },
         onError: (error) => {
-            console.log("The error on login access is", error);
             toast.dismiss();
             toast.error("Invalid credentials");
         }
@@ -165,6 +162,7 @@ const OrgLoginPage = () => {
                             <input onChange={handleChange} id="password" name="password" className="input validator w-full" type={showPass ? "text" : "password"} required placeholder="********" />
                             <button
                                 type="button"
+                                onClick={() => setShowPass(true)}
                                 onMouseDown={() => setShowPass(true)}
                                 onMouseUp={() => setShowPass(false)}
                                 onMouseLeave={() => setShowPass(false)}
@@ -211,10 +209,10 @@ const DefaultOrgAccess = () => {
             const res = await signIn("credentials", {redirect: false, access_username: access_username, access_code: access_code});
             if (!res?.ok) throw new Error(res?.error || "Invalid credentials");
 
-            const sessionRes = await fetch("/api/auth/session", { cache: "no-store" });
+            const sessionRes = await fetch("/api/auth/session", { cache: "no-store", credentials: "include" });
             const session = await sessionRes.json();
 
-            if (!session?.user?.organization_id) throw new Error("Session missing user id");
+            if (!session?.user?.user?.organization_id) throw new Error("Session missing user id");
 
             return session;
         },
@@ -226,9 +224,10 @@ const DefaultOrgAccess = () => {
                     secondary: "#047857",
                 },
             });
-            router.push(`/organizations/${session?.user?.organization_id}`)
+            router.push(`/organizations/${session?.user?.user?.organization_id}`)
         },
         onError: (error) => {
+            console.log("The error at login is", error);
             toast.dismiss();
             toast.error("Invalid credentials");
         }

@@ -37,10 +37,11 @@ async fn main() -> io::Result<()> {
     // Run migrations.
     migrations.run(&shared_data.db).await.unwrap();
 
+
     // Construct app and configure routes
     let app = move || {
         App::new()
-            .wrap(Logger::default()) // Logger middleware
+            .wrap(Logger::new("%a %{User-Agent}i %r %s %b %Dms")) // Logger middleware
             .wrap(Cors::permissive()) // Permissive used for development
             .wrap(IdentityMiddleware::default())
             .wrap(

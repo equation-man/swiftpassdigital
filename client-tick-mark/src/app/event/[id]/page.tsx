@@ -69,10 +69,8 @@ const EventInfo = () => {
         queryKey: ['tickets', ev_id],
         queryFn: () => ticketInfoFn(ev_id),
         onSuccess: (data) => {
-            console.log("Success", data)
         },
         onError: (err) => {
-            console.log("Error", err)
         }
     });
 
@@ -109,7 +107,7 @@ const EventInfo = () => {
                     <h3 className="text-gray-600 font-bold text-lg">tickets</h3>
                     {session?.user && (
                         <div>
-                            {session?.user.organization_id === currentEvent?.owner_id && (
+                            {session?.user.user.organization_id === currentEvent?.owner_id && (
                                 <button
                                     onClick={() => router.push(`/qrscan/${currentEvent.owner_id}/event/${currentEvent.event_id}`)}
                                     className="bg-emerald-700 text-emerald-50 p-1 hover:cursor-pointer rounded-xs text-sm"

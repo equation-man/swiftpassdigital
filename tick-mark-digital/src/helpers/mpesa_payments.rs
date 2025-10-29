@@ -162,10 +162,10 @@ pub async fn generate_daraja_password(till_or_paybill: String) -> (String, Strin
     (password, timestamp)
 }
 
-pub async fn get_daraja_callback() -> String {
+pub async fn get_daraja_callback(itm_id: String) -> String {
     dotenv().ok();
     let url = env::var("MPESA_DARAJA_CALLBACK").expect("Provide callback url");
-    url
+    format!("{}/{}", url, itm_id)
 }
 
 /// Generation bearer authorization token and api url.
@@ -334,6 +334,7 @@ mod tests {
 
     // Test sending stk push prompt.
     #[tokio::test]
+    #[ignore]
     async fn stk_push_mpesa() {
         let stk_push_res = mpesa_stk_push(generate_request().await).await;
         println!("The mpesa stk(c2b) push result is {:#?}", stk_push_res);
@@ -368,5 +369,13 @@ mod tests {
     async fn commission_test() {
         let comm_amount = commission_amnt_calc("1000".to_string()).await;
         println!("The commission amount is: {:#?}", comm_amount);
+    }
+
+    // TEST GETTING THE CALLBACK URL CONFIGURATION.
+    #[tokio::test]
+    #[ignore]
+    async fn get_daraja_callback_test() {
+        let c_url = get_daraja_callback("item005".to_string()).await;
+        println!("The callback url is {}", c_url);
     }
 }

@@ -26,7 +26,7 @@ const OrgHeader = ({ org }: Props) => {
     const handleManageAccount = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
         if (!!session) {
-            router.push(`/organizations/profile/${session.user.organization_id}`)
+            router.push(`/organizations/profile/${session.user.user.organization_id}`)
         } else {
             router.push("/login")
         }

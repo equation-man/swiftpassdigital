@@ -17,13 +17,13 @@ const MyEvents = ({ owner }: Props) => {
     const { data, isLoading, error } = useQuery({
         queryKey: ['MyEvents'],
         queryFn: () => myEventsFn(owner_id),
-        onSuccess: () => {
+        onSuccess: (data) => {
         },
-        onError: () => {
+        onError: (error) => {
         },
     });
 
-    if (error) return <p className="font-semibold font-gray-600">Error loading data</p>
+    if (error) return <p className="font-semibold font-gray-600">Failed loading data</p>
 
     return (
         <div className="carousel carousel-center rounded-box w-full space-x-4 px-2">
@@ -32,7 +32,7 @@ const MyEvents = ({ owner }: Props) => {
                     {data.map((event) => <Event key={event.event_id} evnt={event}/>)}
                 </>
             ):(
-                <p className="font-semibold font-gray-600">Error loading data...</p>
+                <p className="font-semibold font-gray-600">Failed loading data</p>
             )}
         </div>
     );

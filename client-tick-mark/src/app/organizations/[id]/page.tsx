@@ -10,12 +10,12 @@ const OrganizationActivityPage = async () => {
     let user = session;
 
     if (session?.user) {
-        user = session.user;
+        user = session.user.user;
     }
 
     return (
         <div className="p-2">
-            {session?.user?.org_email && (<OrgHeader org={user}/>)}
+            {user?.org_email && (<OrgHeader org={user}/>)}
             <h3 className="text-emerald-800 font-semibold text-xl p-2">My Events</h3>
             <MyEvents owner={user}/>
             {/* MODALS */}

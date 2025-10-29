@@ -20,6 +20,5 @@ type DerOrgLogin = {
 
 export async function defloginOrgFn(defOrgLogin: DefOrgLogin): Promise<unkwon> {
     const response = await axios.post(`${API_URL}/organization/login`, defOrgLogin);
-    console.log("The default login response is", response)
     return response.data;
 }

@@ -5,44 +5,60 @@ import { NextResponse } from "next/server";
 const DEFAULT_LOGOUT_REDIRECT = "/login";
 const DEFAULT_LOGIN_REDIRECT = "/login";
 const authRoutes = ["/login", "/register"];
-const publicRoutes = ["/", "/event/:path"];
+const publicRoutes = ["/", "/event/:path", "/verify/:path", "/verify/failed"];
 const isAuthPrefix = "/api/auth";
+
+// Define public routes with regex
+const publicRoutePatterns: RegExp[] = [
+  /^\/$/,                   // homepage
+  /^\/event\/[^\/]+$/,       // dynamic /event/{id}
+  /^\/verify\/[^\/]+$/,      // dynamic /verify/{id}
+  /^\/verify\/failed$/,      // static /verify/failed
+];
 
 export default auth(async function middleware(req: NextRequest) {
     // Custom middleware logic goes here.
-    const nexturl = req.nextUrl;
-    const isLoggedIn = !req.auth?.user.token;
+    const nextUrl = req.nextUrl;
+    const user = req.auth?.user;
+    const isLoggedIn = !!user?.token;
 
-    const isApiAuthRoute = nexturl.pathname.startsWith(isAuthPrefix);
-    const isPublicRoutes = publicRoutes.includes(nexturl.pathname);
-    const isAuthRoute = authRoutes.includes(nexturl.pathname);
+
+    const isApiAuthRoute = nextUrl.pathname.startsWith(isAuthPrefix);
+    const isAuthRoute = authRoutes.includes(nextUrl.pathname);
+    // Check for public route patterns
+    const isPublicRoute = publicRoutePatterns.some((pattern) => pattern.test(nextUrl.pathname));
+    // Static public route.
+    //const isPublicRoutes = publicRoutes.includes(nextUrl.pathname);
+
 
     if (isApiAuthRoute) {
-        return null;
+        return NextResponse.next();
     }
 
+    // Logged in users visiting login or register.
     if (isAuthRoute) {
-        // Handle redirection to organization page for logged in users.
-        if (!isLoggedIn) {
-            return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, req.url))
+        // Redirect logged in users away from /login and /register routes.
+        if (isLoggedIn) {
+            const userId = user?.organization_id || user?.organization_id;
+            const dashboardUrl = `/organizations/${userId}`;
+            return NextResponse.redirect(new URL(dashboardUrl, req.url))
         }
-        return null;
+        return NextResponse.next();
     }
 
-    if (!isLoggedIn && !isPublicRoutes) {
+    // Unauthenticated users visiting protected routes.
+    if (!isLoggedIn && !isPublicRoute) {
         // Handle redirects for users not yer logged in
-        const callbackUrl = nexturl.pathname;
-        const encodeCallbackUrl = encodeURIComponent(callbackUrl)
-        return NextResponse.redirect(new URL(`/login?callbackUrl=${encodeCallbackUrl}`, req.url));
+        const callbackUrl = nextUrl.pathname;
+        const encodedCallbackUrl = encodeURIComponent(callbackUrl)
+        return NextResponse.redirect(new URL(`/login?callbackUrl=${encodedCallbackUrl}`, req.url));
     }
 
-    return null;
+    // Default
+    return NextResponse.next();
     },{
         callbacks: {
-            authorized: async () => {
-                if (isLoggedIn) return true;
-                else return false
-            }
+            authorized: async ({ auth }) => !!auth?.user?.token,
         },
         pages: {
             signIn: "/login",

@@ -37,6 +37,7 @@ const TicketPaymentModal = ({ ticketId, eventDetails }: PayemntModalProps) => {
     const { data, isLoading, error } = useQuery({
         queryKey: ['ticket', ticketId],
         queryFn: () => singleTicketInfoFn(ticketId),
+        enabled: !!ticketId && fetch_states,
         onSuccess: () => {
         },
         onError: () => {
@@ -62,6 +63,7 @@ const TicketPaymentModal = ({ ticketId, eventDetails }: PayemntModalProps) => {
             dispatch(updatePaymentModalState(false));
         },
         onError: (err: Error) => {
+            console.log("The error during ticket purchase is", err);
             router.push(`/verify/failed`)
             toast.error("Ticket payment confirmation failed.")
             dispatch(updatePaymentModalState(false));

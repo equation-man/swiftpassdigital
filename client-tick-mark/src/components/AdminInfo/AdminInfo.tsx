@@ -141,16 +141,6 @@ const AdminInfo = ({ org }: Props) => {
         setInputs(values => ({...values, [name]:value}));
     }
 
-    const { data: session, status } = useSession();
-    const router = useRouter();
-    const handleRouteToDashboard = () => {
-        if (!!session) {
-            router.push()
-        } else {
-            router.push("/login")
-        }
-    }
-
     const handleWalletCreation = (e: React.MouseEvent<HTMLButtonElement>, value) => {
         e.preventDefault();
         setCreateWallet(value);
@@ -185,10 +175,9 @@ const AdminInfo = ({ org }: Props) => {
         queryKey: ['wallet', org.organization_id],
         queryFn: () => myWalletFn(org.organization_id),
         onSuccess: (data) => {
-            console.log("Wallet fetch success is", data)
         },
+        enabled: !!org.organization_id,
         onError: (error) => {
-            console.llg("Wallet fetch error is", error)
         }
     });
 
@@ -196,10 +185,9 @@ const AdminInfo = ({ org }: Props) => {
         queryKey: ['accessors', org.organization_id],
         queryFn: () => getUserAccessListFn(org.organization_id),
         onSuccess: (data) => {
-            console.log("The access liset is", data);
         },
+        enabled: !!org.organization_id,
         onError: (error) => {
-            console.log("The error for access is", error);
         }
     });
 
@@ -216,7 +204,7 @@ const AdminInfo = ({ org }: Props) => {
                 <div>
                     <div className="w-90 border border-emerald-500 border-2px rounded-sm py-2 my-3 flex flex-col items-center justify-center hover:cursor-pointer">
                         <h3 className="font-semibold text-gray-500">Wallet Details</h3>
-                        {data ? (
+                        {data && data.account_number !== "0000000000" ? (
                             <div className="w-full p-2">
                                 <div className="">
                                     <p className="text-emerald-800"><span className="text-gray-800 font-medium">Account Number:</span> {data.account_number}</p>

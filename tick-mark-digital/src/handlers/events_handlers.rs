@@ -16,6 +16,7 @@ use crate::helpers::{
     DarajaCallback, commission_amnt_calc,
     StkDarajaResponse,
     TicketQRData, qr_code_gen,
+    mail_config, get_daraja_callback,
 };
 use nanoid::nanoid;
 use std::{thread, time::Duration, str::FromStr};
@@ -192,7 +193,7 @@ pub async fn mpesa_order(payload: web::Json<CreateOrder>, ticket_id: web::Path<S
         PhoneNumber: order_payload.user_contact.clone(),
         TransactionDesc: "SwiftPassDigital Event payment".to_string(),//"SwiftPassDigital Event Ticket".to_string(),
         AccountReference: "Test payments".to_string(),
-        CallBackURL: format!("https://unnational-intervocalic-lilia.ngrok-free.dev/events/ticket/callback/{}", t_id.to_string()),
+        CallBackURL: get_daraja_callback(t_id.to_string()).await,
     };
     match mpesa_stk_push(stkPushRequest).await {
         Ok(push_res) => {
@@ -256,10 +257,11 @@ pub async fn mpesa_order(payload: web::Json<CreateOrder>, ticket_id: web::Path<S
                                 };
                                 let qr_code_tag = qr_code_gen(qr_ticket).await.unwrap();
                                 // Send the ticket to the email here.
-                                let sender = "swiftpassdigital@drugsverse.com".to_string();
-                                let subject = "SwiftPassDigital Ticket Confirmation".to_string();
+                                let (sender, subject, text) = mail_config(upd.entrance_code.clone()).await;
+                                //let sender = "swiftpassdigital@drugsverse.com".to_string();
+                                //let subject = "SwiftPassDigital Ticket Confirmation".to_string();
                                 let target_name = "SwiftPassDigital User".to_string();
-                                let text = format!("Your event spot created successfully via SwiftPassDigital. Your ticket id is: {}. Enjoy the event", upd.entrance_code);
+                                //let text = format!("Your event spot created successfully via SwiftPassDigital. Your ticket id is: {}. Enjoy the event", upd.entrance_code);
                                 let html = parse_email_html_content(
                                     upd.entrance_code.clone(), upd.ticket_status.clone().to_string(),
                                     target_event.title, target_event.start_date
