@@ -26,6 +26,7 @@ const Events = ({ owner }: Props) => {
     if (session) {
         sessionFilter = session?.user.organization_id
     }
+    console.log("The events return data is", session);
 
     if (error) return <p className="font-semibold font-gray-600">Error loading data</p>
 

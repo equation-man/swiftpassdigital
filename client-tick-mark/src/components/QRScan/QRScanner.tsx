@@ -20,9 +20,20 @@ export default function QRScanner() {
 
     useEffect(() => {
         return () => {
-            if (html5QrcodeRef.current) {
-                html5QrcodeRef.current.stop().catch(() => {});
-                html5QrcodeRef.current.clear().catch(() => {});
+            const qr = html5QrcodeRef.current;
+            if (qr) {
+                try {
+                    if (qr.isScanning) qr.stop();
+                } catch (e) {
+                    // Catching clean up stop error here.
+                }
+                try {
+                    qr.clear();
+                } catch (e) {
+                    // Cleanup clear error here.
+                }
+                //html5QrcodeRef.current.stop().catch(() => {});
+                //html5QrcodeRef.current.clear().catch(() => {});
             }
         };
     }, []);
@@ -56,7 +67,7 @@ export default function QRScanner() {
                     let data = JSON.parse(decodedText);
                     // Prevent double reads by stopping scanning immediately
                     try {
-                        await html5Qr.stop();
+                        if (html5Qr.isScanning) await html5Qr.stop();
                     } catch (err) {};
                     setScanning(false);
 
@@ -68,7 +79,6 @@ export default function QRScanner() {
                         // Send request to the backend here and retrieve result.
                         const res = await mutation.mutateAsync(data);
                         //const json = JSON.stringify(res);
-                        console.log("The simulated response is", res);
                         setLastResult({...res});
                     } catch (e) {
                         setLastResult({
@@ -90,10 +100,31 @@ export default function QRScanner() {
     }
 
     function stopScanner() {
-        if (!scanning) return;
         const html5Qr = html5QrcodeRef.current;
         if (!html5Qr) return;
-        html5Qr.stop().then(() => html5Qr.clear()).catch(() => {}).finally(() => setScanning(false));
+
+        try {
+            // Use intenal state check
+            if (html5Qr.isScanning) {
+                // Scanner not running, skipping stop()
+                html5Qr
+                .stop()
+                .then(() => html5Qr.clear())
+                .catch(() => {})
+                .finally(() => {
+                    // Stop scanner exception
+                    setScanning(false);
+                });
+            } else {
+                setScanning(false);
+            }
+        } catch (e) {
+            // Stop scanner exception.
+            setScanning(false);
+        } finally {
+            html5QrcodeRef.current = null;
+            setScanning(false);
+        }
     }
 
     return (
@@ -106,7 +137,7 @@ export default function QRScanner() {
                     <span className="text-gray-400 text-sm">Camera feed will appear here</span>
                 )}
             </div>
-            <div className="flex gap-4 py-4 mt-6">
+            <div className="flex gap-4 py-8 mt-8">
                 <button onClick={startScanner} disabled={scanning}
                     className={`px-5 py-2 rounded-sm text-white font-medium transition hover:bg-emerald-800 ${
                         scanning ? "bg-gray-400 cursor-not-allowed": "bg-emerald-700 hover:bg-indigo-700"
