@@ -5,6 +5,7 @@ use crate::{
         create_event, list_events, list_myevents, event_info, event_update, event_delete,
         create_ticket, tickets_display, ticket_info, create_order, events_report,
         orders_list, verify_order, mpesa_order, mpesa_callback, qr_verify,
+        mpesa_order_and_callback,
     },
 };
 
@@ -22,7 +23,7 @@ pub fn events_routes(cfg: &mut web::ServiceConfig) {
         .route("/ticket/callback/{ticket_id}", web::post().to(mpesa_callback))
         .route("/ticket/{ticket_id}", web::get().to(ticket_info))
         .route("/ticket/list/{event_id}", web::get().to(tickets_display))
-        .route("/ticket/mpesa/purchase/{ticket_id}", web::post().to(mpesa_order))
+        .route("/ticket/mpesa/purchase/{ticket_id}", web::post().to(mpesa_order_and_callback)) //rm-mpesa_order
         .route("/ticket/order/purchase/{ticket_id}", web::post().to(create_order))
         .route("/ticket/order/{ticket_id}", web::get().to(orders_list))
         .route("/ticket/verify/{ticket_id}", web::get().to(verify_order))

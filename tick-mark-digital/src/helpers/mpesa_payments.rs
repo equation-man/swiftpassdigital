@@ -203,6 +203,7 @@ pub async fn mpesa_stk_push(payment_request: StkPushRequest) -> Result<StkPushRe
         .json(&payment_request)
         .send().await?;
     let stk_resp: StkPushResponse = res.json().await?;
+    println!("Parse resp stk {:#?}", &stk_resp);
     Ok(stk_resp)
 }
 

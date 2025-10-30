@@ -24,9 +24,8 @@ const Events = ({ owner }: Props) => {
 
     let sessionFilter = null;
     if (session) {
-        sessionFilter = session?.user.organization_id
+        sessionFilter = session?.user?.user.organization_id
     }
-    console.log("The events return data is", session);
 
     if (error) return <p className="font-semibold font-gray-600">Error loading data</p>
 
@@ -37,7 +36,7 @@ const Events = ({ owner }: Props) => {
                     {data.filter(itm => sessionFilter !== itm.owner_id).map((event) => <Event key={event.event_id} evnt={event}/>)}
                 </>
             ):(
-                <p className="font-semibold font-gray-600">Error loading data...</p>
+                <p className="font-semibold font-gray-600">Failed to fetch data. Refresh</p>
             )}
         </div>
     );

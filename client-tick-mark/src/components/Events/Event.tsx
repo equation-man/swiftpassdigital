@@ -62,9 +62,10 @@ const Event = ({ evnt }: Props) => {
         mutation.mutate(evnt);
     }
 
-    let dispDelBtn = null;
+    // This user owns this event
+    let dispAct = null;
     if (session) {
-        dispDelBtn = session?.user.organization_id === evnt.owner_id
+        dispAct = session?.user?.user.organization_id === evnt.owner_id
     }
 
     return (
@@ -120,7 +121,7 @@ const Event = ({ evnt }: Props) => {
                         </div>
                     </div>
                 </div>
-                {session?.user.user.organization_id == evnt.owner_id && (
+                {session?.user?.user?.org_email && dispAct && (
                     <div className="bg-emerald-100 rounded-xs p-1 text-green-7">
                         <div>
                             <h3 className="font-semibold"><span className="text-green-800">Total Tickets:</span> {data?.total_tickets}</h3>
@@ -131,11 +132,11 @@ const Event = ({ evnt }: Props) => {
                         </div>
                     </div>
                 )}
-                <button onClick={showEvent} className="px-4 py-1 bg-emerald-800 font-semibold rounded-sm hover:cursor-pointer text-white">View tickets</button>
-                {session?.user.org_email && (
+                  <button onClick={showEvent} className="px-4 py-1 bg-emerald-800 font-semibold rounded-sm hover:cursor-pointer text-white">View{dispAct && (<span>/Scan</span>)} tickets</button>
+                {session?.user?.user?.org_email && dispAct && (
                     <div className="w-full">
                         <div className="flex flex-row items-center gap-x-2 items-center w-full">
-                            {dispDelBtn && (<button onClick={e => showDelBtn(e, true)} className="btn btn-block bg-white-600 border border-rose-600 text-rose-600 px-4 py-1 font-semibold rounded-sm hover:cursor-pointer"> Delete Event</button>)}
+                            {dispAct && (<button onClick={e => showDelBtn(e, true)} className="btn btn-block bg-white-600 border border-rose-600 text-rose-600 px-4 py-1 font-semibold rounded-sm hover:cursor-pointer"> Delete Event</button>)}
                         </div>
                         {confirmDel && (
                             <div>

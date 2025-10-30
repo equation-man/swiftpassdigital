@@ -1,10 +1,14 @@
 "use client";
-import { signOut } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
 const LogoutButton = () => {
     const router = useRouter();
+    const queryClient = useQueryClient();
+    const { update } = useSession();
+
     const handleLogout = async () => {
         toast.loading("Signing you out...", {
             style: {
@@ -17,10 +21,12 @@ const LogoutButton = () => {
             },
         })
 
+        queryClient.removeQueries({queryKey: ["session"] });//Clear cached session
         await signOut({
             redirect: false,
             callbackUrl: "/login",
         });
+        await update(); //Force useSession to refresh
 
         toast.dismiss();
         toast.success("Signed out successfully", {

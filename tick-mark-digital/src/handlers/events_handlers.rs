@@ -132,6 +132,175 @@ pub async fn ticket_info(ticket_id: web::Path<String>, app_state: web::Data<AppS
 }
 
 // ============================== ORDER TICKETS =========================
+//
+// ====================================
+// NEW MPESA ORDER PAYMENT FUNCTION.
+// ====================================
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum OrderPayloadType {
+    CreateOrder(CreateOrder),
+    DarajaCallback(DarajaCallback),
+}
+
+pub async fn mpesa_order_and_callback(payload: web::Json<OrderPayloadType>, ticket_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
+    let t_id = Uuid::parse_str(&ticket_id.into_inner()).unwrap();
+    println!("Started mpesa verification {:#?}", &payload);
+    match &*payload {
+        OrderPayloadType::CreateOrder(order_payload) => {
+            let ticket_det = get_single_ticket(&app_state.db, t_id).await;
+            let target_event = get_event(&app_state.db, ticket_det.event_id.clone()).await;
+            let target_wallet = get_org_wallet(&app_state.db, target_event.owner_id.clone()).await;
+            let (my_password, timestamp) = generate_daraja_password(target_wallet.account_number.clone()).await;
+            let ticket_price_dec = Decimal::from_str(&ticket_det.base_price.clone()).unwrap();
+            let ticket_price = ticket_price_dec.trunc().to_u64().unwrap();
+            let stkPushRequest = StkPushRequest {
+                Password: my_password.clone(),
+                BusinessShortCode: target_wallet.account_number.clone(),
+                Timestamp: timestamp.clone(),
+                Amount: ticket_price.to_string(), //"1".to_string(),// 
+                PartyA: order_payload.user_contact.clone(),
+                PartyB: target_wallet.account_number.clone(),
+                TransactionType: "CustomerPayBillOnline".to_string(),
+                PhoneNumber: order_payload.user_contact.clone(),
+                TransactionDesc: "SwiftPassDigital Event payment".to_string(),//"SwiftPassDigital Event Ticket".to_string(),
+                AccountReference: "Test payments".to_string(),
+                CallBackURL: get_daraja_callback(t_id.to_string()).await,
+            };
+            println!("About to initiate stk push {:#?}", &stkPushRequest);
+            match mpesa_stk_push(stkPushRequest).await {
+                Ok(push_res) => {
+                    // Check if the order has been created on payment and update it.
+                    let mut delay = 5.0;
+                    let mut attempts = 0;
+                    let max_attempts = 7;
+                    let mut order_value = None;
+                    while let None = order_value {
+                        attempts += 1;
+                        order_value = get_single_order(&app_state.db, t_id, push_res.CheckoutRequestID.clone()).await.unwrap();
+                        if attempts == max_attempts {
+                            //Stop
+                            break;
+                        }
+                        if order_value.is_none() {
+                            let jitter: f64 = rand::thread_rng().gen_range(0.7..1.3);
+                            let waiting = delay * jitter;
+                            thread::sleep(Duration::from_secs_f64(waiting));
+                            delay *= 2.0;
+                            continue;
+                        }
+                        let confirmStkTransaction = ConfirmStkTransaction {
+                            BusinessShortCode: target_wallet.account_number.clone(),
+                            Password: my_password.clone(),
+                            Timestamp: timestamp.clone(),
+                            CheckoutRequestID: push_res.CheckoutRequestID.clone(),
+                        };
+                        if let Ok(pay_status) = stk_push_status(confirmStkTransaction.clone()).await {
+                            match pay_status {
+                                StkDarajaResponse::Success(stk_status) => {
+                                    if stk_status.ResultCode == "0".to_string() {
+                                        let upd_payload: OrderPayload = OrderPayload {
+                                            order_id: None,
+                                            ticket_id: Some(ticket_det.ticket_id.clone()),
+                                            user_id: None,
+                                            user_email: Some(order_payload.user_email.clone()),
+                                            user_contact: Some(order_payload.user_contact.clone()),
+                                            ticket_price: None,
+                                            promo_code: None,
+                                            ticket_status: None,
+                                            entrance_code: None,
+                                            order_limit: Some(ticket_det.capacity.clone()),
+                                            commission_amount: None,
+                                            order_currency: None,
+                                            paystack_reference: None,
+                                        };
+                                        // Order is the ticket.
+                                        let upd = update_order(&app_state.db, push_res.CheckoutRequestID.clone(), upd_payload).await;
+                                        let qr_ticket: TicketQRData = TicketQRData {
+                                            order_id: upd.order_id.clone().to_string(),
+                                            entrance_code: upd.entrance_code.clone(),
+                                            organization_id: target_event.owner_id.clone().to_string(),
+                                            event_id: target_event.event_id.clone().to_string(),
+                                            ticket_type: ticket_det.ticket_type.clone().to_string(),
+                                            ticket_status: upd.ticket_status.clone().to_string(),
+                                            start_time: target_event.start_date.clone(),
+                                            finish_time: target_event.finish_date.clone(),
+                                            paystack_reference: push_res.CheckoutRequestID.clone(),
+                                            ticket_id: ticket_det.ticket_id.clone().to_string(),
+                                        };
+                                        let qr_code_tag = qr_code_gen(qr_ticket).await.unwrap();
+                                        // Send the ticket to the email here.
+                                        let (sender, subject, text) = mail_config(upd.entrance_code.clone()).await;
+                                        let target_name = "SwiftPassDigital User".to_string();
+                                        let html = parse_email_html_content(
+                                            upd.entrance_code.clone(), upd.ticket_status.clone().to_string(),
+                                            target_event.title, target_event.start_date
+                                            ).await;
+                                        let _ = send_email(sender, upd.user_email.clone(), subject, target_name, qr_code_tag, text, Some(html)).await;
+                                        return HttpResponse::Ok().json(upd);
+                                    }
+                                    return HttpResponse::InternalServerError().body("Error processing ticket");
+                                },
+                                StkDarajaResponse::Fault(f_status) => {
+                                    // Handling rate limiting.
+                                    //thread::sleep(Duration::from_secs_f64(waiting)); // Backoff before retrying. 
+                                    //continue;
+                                    return HttpResponse::InternalServerError().body("Handling rate limiting");
+                                },
+                            }
+                        }
+                    }
+                    return HttpResponse::InternalServerError().body("Payment processing failed.");
+                },
+                Err(err) => {
+                    println!("The mpesa stk push message is {:#?}", err);
+                    HttpResponse::InternalServerError().body("Error processing payment")
+                }
+            }
+        },
+
+        OrderPayloadType::DarajaCallback(order_callBack) => {
+            let callBack = &order_callBack.Body.stkCallback;
+            if let Ok(Some(order)) = get_single_order(&app_state.db, t_id.clone(), callBack.CheckoutRequestID.clone()).await {
+                // Prevent double booking of tickets
+                return HttpResponse::InternalServerError().body("Order already exists");
+            }
+
+            // Add the order reference into the db since payment is successful.
+            if callBack.ResultCode == 0 {
+                // Create ticket, Payment was successfull.
+                let alphabet: [char; 32] = [
+                    'A','B','C','D','E','F','G','H','J','K','L','M',
+                    'N','P','Q','R','S','T','U','V','W','X','Y','Z',
+                    '2', '3', '4', '5', '6', '7', '8', '9'
+                ];
+                let entrance_pass = format!("SWPD-{}", nanoid!(8, &alphabet));
+                let ticket_price_obj = callBack.CallbackMetadata.as_ref().unwrap().Item
+                    .iter().filter(|itm| itm.Name == "Amount").collect::<Vec<_>>()[0];
+                let ticket_price: Decimal = serde_json::from_value(ticket_price_obj.Value.clone().unwrap()).unwrap();
+                let my_comm = commission_amnt_calc(ticket_price.to_string()).await;
+                let order_details = OrderDetails {
+                    ticket_id: t_id,
+                    user_email: "NOT_SET".to_string(),
+                    user_contact: "NOT_SET".to_string(),
+                    ticket_status: TickStatus::Pending,
+                    order_limit: 0,
+                    ticket_price: ticket_price,
+                    commission_amount: Decimal::from(0u64),//Decimal::from(my_comm),
+                    order_currency: "KES".to_string(),
+                    paystack_reference: callBack.CheckoutRequestID.clone(),
+                };
+                let new_order = add_order(&app_state.db, entrance_pass, order_details).await;
+                return HttpResponse::Ok().json(new_order);
+            }
+            HttpResponse::InternalServerError().body("Error adding order")
+        },
+        _ => HttpResponse::InternalServerError().body("Payment processing failuire")
+    }
+}
+// ===================================
+// LEGACY MPESA PAYMENT
+// ===================================
 /// Mpesa order confirmation, callback.
 pub async fn mpesa_callback(payload: web::Json<DarajaCallback>, ticket_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
     let callBack = &payload.Body.stkCallback;
@@ -176,6 +345,7 @@ pub async fn mpesa_callback(payload: web::Json<DarajaCallback>, ticket_id: web::
 pub async fn mpesa_order(payload: web::Json<CreateOrder>, ticket_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
     let order_payload: CreateOrder = payload.into();
     let t_id: Uuid = Uuid::parse_str(&ticket_id.into_inner()).unwrap();
+
     let ticket_det = get_single_ticket(&app_state.db, t_id).await;
     let target_event = get_event(&app_state.db, ticket_det.event_id.clone()).await;
     let target_wallet = get_org_wallet(&app_state.db, target_event.owner_id.clone()).await;

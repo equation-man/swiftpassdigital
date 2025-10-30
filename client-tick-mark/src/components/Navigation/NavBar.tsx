@@ -6,7 +6,7 @@ import LogoutButton from "./LogoutButton";
 import { useSession } from "next-auth/react";
 
 const NavBar = () => {
-    const { update, data: session, status } = useSession();
+    const { data: session, status } = useSession();
     const router = useRouter();
 
     const handleRouteToDashboard = () => {

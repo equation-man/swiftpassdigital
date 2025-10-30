@@ -34,9 +34,7 @@ export async function purchaseTicketFn({orderDet, ticketId}: OrdDet): Promise<Or
 }
 
 export async function mpesaTicketPurchaseFn({orderDet, ticketId}: OrdDet): Promise<OrderDetails | unknown> {
-    console.log("Ticket details are ", orderDet);
     const response = await axios.post(`${API_URL}/events/ticket/mpesa/purchase/${ticketId}`, orderDet, { timeout: 60000});
-    console.log("The return value is", response);
     return response.data
 }
 

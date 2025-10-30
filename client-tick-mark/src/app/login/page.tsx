@@ -166,6 +166,8 @@ const OrgLoginPage = () => {
                                 onMouseDown={() => setShowPass(true)}
                                 onMouseUp={() => setShowPass(false)}
                                 onMouseLeave={() => setShowPass(false)}
+                                onTouchStart={() => setShowPass(true)}
+                                onTouchEnd={() => setShowPass(false)}
                                 className="absolute right-2 top-2 z-10 text-emerald-800 hover:cursor-pointer"
                             >
                                 {showPass ? <EyeOff size={25} /> : <Eye size={25} />}
@@ -273,6 +275,8 @@ const DefaultOrgAccess = () => {
                                 onMouseDown={() => setShowPass(true)}
                                 onMouseUp={() => setShowPass(false)}
                                 onMouseLeave={() => setShowPass(false)}
+                                onTouchStart={() => setShowPass(true)}
+                                onTouchEnd={() => setShowPass(false)}
                                 className="absolute right-2 top-2 z-10 text-emerald-800 hover:cursor-pointer"
                             >
                                 {showPass ? <EyeOff size={25} /> : <Eye size={25} />}

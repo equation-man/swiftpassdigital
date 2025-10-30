@@ -31,8 +31,9 @@ const Info = ({ ticketDetails, ticketIdViewFn }: TicketProps ) => {
         <div className="card bg-base-100 image-full w-96 shadow-sm rounded-sm">
           <figure>
             <img
-              src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"
-              alt="Shoes" />
+              className="w-full h-full"
+              src="/swiftpass-bg-demo.svg"
+              alt="Swiftpass logo" />
           </figure>
           <div className="card-body">
             <h2 className="card-title">{formatCurrency(Number(ticketDetails.base_price))}</h2>
