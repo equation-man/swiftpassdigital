@@ -170,6 +170,7 @@ pub async fn mpesa_order_and_callback(payload: web::Json<OrderPayloadType>, tick
             println!("About to initiate stk push {:#?}", &stkPushRequest);
             match mpesa_stk_push(stkPushRequest).await {
                 Ok(push_res) => {
+                    println!("Started processing push response, for proceesing ticket {:#?}", &push_res);
                     // Check if the order has been created on payment and update it.
                     let mut delay = 5.0;
                     let mut attempts = 0;
@@ -177,6 +178,7 @@ pub async fn mpesa_order_and_callback(payload: web::Json<OrderPayloadType>, tick
                     let mut order_value = None;
                     while let None = order_value {
                         attempts += 1;
+                        println!("The while loop attempts {}", attempts);
                         order_value = get_single_order(&app_state.db, t_id, push_res.CheckoutRequestID.clone()).await.unwrap();
                         if attempts == max_attempts {
                             //Stop
@@ -238,18 +240,22 @@ pub async fn mpesa_order_and_callback(payload: web::Json<OrderPayloadType>, tick
                                             ).await;
                                         let _ = send_email(sender, upd.user_email.clone(), subject, target_name, qr_code_tag, text, Some(html)).await;
                                         return HttpResponse::Ok().json(upd);
+                                    } else {
+                                        println!("The result code for payment is not 0");
+                                        return HttpResponse::InternalServerError().body("Error processing ticket");
                                     }
-                                    return HttpResponse::InternalServerError().body("Error processing ticket");
                                 },
                                 StkDarajaResponse::Fault(f_status) => {
                                     // Handling rate limiting.
                                     //thread::sleep(Duration::from_secs_f64(waiting)); // Backoff before retrying. 
                                     //continue;
+                                    println!("Generates fault response for Daraja api stk response {:#?}", f_status);
                                     return HttpResponse::InternalServerError().body("Handling rate limiting");
                                 },
                             }
                         }
                     }
+                    println!("The processing error is");
                     return HttpResponse::InternalServerError().body("Payment processing failed.");
                 },
                 Err(err) => {
@@ -291,8 +297,10 @@ pub async fn mpesa_order_and_callback(payload: web::Json<OrderPayloadType>, tick
                     paystack_reference: callBack.CheckoutRequestID.clone(),
                 };
                 let new_order = add_order(&app_state.db, entrance_pass, order_details).await;
+                println!("The order added is {:#?}", new_order);
                 return HttpResponse::Ok().json(new_order);
             }
+            println!("The callback result code is not 0 {:#?}", &callBack);
             HttpResponse::InternalServerError().body("Error adding order")
         },
         _ => HttpResponse::InternalServerError().body("Payment processing failuire")
