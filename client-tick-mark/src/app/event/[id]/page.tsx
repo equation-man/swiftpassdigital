@@ -106,7 +106,7 @@ const EventInfo = () => {
                 <div className="py-3 flex flex-col justify-center items-center">
                     <h1 className="text-emrald-800 text-2xl font-bold text-center">{currentEvent?.title}</h1>
                     <h3 className="text-gray-600 font-bold text-lg">tickets</h3>
-                    {session?.user && (
+                    {!!session && (
                         <div>
                             {session?.user.user.organization_id === currentEvent?.owner_id && (
                                 <button

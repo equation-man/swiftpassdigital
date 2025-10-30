@@ -93,7 +93,6 @@ export default function QRScanner() {
                 }
             );
         } catch (err) {
-            console.error("Camera start error is", err);
             setScanning(false);
             setLastResult({ok: false, message: "Camera permission denied"})
         }
