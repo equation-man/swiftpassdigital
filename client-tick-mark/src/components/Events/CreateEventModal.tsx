@@ -121,7 +121,7 @@ const EventCreationModal = ({ eventOwner }: Props) => {
                                 form="eventForm"
                                 className="bg-emerald-800 btn-block p-2 hover:cursor-pointer"
                             >
-                                Continue
+                                Generate ticket
                             </button>
                         </div>
                     </dialog>

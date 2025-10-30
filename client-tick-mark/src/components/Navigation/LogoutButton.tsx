@@ -7,7 +7,6 @@ import toast from "react-hot-toast";
 const LogoutButton = () => {
     const router = useRouter();
     const queryClient = useQueryClient();
-    const { update } = useSession();
 
     const handleLogout = async () => {
         toast.loading("Signing you out...", {
@@ -23,10 +22,9 @@ const LogoutButton = () => {
 
         queryClient.removeQueries({queryKey: ["session"] });//Clear cached session
         await signOut({
-            redirect: false,
+            //redirect: false,
             callbackUrl: "/login",
         });
-        await update(); //Force useSession to refresh
 
         toast.dismiss();
         toast.success("Signed out successfully", {
@@ -35,7 +33,7 @@ const LogoutButton = () => {
                 secondary: "#047857",
             },
         });
-        router.push("/login")
+        //router.push("/login")
     };
 
     return (
