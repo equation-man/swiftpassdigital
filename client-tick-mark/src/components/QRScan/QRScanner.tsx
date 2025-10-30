@@ -3,6 +3,7 @@
 import { confirmQRcodeFn } from "./actions";
 import { QRTicketValidation } from "@types/types";
 import { useMutation } from "@tanstack/react-query";
+import { useParams } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { HTML5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 
@@ -17,6 +18,8 @@ export default function QRScanner() {
     const html5QrcodeRef = useRef<any | null>(null);
     const [scanning, setScanning] = useState(false);
     const [lastResult, setLastResult] = useState<QRTicketValidation | null>(null);
+    const params = useParams();
+    const org_id = params.org_id as string;
 
     useEffect(() => {
         return () => {
@@ -38,6 +41,7 @@ export default function QRScanner() {
         };
     }, []);
 
+
     const mutation = useMutation({
         mutationKey: ['checkTicket'],
         mutationFn: (lastResult) => confirmQRcodeFn(lastResult),
@@ -46,6 +50,7 @@ export default function QRScanner() {
         },
         onError: (err: Error) => {
             //toast.error("Ticket verification failed")
+            console.log("Error fetching data scanning", err)
         }
     });
 
@@ -77,6 +82,7 @@ export default function QRScanner() {
                     try {
                         // Data from scanned qrcode.
                         // Send request to the backend here and retrieve result.
+                        //data.organization_id = org_id
                         const res = await mutation.mutateAsync(data);
                         //const json = JSON.stringify(res);
                         setLastResult({...res});

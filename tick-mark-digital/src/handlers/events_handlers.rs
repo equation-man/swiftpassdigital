@@ -178,8 +178,9 @@ pub async fn mpesa_order_and_callback(payload: web::Json<OrderPayloadType>, tick
                     let mut order_value = None;
                     while let None = order_value {
                         attempts += 1;
-                        println!("The while loop attempts {}", attempts);
                         order_value = get_single_order(&app_state.db, t_id, push_res.CheckoutRequestID.clone()).await.unwrap();
+                        println!("The while loop attempts {}", attempts);
+                        println!("The order value is {:#?}", &order_value);
                         if attempts == max_attempts {
                             //Stop
                             break;
@@ -271,7 +272,7 @@ pub async fn mpesa_order_and_callback(payload: web::Json<OrderPayloadType>, tick
                 // Prevent double booking of tickets
                 return HttpResponse::InternalServerError().body("Order already exists");
             }
-
+            println!("The daraja stk callback result is {:#?}", &callBack);
             // Add the order reference into the db since payment is successful.
             if callBack.ResultCode == 0 {
                 // Create ticket, Payment was successfull.
@@ -518,11 +519,6 @@ pub async fn verify_order(ticket_id: web::Path<String>, v_query: web::Query<Veri
         Err(_) => return HttpResponse::BadRequest().body("Invalid UUID")
     }
 }
-
-
-
-
-
 
 #[derive(Serialize)]
 struct VerificationResponse<T> {

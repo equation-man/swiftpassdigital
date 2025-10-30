@@ -22,7 +22,7 @@ const LogoutButton = () => {
 
         queryClient.removeQueries({queryKey: ["session"] });//Clear cached session
         await signOut({
-            //redirect: false,
+            redirect: false,
             callbackUrl: "/login",
         });
 
