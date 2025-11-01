@@ -106,7 +106,7 @@ const Event = ({ evnt }: Props) => {
                 <div className="text-gray-600 flex flex-row items-center">
                     <p className="text-xs">#{evnt.event_tag}</p>
                     <ShareButton
-                        title="A very delightfull event"
+                        title="Enjoy efficient events on SwiftPassDigital"
                         shareUrl={`https://swiftpassdigital.com/event/${evnt.event_id}`}
                         message={`Grab your ticket for ${evnt.title}`}
                     />
