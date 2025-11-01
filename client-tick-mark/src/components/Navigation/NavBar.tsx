@@ -29,6 +29,11 @@ const NavBar = () => {
                     </Link>
                 </div>
                 <div className="flex flex-row items-center gap-x-1">
+                    <Link href="mailto:bigtechguyz@gmail.com?subject=SwiftPassDigital Technical Support Center" className="text-emerald-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width={32} height={32} viewBox="0 0 32 32">
+                            <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M29 9v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9m26 0a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2m26 0l-11.862 8.212a2 2 0 0 1-2.276 0L3 9"></path>
+                        </svg>                        
+                    </Link>
                     <Link href="/" className="text-emerald-600">
                         <svg xmlns="http://www.w3.org/2000/svg" width={30} height={30} viewBox="0 0 24 24">
                             <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}>

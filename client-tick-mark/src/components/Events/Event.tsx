@@ -11,6 +11,7 @@ import { useSession } from "next-auth/react";
 import { deleteEventFn, fetchReportFn } from "./actions";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { EventDate, ClientOnly } from "@/components/Events/EventDateTime";
+import ShareButton from "@/components/ShareButton/ShareButton";
 
 type Props = {
     evnt: EventType;
@@ -102,8 +103,13 @@ const Event = ({ evnt }: Props) => {
               </figure>
               <div className="card-body">
                 <h2 className="card-title">{evnt.title}</h2>
-                <div className="text-gray-600">
+                <div className="text-gray-600 flex flex-row items-center">
                     <p className="text-xs">#{evnt.event_tag}</p>
+                    <ShareButton
+                        title="A very delightfull event"
+                        shareUrl={`https://swiftpassdigital.com/event/${evnt.event_id}`}
+                        message={`Grab your ticket for ${evnt.title}`}
+                    />
                 </div>
                 <p>{evnt.description}</p>
                 <div className="card-actions justify-between items-center">
