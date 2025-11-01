@@ -12,6 +12,7 @@ type Props = {
 // pass user object.
 const Events = ({ owner }: Props) => {
     const { data: session, status } = useSession();
+    const now = new Date();
 
     const { data, isLoading, error } = useQuery({
         queryKey: ['events'],
@@ -33,7 +34,10 @@ const Events = ({ owner }: Props) => {
         <div className="carousel carousel-center rounded-box w-full space-x-4 px-2">
             {data ? (
                 <>
-                    {data.filter(itm => sessionFilter !== itm.owner_id).map((event) => <Event key={event.event_id} evnt={event}/>)}
+                    {data.filter(itm => {
+                        const eventEnd = new Date(itm.finish_date);
+                        return sessionFilter !== itm.owner_id && eventEnd >= now;
+                    }).map((event) => <Event key={event.event_id} evnt={event}/>)}
                 </>
             ):(
                 <p className="font-semibold font-gray-600">Failed to fetch data. Refresh</p>

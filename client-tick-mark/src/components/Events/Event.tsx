@@ -128,8 +128,11 @@ const Event = ({ evnt }: Props) => {
                     </div>
                 </div>
                 {session?.user?.user?.org_email && dispAct && (
-                    <div className="bg-emerald-100 rounded-xs p-1 text-green-7">
-                        <div>
+                    <div className="bg-emerald-100 rounded-xs text-green-7">
+                        <div className="bg-emerald-700 w-full">
+                            <h3 className="font-semibold text-emerald-50 p-1">Report</h3>
+                        </div>
+                        <div className="p-1">
                             <h3 className="font-semibold"><span className="text-green-800">Total Tickets:</span> {data?.total_tickets}</h3>
                             <h3 className="font-semibold"><span className="text-green-800">Tickets Sold:</span> {data?.tickets_sold}</h3>
                             <h3 className="font-semibold"><span className="text-green-800">Total sales:</span> {data?.total_sales}</h3>
