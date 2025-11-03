@@ -204,7 +204,7 @@ const AdminInfo = ({ org }: Props) => {
                 <div>
                     <div className="w-90 border border-emerald-500 border-2px rounded-sm py-2 my-3 flex flex-col items-center justify-center hover:cursor-pointer">
                         <h3 className="font-semibold text-gray-500">Wallet Details</h3>
-                        {data ? (
+                        {data && data.wallet_email !== 'none@notset.com' ? (
                             <div className="w-full p-2">
                                 <div className="">
                                     <p className="text-emerald-800"><span className="text-gray-800 font-medium">Account Number:</span> {data.account_number}</p>
