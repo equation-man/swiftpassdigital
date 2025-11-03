@@ -33,7 +33,7 @@ const SuccessStatus = ({ order }: OrderProps) => {
                     <rect width={24} height={24} fill="currentColor" mask="url(#SVGkzXYXbbR)"></rect>
                 </svg>
             </div>
-            <h1 className="text-emerald-800 text-center px-4">Transaction completed successfully. Ticket processed sent to the email you provided</h1>
+            <h1 className="text-emerald-800 text-center px-4">Transaction completed successfully. Ticket processed sent to the email you provided, attached with qrcode.</h1>
             <div>
                 <p className="text-center text-sm text-emerald-600"><ClientOnly><EventDate iso={order.added_at} /></ClientOnly></p>
                 <p className="text-center text-sm">Amount: {formatCurrency(Number(order.ticket_price))}</p>
@@ -47,6 +47,7 @@ const SuccessStatus = ({ order }: OrderProps) => {
 const PaymentStatusPage = () => {
     const searchParams = useSearchParams();
     const ticketId = useParams();
+    const router = useRouter();
 
     const params = {
         ticket_id: ticketId.id,
@@ -63,7 +64,6 @@ const PaymentStatusPage = () => {
             //console.log("The order fetch result is", data);
         },
         onError: (err) => {
-            //console.log("The err result when fetching order is", err);
         },
     });
     if (isLoading) return <div className="flex flex-col items-center justify-center text-emerald-500">
@@ -89,7 +89,7 @@ const PaymentStatusPage = () => {
 
     return (
         <div className="flex flex-col items-center justify-center">
-            <SuccessStatus order={data}/>
+            {data && (<SuccessStatus order={data}/>)}
         </div>
     );
 };

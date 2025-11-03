@@ -18,8 +18,10 @@ pub fn orgs_routes(cfg: &mut web::ServiceConfig) {
         .route("/admin", web::post().to(org_login))
         .route("/login", web::post().to(get_org_via_code))
         .route("/list", web::get().to(org_list))
-        .route("/wallet/create/{owner_id}", web::post().to(new_wallet))
-        .route("/wallet/mpesa/create/{owner_id}", web::post().to(new_mpesa_wallet))
+        .route("/wallet/create/{owner_id}", web::post().to(new_mpesa_wallet)) // new_mpesa_wallet
+                                                                              // temp route.
+        .route("/wallet/mpesa/create/{owner_id}", web::post().to(new_wallet)) //mpesa order
+                                                                              //disabled.
         .route("/wallet/{org_id}", web::get().to(get_wallet))
         .route("/wallet/delete/{org_id}", web::delete().to(delete_wallet))
         .route("/update/{org_id}", web::post().to(org_update))

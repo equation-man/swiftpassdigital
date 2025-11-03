@@ -51,15 +51,16 @@ const TicketPaymentModal = ({ ticketId, eventDetails }: PayemntModalProps) => {
         mutationFn: (orderInputData) => mpesaTicketPurchaseFn(orderInputData),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["ticket", ticketId]});
-            toast.success("Ticket payment processing was successfull", {
+            toast.success("Ticket payment being processed...", {
                 iconTheme: {
                     primary: "#ecfdf5",
                     secondary: "#047857",
                 },
             })
             // Redirect to ticket page with query params of reference, ticket_id dynamic url.
-            //window.location.href = data.authorization_url;
-            router.push(`/verify/${data.ticket_id}?reference=${data.paystack_reference}`)
+            window.location.href = data.authorization_url;
+            //router.push(`/verify/${data.ticket_id}?reference=${data.paystack_reference}`)
+            //console.log("The mutation for payment data is", data);
             dispatch(updatePaymentModalState(false));
         },
         onError: (err: Error) => {
@@ -93,7 +94,7 @@ const TicketPaymentModal = ({ ticketId, eventDetails }: PayemntModalProps) => {
                                         <input onChange={handleChange} id="user_email" name="user_email" className="input validator w-full" type="email" required placeholder="mail@gmail.com" />
                                     </div>
                                     <div className="w-full">
-                                        <label className="font-medium text-gray-600">Mpesa Contact (with country code)</label>
+                                        <label className="font-medium text-gray-600">Phone contact (with country code)</label>
                                         <PhoneInput
                                             country={"ke"}
                                             value={phone}

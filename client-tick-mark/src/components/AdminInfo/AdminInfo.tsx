@@ -204,7 +204,7 @@ const AdminInfo = ({ org }: Props) => {
                 <div>
                     <div className="w-90 border border-emerald-500 border-2px rounded-sm py-2 my-3 flex flex-col items-center justify-center hover:cursor-pointer">
                         <h3 className="font-semibold text-gray-500">Wallet Details</h3>
-                        {data && data.account_number !== "0000000000" ? (
+                        {data ? (
                             <div className="w-full p-2">
                                 <div className="">
                                     <p className="text-emerald-800"><span className="text-gray-800 font-medium">Account Number:</span> {data.account_number}</p>
@@ -249,10 +249,11 @@ const AdminInfo = ({ org }: Props) => {
                                         <label className="font-medium text-gray-600">Settlement Scheme</label>
                                         <select onClick={handleChange} id="settlement_bank" name="settlement_bank" className="px-2">
                                             <option value="MPESA">MPESA</option>
+                                            <option value="057">Zenith Bank</option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="font-medium text-gray-600">Account (MPESA number)</label>
+                                        <label className="font-medium text-gray-600">Account number</label>
                                         <input id="account_number" onChange={handleChange} name="account_number" className="input validator w-full" type="text" required placeholder="Mpesa no. eg 0712345678" />
                                     </div>
                                     <div>

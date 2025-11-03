@@ -16,7 +16,7 @@ use crate::helpers::{
     DarajaCallback, commission_amnt_calc,
     StkDarajaResponse,
     TicketQRData, qr_code_gen,
-    mail_config, get_daraja_callback,
+    mail_config, get_daraja_callback, get_paystack_callback
 };
 use nanoid::nanoid;
 use std::{thread, time::Duration, str::FromStr};
@@ -477,14 +477,12 @@ pub async fn create_order(payload: web::Json<CreateOrder>, ticket_id: web::Path<
     let initSplitPymt = InitializeSplitPayment {
         email: order_payload.user_email.clone(),
         amount: ticket_det.base_price,
+
         subaccount: target_wallet.subaccount_code,
-        callback_url: format!(
-            "http://10.84.96.63:3000/verify/{}?event_id={}&email={}&phone={}",
-            ticket_det.ticket_id,
-            ticket_det.event_id.clone(),
+        callback_url: get_paystack_callback(
+            ticket_det.ticket_id.to_string(), ticket_det.event_id.to_string().clone(),
             order_payload.user_email.clone(),
-            order_payload.user_contact.clone()
-            ),
+            order_payload.user_contact.clone()).await,
     };
     match init_split_trans(initSplitPymt).await {
         Ok(init_payment) => {
@@ -629,10 +627,11 @@ pub async fn verify_paystack_order(ticket_id: web::Path<String>, verif_query: we
             };
             let qr_code_tag = qr_code_gen(qr_ticket).await.unwrap();
             // Send the ticket to the email here.
-            let sender = "swiftpassdigital@drugsverse.com".to_string();
-            let subject = "SwiftPassDigital Ticket Confirmation".to_string();
+            let (sender, subject, text) = mail_config(new_order.entrance_code.clone()).await;
+            //let sender = "swiftpassdigital@drugsverse.com".to_string();
+            //let subject = "SwiftPassDigital Ticket Confirmation".to_string();
             let target_name = "SwiftPassDigital User".to_string();
-            let text = format!("Your event spot created successfully via SwiftPassDigital. Your ticket id is: {}. Enjoy your event", new_order.entrance_code);
+            //let text = format!("Your event spot created successfully via SwiftPassDigital. Your ticket id is: {}. Enjoy your event", new_order.entrance_code);
             let html = parse_email_html_content(
                 new_order.entrance_code.clone(), new_order.ticket_status.clone().to_string(),
                 ev_title.to_string(), start.to_string()
@@ -871,7 +870,7 @@ mod tests {
     async fn create_order_test() {
         let test_state: web::Data<AppState> = web::Data::new(app_state().await);
         let order_payload = web::Json(create_order_info());
-        let ticket_id = web::Path::from("9f9bf9f9-eb09-4b75-9a76-24bbeaee0b44".to_string());
+        let ticket_id = web::Path::from("1554b773-f49d-41d7-baca-b67a2a9943b3".to_string());
         let ticket_order = create_order(order_payload, ticket_id, test_state).await;
         println!("The ticket order is {:#?}", ticket_order.body());
         assert_eq!(ticket_order.status(), StatusCode::OK);

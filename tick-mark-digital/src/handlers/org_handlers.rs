@@ -93,7 +93,7 @@ pub async fn new_mpesa_wallet(wallet_details: web::Json<NewUserWalletData>, org_
         business_name: wallet_details.business_name.clone(),
         settlement_bank: wallet_details.settlement_bank.clone(),
         account_number: wallet_details.account_number.clone(),
-        percentage_charge: "6".to_string(),
+        percentage_charge: "10".to_string(),
         subaccount_code: "NO_SUBACCOUNT_CODE".to_string(),
         currency: "KES".to_string(),
         wallet_email: wallet_details.wallet_email.clone(),
@@ -107,7 +107,7 @@ pub async fn new_wallet(wallet_details: web::Json<NewUserWalletData>, org_id: we
         business_name: wallet_details.business_name.clone(),
         settlement_bank: wallet_details.settlement_bank.clone(),
         account_number: wallet_details.account_number.clone(),
-        percentage_charge: Some(6),
+        percentage_charge: Some(10),
         description: Some("Subaccount wallet created".to_string()),
     };
     match create_subaccnt(details).await {

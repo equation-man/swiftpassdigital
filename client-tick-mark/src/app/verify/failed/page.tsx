@@ -24,6 +24,7 @@ const PaymentErrorStatusPage = () => {
                     <li>Network or internet connectivity issues.</li>
                     <li>Payments processing failure.</li>
                     <li>The payment procesing took too long.</li>
+                    <li>Ticket has already been generated for this payment.</li>
                 </ul>
             </div>
         </div>

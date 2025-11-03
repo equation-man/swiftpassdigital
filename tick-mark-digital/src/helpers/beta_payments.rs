@@ -1,6 +1,7 @@
 //! Beta payment processor interactions
 use reqwest::Error;
 use serde::{Serialize, Deserialize};
+use serde_json::Value;
 use actix_web::{web};
 use dotenvy::dotenv;
 use std::env;
@@ -105,6 +106,13 @@ async fn paystack_integration() -> (String, String) {
     (payment_url, access_token)
 }
 
+/// Getting paystack callback url
+pub async fn get_paystack_callback(ticket_id: String, event_id: String, email: String, contact: String) -> String {
+    dotenv().ok();
+    let url = env::var("PAYSTACK_PAYMENT_CALLBACK").expect("Provide callback url");
+    format!("{}/verify/{}?event_id={}&email={}&phone={}", url, ticket_id, event_id, email, contact)
+}
+
 /// Creating a subaccount where to deposit ticket sales funds after fees.
 pub async fn create_subaccnt(subaccount_payload: SubAccount) -> Result<SubAccountResult, Error> {
     let (payment_url, access_key) = paystack_integration().await;
@@ -142,17 +150,39 @@ pub async fn verify_trans(reference: String) -> Result<VerifyPaymentRes, Error> 
     Ok(verify_result)
 }
 
+pub async fn get_paystack_bank_lists() -> Result<(), Error> {
+    let (payment_url, access_key) = paystack_integration().await;
+    let  client = reqwest::Client::new();
+    let res = client.get("https://api.paystack.co/bank?country=kenya".to_string())
+        .bearer_auth(&access_key)
+        .send().await?;
+    let res_json: Value = res.json().await?;
+    // Get the "data" array safely
+    if let Some(array) = res_json["data"].as_array() {
+        // Filter active events
+        let banks: Vec<&Value> = array
+            .iter()
+            .filter(|item| item["country"] == "Kenya".to_string())
+            .collect();
+
+        println!("The banks supported are {:#?} let is {}", &banks, banks.len());
+    }
+    //println!("The test banks are {:#?}", res.text().await);
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
     // ========== FIXTURES ============
     fn sub_accnt_fixture() -> SubAccount {
         SubAccount {
-            business_name: "Organization Ltd".to_string(),
-            settlement_bank: "MPESA".to_string(),
-            account_number: "0711111111".to_string(),
-            percentage_charge: Some(6),
-            description: Some("Subaccount wallet for Organization Ltd".to_string()),
+            business_name: "Events Organization Ltd".to_string(),
+            settlement_bank: "Zenith Bank".to_string(),
+            account_number: "0000000000".to_string(),
+            percentage_charge: Some(10),
+            description: Some("Subaccount wallet for Events Organization Ltd".to_string()),
         }
     }
 
@@ -180,6 +210,12 @@ mod tests {
     }
 
     // ========== REAL TESTS ==========
+    #[tokio::test]
+    #[ignore]
+    async fn paystack_bank_lists() {
+        get_paystack_bank_lists().await;
+    }
+
     #[tokio::test]
     #[ignore]
     async fn creating_sub_account_test() {

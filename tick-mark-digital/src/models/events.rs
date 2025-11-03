@@ -348,6 +348,33 @@ impl From<web::Json<CreateOrder>> for CreateOrder {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct CreatePaystackOrder {
+    //pub ticket_id: Uuid,
+    //pub user_id: Uuid,
+    pub user_email: String,
+    pub user_contact: String,
+    //pub ticket_price: Decimal,
+    //pub promo_code: String,
+    //pub ticket_status: TickStatus,
+    //pub order_limit: i64,
+}
+
+impl From<web::Json<CreatePaystackOrder>> for CreatePaystackOrder {
+    fn from(create_order: web::Json<CreatePaystackOrder>) -> Self {
+        CreatePaystackOrder {
+            //ticket_id: create_order.ticket_id.clone(),
+            //user_id: create_order.user_id.clone(),
+            user_email: create_order.user_email.clone(),
+            user_contact: create_order.user_contact.clone(),
+            //ticket_price: create_order.ticket_price.clone(),
+            //promo_code: create_order.promo_code.clone(),
+            //ticket_status: create_order.ticket_status.clone(),
+            //order_limit: create_order.order_limit.clone(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct OrderDetails {
     pub ticket_id: Uuid,
     pub user_email: String,
