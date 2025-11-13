@@ -16,6 +16,9 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: "SwiftPassDigital",
   description: "Event management and digital ticketing software platform.",
+  icons: {
+      icon: '/logo-files/transp-swiftpass-favicon.ico',
+  },
 };
 
 export default function RootLayout({

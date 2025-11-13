@@ -99,6 +99,7 @@ const TicketPaymentModal = ({ ticketId, eventDetails }: PayemntModalProps) => {
                                             country={"ke"}
                                             value={phone}
                                             onChange={setPhone}
+                                            inputClass="!w-full"
                                             inputProps={{
                                                 name: "user_contact",
                                                 required: true,

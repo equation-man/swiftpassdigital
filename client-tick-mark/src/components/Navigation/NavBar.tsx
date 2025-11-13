@@ -2,6 +2,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import LogoutButton from "./LogoutButton";
 import { useSession } from "next-auth/react";
 
@@ -22,8 +23,14 @@ const NavBar = () => {
             {/*HEADER*/}
             <div className="flex flex-row items-center justify-between p-2">
                 <div>
-                    <Link href="/">
-                        <h1 className="text-emerald-800 font-bold text-lg">
+                    <Link href="/" className="flex flex-row items-center">
+                        <Image
+                            src="/logo-files/transp-swiftpass-logo.png"
+                            width={40}
+                            height={40}
+                            alt="SwiftPassDigital logo"
+                        />
+                        <h1 className="text-emerald-800 font-bold text-sm md:text-lg">
                             SwiftPass<span className="text-emerald-500">Digital</span> 
                         </h1>
                     </Link>
@@ -44,9 +51,11 @@ const NavBar = () => {
                     </Link>
                     <button
                         onClick={handleRouteToDashboard}
-                        className="rounded-sm text-white bg-emerald-800 text-xs px-4 py-2 hover:cursor-pointer"
+                        className="rounded-sm text-emerald-800 hover:cursor-pointer"
                     >
-                        Dashboard
+                        <svg xmlns="http://www.w3.org/2000/svg" width={28} height={28} viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M3 12a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1zm0 8a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1zm10 0a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1zm1-17a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1z"></path>
+                        </svg>                        
                     </button>
                     {!!session && (<LogoutButton />)}
                 </div>

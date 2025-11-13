@@ -32,7 +32,7 @@ const Info = ({ ticketDetails, ticketIdViewFn }: TicketProps ) => {
           <figure>
             <img
               className="w-full h-full"
-              src="/swiftpass-bg-demo.svg"
+              src="/logo-files/swiftpass-logo-only-svg.svg"
               alt="Swiftpass logo" />
           </figure>
           <div className="card-body">
