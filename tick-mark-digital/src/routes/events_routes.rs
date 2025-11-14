@@ -6,6 +6,7 @@ use crate::{
         create_ticket, tickets_display, ticket_info, create_order, events_report,
         orders_list, verify_order, mpesa_order, mpesa_callback, qr_verify,
         mpesa_order_and_callback, verify_paystack_order,
+        search_available_events,
     },
 };
 
@@ -15,6 +16,7 @@ pub fn events_routes(cfg: &mut web::ServiceConfig) {
         web::scope("/events")
         .route("/create", web::post().to(create_event))
         .route("/list", web::get().to(list_events))
+        .route("/search", web::get().to(search_available_events))
         .route("/myevents/{owner_id}", web::get().to(list_myevents))
         .route("/{event_id}", web::get().to(event_info))
         .route("/update/{event_id}", web::patch().to(event_update))

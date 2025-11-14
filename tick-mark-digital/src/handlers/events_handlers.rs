@@ -92,6 +92,59 @@ pub async fn list_myevents(filter: Option<web::Json<EventPayload>>, owner_id: we
     }
 }
 
+#[derive(Debug, Clone, Deserialize)]
+pub struct EventSearchQuery {
+    pub event_tag: Option<String>,
+    pub owner_id: Option<String>,
+    pub search_string: Option<String>,
+}
+
+#[derive(Serialize)]
+pub struct EventsNotFound {
+    message: String,
+}
+
+/// Searching events.
+pub async fn search_available_events(fts_query: web::Query<EventSearchQuery>, app_state: web::Data<AppState>) -> HttpResponse {
+    let event_search_query = fts_query.into_inner();
+    match event_search_query.search_string {
+        Some(filter_string) => {
+            let fts_payload = EventPayload {
+                event_id: None,
+                owner_id: None,
+                title: None,
+                venue: None,
+                start_date: None,
+                finish_date: None,
+                event_tag: None,
+                search_query: Some(filter_string),
+            };
+            let events = fts_search_events(&app_state.db, fts_payload).await;
+            match events {
+                Ok(events) => HttpResponse::Ok().json(events),
+                Err(_) => HttpResponse::NotFound().json(EventsNotFound { message: "Events not found".to_string() })
+            }
+        },
+        None => {
+            let fts_payload = EventPayload {
+                event_id: None,
+                owner_id: None,
+                title: None,
+                venue: None,
+                start_date: None,
+                finish_date: None,
+                event_tag: None,
+                search_query: Some("".to_string()),
+            };
+            let events = fts_search_events(&app_state.db, fts_payload).await;
+            match events {
+                Ok(events) => HttpResponse::Ok().json(events),
+                Err(_) => HttpResponse::NotFound().json(EventsNotFound { message: "Events not found".to_string() })
+            }
+        }
+    }
+}
+
 /// Editing the event.
 pub async fn event_update(payload: web::Json<EventPayload>, params: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
     let event_id: Uuid = Uuid::parse_str(&params.into_inner()).unwrap();

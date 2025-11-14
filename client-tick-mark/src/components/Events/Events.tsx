@@ -28,7 +28,28 @@ const Events = ({ owner }: Props) => {
         sessionFilter = session?.user?.user.organization_id
     }
 
-    if (error) return <p className="font-semibold font-gray-600">Error loading data</p>
+    if (error) return <p className="font-semibold font-gray-600 text-center p-4">Error fetching data</p>
+
+    if (isLoading) return <div className="flex flex-col items-center justify-center p-4 text-emerald-700">
+        <svg xmlns="http://www.w3.org/2000/svg" width={35} height={35} viewBox="0 0 24 24">
+            <rect width={6} height={14} x={1} y={4} fill="currentColor">
+                <animate id="SVGBoZ3Ab9F" fill="freeze" attributeName="y" begin="0;SVG0XJl4OCs.end-0.25s" dur="0.75s" values="1;5"></animate>
+                <animate fill="freeze" attributeName="height" begin="0;SVG0XJl4OCs.end-0.25s" dur="0.75s" values="22;14"></animate>
+                <animate fill="freeze" attributeName="opacity" begin="0;SVG0XJl4OCs.end-0.25s" dur="0.75s" values="1;0.2"></animate>
+            </rect>
+            <rect width={6} height={14} x={9} y={4} fill="currentColor" opacity={0.4}>
+                <animate fill="freeze" attributeName="y" begin="SVGBoZ3Ab9F.begin+0.15s" dur="0.75s" values="1;5"></animate>
+                <animate fill="freeze" attributeName="height" begin="SVGBoZ3Ab9F.begin+0.15s" dur="0.75s" values="22;14"></animate>
+                <animate fill="freeze" attributeName="opacity" begin="SVGBoZ3Ab9F.begin+0.15s" dur="0.75s" values="1;0.2"></animate>
+            </rect>
+            <rect width={6} height={14} x={17} y={4} fill="currentColor" opacity={0.3}>
+                <animate id="SVG0XJl4OCs" fill="freeze" attributeName="y" begin="SVGBoZ3Ab9F.begin+0.3s" dur="0.75s" values="1;5"></animate>
+                <animate fill="freeze" attributeName="height" begin="SVGBoZ3Ab9F.begin+0.3s" dur="0.75s" values="22;14"></animate>
+                <animate fill="freeze" attributeName="opacity" begin="SVGBoZ3Ab9F.begin+0.3s" dur="0.75s" values="1;0.2"></animate>
+            </rect>
+        </svg>
+        <p className="text-center font-semibold">Fetching available events</p>
+    </div>
 
     return (
         <div className="carousel carousel-center rounded-box w-full space-x-4 px-2 py-4">

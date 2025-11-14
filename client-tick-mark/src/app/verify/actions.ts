@@ -18,7 +18,6 @@ export async function fetchOrderFn(params): Promise<Order | unknown> {
 }
 
 export async function fetchMpesaOrderFn(params): Promise<Order | unknown> {
-    console.log("The fetch function params are", params)
     const order = await axios.get(`${API_URL}/events/ticket/verify/${params.ticket_id}`, {
         params: {
             //trxref: params.trxref,

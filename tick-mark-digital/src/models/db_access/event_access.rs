@@ -119,6 +119,35 @@ pub async fn get_events(db_pool: &PgPool, owner_id: Option<Uuid>, filters: Event
     }).collect()
 }
 
+// FULL TEXT SEARCH ON EVENTS
+pub async fn fts_search_events(db_pool: &PgPool, search_payload: EventPayload) -> Result<Vec<Event>, sqlx::Error> {
+    let events_fts = sqlx::query(r#"
+        SELECT (results).*, total_count FROM ticket_market.search_events(search_query => $1)
+    "#)
+    .bind(search_payload.search_query)
+    .fetch_all(db_pool).await?;
+
+    let events_res = events_fts.iter().map(|event| {
+        let start_time_str = event.get::<DateTime<Utc>, &str>("start_time").to_rfc3339();
+        let finish_time_str = event.get::<DateTime<Utc>, &str>("finish_time").to_rfc3339();
+        let added_at_str = event.get::<DateTime<Utc>, &str>("added_at").to_rfc3339();
+        Event {
+            event_id: event.get("event_id"),
+            owner_id: event.get("owner_id"),
+            title: event.get("title"),
+            description: event.get("description"),
+            venue: event.get("venue"),
+            start_date: start_time_str,
+            finish_date: finish_time_str,
+            added_at: added_at_str,
+            edited: event.get("edited"),
+            event_tag: event.get("event_tag"),
+        }
+    }).collect();
+
+    Ok(events_res)
+}
+
 pub async fn generate_report(db_pool: &PgPool, event_id: Uuid, org_id: Option<Uuid>) -> Option<Report> {
     //let evnt = get_event(db_pool, event_id).await;
     let tickets = get_tickets(db_pool, event_id).await;

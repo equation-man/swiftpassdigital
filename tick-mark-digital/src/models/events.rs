@@ -29,7 +29,7 @@ pub fn pg_interval_to_seconds(intv: PgInterval) -> i64 {
     secs_from_days + secs_from_micros
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, FromRow)]
 pub struct Event {
     pub event_id: Uuid,
     pub owner_id: Uuid,
