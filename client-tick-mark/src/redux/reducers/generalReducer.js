@@ -1,0 +1,50 @@
+// Helps decide on how we'll change invocation of the modals.
+"use client";
+import { initialState } from "@/redux/initialStates/generalInitialStates";
+import { createSlice } from "@reduxjs/toolkit";
+
+// Create the modal slice
+export const modalSlice = createSlice({
+    name: "generalModal",
+    initialState,
+    reducers: {
+        updatePaymentModalState: (state, action) => {
+            state.payment = action.payload;
+        },
+        createEventModalState: (state, action) => {
+            state.create_event = action.payload;
+        },
+        createTicketModalState: (state, action) => {
+            state.create_ticket = action.payload;
+        },
+        updateEvDetails: (state, action) => {
+            state.event_details = action.payload;
+        },
+        deleteModalState: (state, action) => {
+            state.del_event = action.payload;
+        }
+    }
+});
+
+// Optional: a simple fallback reducer (if needed)
+const generalReducer = (state = initialState, action) => {
+    switch (action) {
+        case true:
+        case false:
+            return { ...state, error: null };
+        default:
+            return state;
+    }
+};
+
+// Export actions and reducer
+export const { 
+    updatePaymentModalState, 
+    createEventModalState, 
+    createTicketModalState, 
+    updateEvDetails, 
+    deleteModalState 
+} = modalSlice.actions;
+
+export default modalSlice.reducer;
+
