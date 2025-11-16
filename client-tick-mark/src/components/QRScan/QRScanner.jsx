@@ -14,7 +14,10 @@ async function loadHtml5Qrcode() {
 
 export default function QRScanner() {
     const readerId = "html5qr-reader";
+
     const html5QrcodeRef = useRef(null);
+    const containerRef = useRef(null);
+
     const [scanning, setScanning] = useState(false);
     const [lastResult, setLastResult] = useState(null);
     const params = useParams();
@@ -112,20 +115,24 @@ export default function QRScanner() {
             setScanning(false);
         } finally {
             html5QrcodeRef.current = null;
-            setScanning(false);
+            //setScanning(false);
         }
     }
 
     return (
         <div className="flex flex-col items-center space-b-6 space-t-3 pb-10 pt-5">
             <h1 className="text-2xl font-semibold">Scan Ticket QR code</h1>
-            <div
-                id={readerId}
-                className="rounded-sm border border-gray-300 shadow-inner w-[320px] h-[320px] bg-gray-50 flex items-center justify-center"
-            >
-                {!scanning && (
-                    <span className="text-gray-400 text-sm">Camera feed will appear here</span>
-                )}
+            <div ref={containerRef}>
+                <div
+                    id={readerId}
+                    key="qr-static"
+                    suppressHydrationWarning={true}
+                    className="rounded-sm border border-gray-300 shadow-inner w-[320px] h-[320px] bg-gray-50 flex items-center justify-center"
+                >
+                    {!scanning && (
+                        <span className="text-gray-400 text-sm">Camera feed will appear here</span>
+                    )}
+                </div>
             </div>
 
             <div className="flex gap-4 py-8 mt-8">

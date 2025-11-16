@@ -12,7 +12,7 @@ import { dateTimeToUtc } from "@/lib/helpers";
 const CreateTicketModal = ({ eventDetails }) => {
     const fetch_states = useSelector((state) => state.generalModal.create_ticket);
     const fetch_ev_details = useSelector((state) => state.generalModal.event_details);
-    const [inputs, setInputs] = useState({});
+    const [inputs, setInputs] = useState({ ticket_type: "Regular", ticket_class: "Individual" });
 
     const handleChange = (event) => {
         const name = event.target.name;
@@ -39,7 +39,7 @@ const CreateTicketModal = ({ eventDetails }) => {
             });
             dispatch(createTicketModalState(false));
         },
-        onError: () => {
+        onError: (err) => {
             toast.error("Ticket creation failed");
         },
     });
@@ -110,6 +110,8 @@ const CreateTicketModal = ({ eventDetails }) => {
                                             onChange={handleChange}
                                             name="ticket_type"
                                             className="px-2"
+                                            value={inputs.ticket_type}
+                                            required
                                         >
                                             <option value="Regular">Regular</option>
                                         </select>
@@ -123,6 +125,8 @@ const CreateTicketModal = ({ eventDetails }) => {
                                             onChange={handleChange}
                                             name="ticket_class"
                                             className="px-2"
+                                            value={inputs.ticket_class}
+                                            required
                                         >
                                             <option value="Individual">Individual</option>
                                         </select>

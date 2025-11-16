@@ -214,7 +214,7 @@ pub async fn update_event(db_pool: &PgPool, event_id: Uuid, payload: EventPayloa
 
 pub async fn delete_event(db_pool: &PgPool, event_id: Uuid) -> Event {
     // Deleting event related ticket first.
-    let _ = delete_ticket(db_pool, event_id.clone()).await;
+    let _ = delete_ticket(db_pool, event_id.clone()).await.unwrap();
     let del_event = sqlx::query!(r#"
         DELETE FROM ticket_market.events
         WHERE event_id=$1
@@ -337,8 +337,8 @@ pub async fn get_single_ticket(db_pool: &PgPool, ticket_id: Uuid) -> Ticket {
     }
 }
 
-pub async fn delete_ticket(db_pool: &PgPool, event_id: Uuid) -> Ticket {
-    let del_ticket = sqlx::query!(r#"
+pub async fn delete_ticket(db_pool: &PgPool, event_id: Uuid) -> Result<Option<Ticket>, sqlx::Error> {
+    let del_t = sqlx::query!(r#"
         DELETE FROM ticket_market.tickets
         WHERE event_id=$1
         RETURNING ticket_id, event_id, capacity,
@@ -346,14 +346,19 @@ pub async fn delete_ticket(db_pool: &PgPool, event_id: Uuid) -> Ticket {
             ticket_class as "tick_class: TickClass",
             discount_time, start_time, finish_time,
             added_at, description, base_price
-    "#, event_id).fetch_one(db_pool).await.unwrap();
+    "#, event_id).fetch_optional(db_pool).await?;
+    if del_t.is_none() {
+        return Ok(None)
+    }
+
+    let del_ticket = del_t.unwrap();
 
     let start_time_iso_str = del_ticket.start_time.to_rfc3339();
     let finish_time_iso_str = del_ticket.finish_time.to_rfc3339();
     let added_at_str = del_ticket.added_at.to_rfc3339();
     let ticket_price = del_ticket.base_price.unwrap().to_string();
 
-    Ticket {
+    Ok(Some(Ticket {
         ticket_id: del_ticket.ticket_id,
         event_id: del_ticket.event_id,
         base_price: ticket_price,
@@ -365,7 +370,7 @@ pub async fn delete_ticket(db_pool: &PgPool, event_id: Uuid) -> Ticket {
         finish_time: finish_time_iso_str, 
         added_at: added_at_str,
         description: del_ticket.description.unwrap(),
-    }
+    }))
 
 }
 

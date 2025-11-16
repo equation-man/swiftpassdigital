@@ -1,3 +1,4 @@
+import Link from "next/link";
 import EventsDisp from "@/components/Events/EventsDisp";
 
 export default function Home() {
@@ -7,9 +8,14 @@ export default function Home() {
         <div className="p-2 bg-gradient-to-r from-emerald-100 via-emerald-50 via-white-100 to-green-100">
             <div className="flex flex-col md:flex-row md:justify-between items-center gap-x-5">
                 <div className="self-end order-2 md:order-1">
+                    <p className="text-center text-sm">
+                        <Link href="/how-it-works" className="underline text-teal-600 hover:cursor-pointer">See How It Works</Link> | 
+                        <Link href="/payments-policy" className="underline text-teal-600 hover:cursor-pointer"> Payments Policy</Link> |  
+                        <Link href="/terms-of-service" className="underline text-teal-600 hhover:cursor-pointer"> Terms Of Service</Link>
+                    </p>
                     <div className="my-6">
                         <h1 className="text-3xl md:text-6xl font-bold text-gray-900 text-center">
-                            Seamless <span className="text-emerald-600">ticketing</span> that empowers <span className="text-emerald-500">organizers</span> and <span className="text-emerald-700">delights fans</span>
+                            Seamless <span className="text-emerald-600">events</span> that empowers <span className="text-emerald-500">organizers</span> and <span className="text-emerald-700">delights fans</span>
                         </h1>
                     </div>
                     <div className="w-full flex flex-col items-center justify-center gap-x-2 my-4">

@@ -1,11 +1,12 @@
 // Organization Header component
 "use client";
-
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { useSession } from "next-auth/react";
 import { createEventModalState } from "@/redux/reducers/generalReducer";
+import { myWalletFn } from "@/components/AdminInfo/actions";
+import { useQuery } from "@tanstack/react-query";
 
 const OrgHeader = ({ org }) => {
     const { data: session } = useSession();
@@ -26,6 +27,12 @@ const OrgHeader = ({ org }) => {
         }
     };
 
+    // Wallet Query
+    const walletAvailability = useQuery({
+        queryKey: ["wallet", org.organization_id],
+        queryFn: () => myWalletFn(org.organization_id),
+    });
+
     return (
         <div className="p-2">
             <div className="my-2">
@@ -35,7 +42,7 @@ const OrgHeader = ({ org }) => {
                     <p>{org.organization_username}</p>
                     <p>{org.description}</p>
                 </div>
-
+                {walletAvailability?.data?.wallet_email === "none@notset.com" && <p className="font-medium text-teal-500 text-sm">Set up your wallet first in manage account to create a new event</p>}
                 <div className="flex flex-row gap-x-2">
                     <button
                         onClick={handleManageAccount}
@@ -45,6 +52,7 @@ const OrgHeader = ({ org }) => {
                     </button>
 
                     <button
+                        disabled={walletAvailability?.data?.wallet_email === "none@notset.com"}
                         onClick={(e) => handleCreateEventModDisp(e, true)}
                         className="bg-emerald-700 text-white font-medium text-xs p-1 rounded-xs hover:cursor-pointer"
                     >

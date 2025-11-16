@@ -36,7 +36,7 @@ export default function RootLayout({ children }) {
                 <meta name="theme-color" content="#10b981" />
 
                 {/*Required for IOS PWA*/}
-                <meta name="apple-mobile-web-app-capable" content="yes" />
+                <meta name="mobile-web-mobile-web-app-capable" content="yes" />
                 <meta
                     name="apple-mobile-web-app-status-bar-style"
                     content="black-translucent"

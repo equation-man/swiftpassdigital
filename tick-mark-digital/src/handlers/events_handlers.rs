@@ -13,7 +13,7 @@ use crate::helpers::{
     parse_email_html_content, send_email,
     ConfirmStkTransaction, StkPushRequest,
     mpesa_stk_push, stk_push_status, generate_daraja_password,
-    DarajaCallback, commission_amnt_calc,
+    DarajaCallback, commission_amnt_calc, get_comm_percent,
     StkDarajaResponse,
     TicketQRData, qr_code_gen,
     mail_config, get_daraja_callback, get_paystack_callback
@@ -338,7 +338,8 @@ pub async fn mpesa_order_and_callback(payload: web::Json<OrderPayloadType>, tick
                 let ticket_price_obj = callBack.CallbackMetadata.as_ref().unwrap().Item
                     .iter().filter(|itm| itm.Name == "Amount").collect::<Vec<_>>()[0];
                 let ticket_price: Decimal = serde_json::from_value(ticket_price_obj.Value.clone().unwrap()).unwrap();
-                let my_comm = commission_amnt_calc(ticket_price.to_string()).await;
+                let comm_percent = get_comm_percent().await;
+                let my_comm = commission_amnt_calc(comm_percent, ticket_price.to_string()).await;
                 let order_details = OrderDetails {
                     ticket_id: t_id,
                     user_email: "NOT_SET".to_string(),
@@ -385,7 +386,8 @@ pub async fn mpesa_callback(payload: web::Json<DarajaCallback>, ticket_id: web::
         let ticket_price_obj = callBack.CallbackMetadata.as_ref().unwrap().Item
             .iter().filter(|itm| itm.Name == "Amount").collect::<Vec<_>>()[0];
         let ticket_price: Decimal = serde_json::from_value(ticket_price_obj.Value.clone().unwrap()).unwrap();
-        let my_comm = commission_amnt_calc(ticket_price.to_string()).await;
+        let pc_comm = get_comm_percent().await;
+        let my_comm = commission_amnt_calc(pc_comm, ticket_price.to_string()).await;
         let order_details = OrderDetails {
             ticket_id: target_ticket_id,
             user_email: "NOT_SET".to_string(),
@@ -648,7 +650,8 @@ pub async fn verify_paystack_order(ticket_id: web::Path<String>, verif_query: we
             let code_gen = nanoid!(8, &alphabet);
             let entrance_pass = format!("SWPD-{}", code_gen);
             let ticket = get_single_ticket(&app_state.db, ticket_id).await;
-            let comm_amnt = commission_amnt_calc(res.amount.to_string()).await;
+            let pc_comm = get_comm_percent().await;
+            let comm_amnt = commission_amnt_calc(pc_comm, res.amount.to_string()).await;
             let order_details = OrderDetails {
                 ticket_id: ticket_id,
                 user_email: q.email.unwrap(),

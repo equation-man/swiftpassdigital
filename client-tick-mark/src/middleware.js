@@ -10,6 +10,9 @@ const publicRoutePatterns = [
   /^\/event\/[^\/]+$/,     // dynamic /event/{id}
   /^\/verify\/[^\/]+$/,    // dynamic /verify/{id}
   /^\/verify\/failed$/,    // static /verify/failed
+  /^\/payments\-policy$/,
+  /^\/terms\-of\-service$/,
+  /^\/how\-it\-works$/,
 ];
 const isAuthPrefix = "/api/auth";
 

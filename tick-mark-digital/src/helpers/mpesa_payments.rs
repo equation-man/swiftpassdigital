@@ -189,8 +189,13 @@ pub async fn mpesa_auth_details() -> (String, String) {
 }
 
 /// Calculating the commission amount
-pub async fn commission_amnt_calc(amount: String) -> u64 {
-    (6*amount.parse::<u64>().unwrap())/100
+pub async fn get_comm_percent() -> u64 {
+    dotenv().ok();
+    let perc_value = env::var("PERCENTAGE_COMMISSION").unwrap_or_else(|_| "6".to_string());
+    perc_value.parse::<u64>().unwrap()
+}
+pub async fn commission_amnt_calc(percent: u64, total_amount: String) -> u64 {
+    (percent*total_amount.parse::<u64>().unwrap())/100
 }
 
 /// Mpesa STK push payment.

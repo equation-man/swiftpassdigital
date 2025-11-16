@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { registerUserFn, registerOrgFn } from "./actions";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Eye, EyeOff } from "lucide-react";
 
 const UserRegistrationPage = () => {
     const router = useRouter();
@@ -104,11 +105,18 @@ const UserRegistrationPage = () => {
 const RegistrationPage = () => {
     const router = useRouter();
     const [inputs, setInputs] = useState({});
+    const [passwordError, setPasswordError] = useState("");
+    const [showPass, setShowPass] = useState(false);
 
     const handleChange = (event) => {
         const name = event.target.name;
         const value = event.target.value;
         setInputs(values => ({ ...values, [name]: value }));
+    };
+
+    // Password strength validation.
+    const isStrongPassword = (pwd) => {
+        return /^(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/.test(pwd);
     };
 
     const queryClient = useQueryClient();
@@ -132,6 +140,22 @@ const RegistrationPage = () => {
 
     const handleSubmit = (event) => {
         event.preventDefault();
+
+        // Added matching password check
+        if (inputs.org_pwd !== inputs.confirm_password) {
+            setPasswordError("Passwords do not match");
+            toast.error("Passwords do not match");
+            return;
+        }
+
+        // Strong password check
+        if (!isStrongPassword(inputs.org_pwd)) {
+            setPasswordError("Password should be at least 8 characters long and include atleast 1 number and 1 special chaaracter.");
+            toast.error("Weak password")
+            return;
+        }
+
+        setPasswordError("");
         mutation.mutate(inputs);
     };
 
@@ -163,15 +187,47 @@ const RegistrationPage = () => {
                     <div className="grid grid-cols-2 gap-x-1">
                         <div>
                             <label className="font-medium text-gray-600">Password</label>
-                            <input onChange={handleChange} name="org_pwd" className="input validator w-full" type="password" required placeholder="********" />
+                            <div className="relative w-full">
+                                <input
+                                    onChange={handleChange}
+                                    name="org_pwd"
+                                    className="input validator w-full"
+                                    type={showPass ? "text" : "password"}
+                                    required
+                                    placeholder="********" 
+                                />
+                            </div>
                         </div>
 
                         <div>
                             <label className="font-medium text-gray-600">Confirm password</label>
-                            <input onChange={handleChange} name="confirm_password" className="input validator w-full" type="password" required placeholder="********" />
+                            <div className="relative w-full">
+                                <input
+                                    onChange={handleChange}
+                                    name="confirm_password"
+                                    className="input validator w-full"
+                                    type={showPass ? "text" : "password"}
+                                    required
+                                    placeholder="********" 
+                                />
+                                <button
+                                  type="button"
+                                  onMouseDown={() => setShowPass(true)}
+                                  onMouseUp={() => setShowPass(false)}
+                                  onMouseLeave={() => setShowPass(false)}
+                                  onTouchStart={() => setShowPass(true)}
+                                  onTouchEnd={() => setShowPass(false)}
+                                  className="absolute right-2 top-2 z-10 text-emerald-800 hover:cursor-pointer"
+                                >
+                                  {showPass ? <EyeOff size={25} /> : <Eye size={25} />}
+                                </button>
+                            </div>
                         </div>
                     </div>
+                    {/*Password UI error*/}
+                    {passwordError && (<p className="text-red-600 text-sm mt-1">{passwordError}</p>)}
 
+                    <p className="font-semibold text-sm">Signing up means you have agreed to our  <Link href="/terms-of-service" className="underline text-emerald-600 hover:cursor-pointer">terms of service</Link></p>
                     <button type="submit" className="btn btn-block mt-3 text-emerald-50 bg-emerald-800">
                         Create Account
                     </button>

@@ -29,13 +29,13 @@ export default function ScanPage() {
         <p>
           <span className="font-medium">Start:</span>{" "}
           <ClientOnly>
-            <EventDate iso={currentEvent?.start_time} />
+            <EventDate iso={currentEvent?.start_date} />
           </ClientOnly>
         </p>
         <p>
           <span className="font-medium">End:</span>{" "}
           <ClientOnly>
-            <EventDate iso={currentEvent?.finish_time} />
+            <EventDate iso={currentEvent?.finish_date} />
           </ClientOnly>
         </p>
       </div>

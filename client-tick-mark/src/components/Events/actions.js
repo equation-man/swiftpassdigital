@@ -15,5 +15,5 @@ export async function fetchReportFn(event_id) {
 
 export async function deleteEventFn(event_id) {
     const del_event = await axios.delete(`${API_URL}/events/delete/${event_id}`);
-    return del_event;
+    return del_event.data;
 }

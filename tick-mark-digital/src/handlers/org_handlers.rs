@@ -134,9 +134,13 @@ pub async fn new_wallet(wallet_details: web::Json<NewUserWalletData>, org_id: we
 }
 
 pub async fn get_wallet(org_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
-    let owner_id: Uuid = Uuid::parse_str(&org_id.into_inner()).unwrap();
-    let wallet = get_org_wallet(&app_state.db, owner_id).await;
-    HttpResponse::Ok().json(wallet)
+    match Uuid::parse_str(&org_id.into_inner()) {
+        Ok(owner_id) => {
+            let wallet = get_org_wallet(&app_state.db, owner_id).await;
+            HttpResponse::Ok().json(wallet)
+        },
+        Err(_) => return HttpResponse::BadRequest().body("Invalid UUID")
+    }
 }
 
 pub async fn delete_wallet(wallet_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {

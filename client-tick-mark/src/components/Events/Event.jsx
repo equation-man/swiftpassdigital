@@ -46,14 +46,14 @@ const Event = ({ evnt }) => {
         },
       });
     },
-    onError: () => {
+    onError: (err) => {
       toast.error("Failed deleting the event, try again!");
     },
   });
 
   const handleDelEvent = (event) => {
     event.preventDefault();
-    mutation.mutate(evnt);
+      mutation.mutate({ event_id: evnt.event_id});
     setConfirmDel(false);
   };
 
