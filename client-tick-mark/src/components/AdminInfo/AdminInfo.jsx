@@ -6,7 +6,7 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useSession } from "next-auth/react";
 
-import { deleteUserAccessFn, getUserAccessListFn, myWalletFn, createMpesaWalletFn, createUserAccessFn } from "./actions";
+import { deleteUserAccessFn, getUserAccessListFn, myWalletFn, createMpesaWalletFn, createUserAccessFn, availableBanksFn } from "./actions";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -197,6 +197,20 @@ const AdminInfo = ({ org }) => {
         enabled: !!org.organization_id
     });
 
+    // Banks query
+    const suptdBanks = useQuery({
+        queryKey: ["avalBanks", org.organization_id],
+        queryFn: () => availableBanksFn(org.organization_id),
+        enabled: !!org.organization_id
+    });
+
+    let supportedBanks = null;
+    if (suptdBanks?.data) {
+        supportedBanks = [
+            ...new Map(suptdBanks.data.map(bank => [bank.code, bank])).values()
+        ];
+    }
+
     return (
         <div>
             <div>
@@ -237,22 +251,33 @@ const AdminInfo = ({ org }) => {
 
                 {/* Wallet creation form */}
                 {createWallet && (
-                    <div className="max-w-sm p-1 shadow-xl border border-emerald-500">
+                    <div className="w-90 p-1 shadow-xl border border-emerald-500">
                         <form id="createWalletForm" onSubmit={handleCreateWalletSubmission}>
-                            <label>Business Name</label>
-                            <input name="business_name" onChange={handleChange} className="input validator w-full" required />
+                            <div>
+                                <label className="font-medium text-emerald-600">Business Name</label>
+                                <input name="business_name" onChange={handleChange} className="input validator w-full" required />
+                            </div>
 
-                            <label>Settlement Scheme</label>
-                            <select name="settlement_bank" onChange={handleChange}>
-                                <option value="MPESA">MPESA</option>
-                                <option value="057">Zenith Bank</option>
-                            </select>
+                            <div>
+                                <label className="font-medium text-emerald-600">Select Settlement Bank</label>
+                                <select name="settlement_bank" onChange={handleChange} className="w-full">
+                                    {supportedBanks && (
+                                        supportedBanks.map((bank) => {
+                                            return <option key={bank.code} value={bank.code}>{bank.name}</option>
+                                        })
+                                    )}
+                                </select>
+                            </div>
 
-                            <label>Account number</label>
-                            <input name="account_number" onChange={handleChange} className="input validator w-full" required />
+                            <div>
+                                <label className="font-medium text-emerald-600">Account Number</label>
+                                <input name="account_number" onChange={handleChange} className="input validator w-full" required />
+                            </div>
 
-                            <label>Email address</label>
-                            <input name="wallet_email" onChange={handleChange} className="input validator w-full" required />
+                            <div>
+                                <label className="font-medium text-emerald-600">Email Address</label>
+                                <input name="wallet_email" onChange={handleChange} className="input validator w-full" required />
+                            </div>
                         </form>
 
                         <div className="flex gap-x-2 my-2">
@@ -295,7 +320,7 @@ const AdminInfo = ({ org }) => {
 
                     {accessList.isLoading && <p>Loading Swifter access...</p>}
 
-                    {accessList.isSuccess ? (
+                    {accessList.isSuccess && accessList?.data.length > 0 ? (
                         <div>
                             {accessList.data.map((usr) => (
                                 <UsersAccess key={usr.access_code_id} user_access={usr} />

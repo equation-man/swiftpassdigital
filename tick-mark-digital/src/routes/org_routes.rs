@@ -6,7 +6,7 @@ use crate::{
         add_contact, contact_list, contact_update,
         delete_contact, create_access_code, list_access_codes,
         new_wallet, get_wallet, delete_wallet, new_mpesa_wallet,
-        get_org_via_code, revoke_access,
+        get_org_via_code, revoke_access, get_supported_banks,
     },
 };
 
@@ -23,6 +23,7 @@ pub fn orgs_routes(cfg: &mut web::ServiceConfig) {
         .route("/wallet/mpesa/create/{owner_id}", web::post().to(new_wallet)) //mpesa order
                                                                               //disabled.
         .route("/wallet/{org_id}", web::get().to(get_wallet))
+        .route("/banks/{org_id}", web::get().to(get_supported_banks))
         .route("/wallet/delete/{org_id}", web::delete().to(delete_wallet))
         .route("/update/{org_id}", web::post().to(org_update))
         .route("/contact/{org_id}", web::post().to(add_contact))

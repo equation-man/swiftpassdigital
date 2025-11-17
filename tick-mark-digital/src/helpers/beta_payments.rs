@@ -150,7 +150,7 @@ pub async fn verify_trans(reference: String) -> Result<VerifyPaymentRes, Error> 
     Ok(verify_result)
 }
 
-pub async fn get_paystack_bank_lists() -> Result<(), Error> {
+pub async fn get_paystack_bank_lists() -> Result<Option<Vec<Value>>, Error> {
     let (payment_url, access_key) = paystack_integration().await;
     let  client = reqwest::Client::new();
     let res = client.get("https://api.paystack.co/bank?country=kenya".to_string())
@@ -158,17 +158,18 @@ pub async fn get_paystack_bank_lists() -> Result<(), Error> {
         .send().await?;
     let res_json: Value = res.json().await?;
     // Get the "data" array safely
+    let mut banks: Option<Vec<Value>> = None;
     if let Some(array) = res_json["data"].as_array() {
         // Filter active events
-        let banks: Vec<&Value> = array
+        banks = Some(array
             .iter()
+            .cloned()
             .filter(|item| item["country"] == "Kenya".to_string())
-            .collect();
+            .collect());
 
-        println!("The banks supported are {:#?} let is {}", &banks, banks.len());
+        return Ok(banks);
     }
-    //println!("The test banks are {:#?}", res.text().await);
-    Ok(())
+    return Ok(None)
 }
 
 #[cfg(test)]
@@ -213,7 +214,8 @@ mod tests {
     #[tokio::test]
     #[ignore]
     async fn paystack_bank_lists() {
-        get_paystack_bank_lists().await;
+        let lst = get_paystack_bank_lists().await;
+        println!("The banks lists is {:#?}", lst);
     }
 
     #[tokio::test]

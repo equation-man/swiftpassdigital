@@ -14,7 +14,7 @@ use crate::helpers::{
     hash_password, verify_password,
     load_secret_key,
     SubAccount, InitializeSplitPayment, PaystackWalletDetails,
-    create_subaccnt,
+    create_subaccnt, get_paystack_bank_lists,
 };
 use uuid::Uuid;
 use nanoid::nanoid;
@@ -140,6 +140,20 @@ pub async fn get_wallet(org_id: web::Path<String>, app_state: web::Data<AppState
             HttpResponse::Ok().json(wallet)
         },
         Err(_) => return HttpResponse::BadRequest().body("Invalid UUID")
+    }
+}
+
+pub async fn get_supported_banks(org_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
+    match Uuid::parse_str(&org_id.into_inner()) {
+        Ok(org_id) => {
+            match get_paystack_bank_lists().await {
+                Ok(lsts) => {
+                    return HttpResponse::Ok().json(lsts);
+                },
+                Err(_) => return HttpResponse::BadRequest().body("Error fetching banks")
+            }
+        },
+        Err(_) => return HttpResponse::BadRequest().body("Invalid UUID when getting banks")
     }
 }
 

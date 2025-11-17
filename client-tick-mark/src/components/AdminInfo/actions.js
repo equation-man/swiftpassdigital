@@ -10,6 +10,12 @@ export async function myWalletFn(owner_id) {
     return response.data;
 }
 
+// GET AVAILABLE BANKS
+export async function availableBanksFn(org_id) {
+    const response = await axios.get(`${API_URL}/organization/banks/${org_id}`);
+    return response.data;
+}
+
 // CREATE BANK WALLET
 export async function createWalletFn(walletData) {
     const payload = {

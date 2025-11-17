@@ -291,7 +291,7 @@ mod tests {
             InitiatorName: "testapi".to_string(),
             SecurityCredential: sec_credentials,
             CommandID: "SalaryPayment".to_string(),
-            Amount: commission_amnt_calc("1000".to_string()).await,
+            Amount: commission_amnt_calc(0 as u64, "1000".to_string()).await,
             PartyA: 600998,
             PartyB: 254708374149,
             Remarks: "Test remarks".to_string(),
@@ -373,7 +373,7 @@ mod tests {
     #[tokio::test]
     #[ignore]
     async fn commission_test() {
-        let comm_amount = commission_amnt_calc("1000".to_string()).await;
+        let comm_amount = commission_amnt_calc(0 as u64, "1000".to_string()).await;
         println!("The commission amount is: {:#?}", comm_amount);
     }
 
