@@ -529,9 +529,11 @@ pub async fn create_order(payload: web::Json<CreateOrder>, ticket_id: web::Path<
     let ticket_det = get_single_ticket(&app_state.db, t_id).await;
     let target_event = get_event(&app_state.db, ticket_det.event_id.clone()).await;
     let target_wallet = get_org_wallet(&app_state.db, target_event.owner_id.clone()).await;
+    let amount_number: f64 = ticket_det.base_price.parse().expect("Invalid base price number");
+    let amount_in_subunits = (amount_number * 100.0).round() as u64;
     let initSplitPymt = InitializeSplitPayment {
         email: order_payload.user_email.clone(),
-        amount: ticket_det.base_price,
+        amount: amount_in_subunits.to_string(),
 
         subaccount: target_wallet.subaccount_code,
         callback_url: get_paystack_callback(

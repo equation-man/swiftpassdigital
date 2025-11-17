@@ -40,7 +40,7 @@ const SuccessStatus = ({ order }) => {
                         <EventDate iso={order.added_at} />
                     </ClientOnly>
                 </p>
-                <p className="text-center text-sm">Amount: {formatCurrency(Number(order.ticket_price))}</p>
+                {/*<p className="text-center text-sm">Amount: {formatCurrency(Number(order.ticket_price))}</p>*/}
                 <p className="text-center text-sm">Status: {order.ticket_status}</p>
                 <p className="text-center text-sm">
                     Entrance Code: <span className="font-bold">{order.entrance_code}</span>
