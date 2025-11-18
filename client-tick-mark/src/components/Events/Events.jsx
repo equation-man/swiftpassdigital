@@ -56,7 +56,7 @@ const Events = ({ owner }) => {
 
     return (
         <div className="carousel carousel-center rounded-box w-full space-x-4 px-2 py-4">
-            {data ? (
+            {data && data.length > 0 ? (
                 <>
                     {data
                         .filter((itm) => {
