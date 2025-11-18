@@ -189,13 +189,15 @@ pub async fn mpesa_auth_details() -> (String, String) {
 }
 
 /// Calculating the commission amount
-pub async fn get_comm_percent() -> u64 {
+pub async fn get_comm_percent() -> u8 {
     dotenv().ok();
     let perc_value = env::var("PERCENTAGE_COMMISSION").unwrap_or_else(|_| "6".to_string());
-    perc_value.parse::<u64>().unwrap()
+    perc_value.parse::<u8>().unwrap()
 }
-pub async fn commission_amnt_calc(percent: u64, total_amount: String) -> u64 {
-    (percent*total_amount.parse::<u64>().unwrap())/100
+
+pub async fn commission_amnt_calc(percent: u8, total_amount: String) -> u64 {
+    let total = total_amount.parse::<u64>().unwrap();
+    (percent as u64*total)/100
 }
 
 /// Mpesa STK push payment.
@@ -257,7 +259,6 @@ pub async fn stk_push_status(stk_status_request: ConfirmStkTransaction) -> Resul
     let json_res: ConfirmStkTransactionResponse = serde_json::from_value(value).unwrap();
     Ok(StkDarajaResponse::Success(json_res))
 }
-
 
 #[cfg(test)]
 mod tests {

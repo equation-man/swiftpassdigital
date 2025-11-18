@@ -45,6 +45,32 @@ pub struct SubAccountResData {
     pub updatedAt: String,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct UpdateSubaccount {
+    #[serde(skip_serializing_if="Option::is_none")]
+    pub business_name: Option<String>,
+    #[serde(skip_serializing_if="Option::is_none")]
+    pub settlement_bank: Option<String>,
+    #[serde(skip_serializing_if="Option::is_none")]
+    pub account_number: Option<String>,
+    #[serde(skip_serializing_if="Option::is_none")] 
+    pub percentage_charge: Option<f64>,
+    #[serde(skip_serializing_if="Option::is_none")]
+    pub description: Option<String>,
+}
+
+impl From<web::Json<UpdateSubaccount>> for UpdateSubaccount {
+    fn from(subaccnt: web::Json<UpdateSubaccount>) -> Self {
+        UpdateSubaccount {
+            business_name: subaccnt.business_name.clone(),
+            settlement_bank: subaccnt.settlement_bank.clone(),
+            account_number: subaccnt.account_number.clone(),
+            percentage_charge: subaccnt.percentage_charge.clone(),
+            description: subaccnt.description.clone()
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InitializeSplitPayment {
     pub email: String,
@@ -153,7 +179,7 @@ pub async fn verify_trans(reference: String) -> Result<VerifyPaymentRes, Error> 
 pub async fn get_paystack_bank_lists() -> Result<Option<Vec<Value>>, Error> {
     let (payment_url, access_key) = paystack_integration().await;
     let  client = reqwest::Client::new();
-    let res = client.get("https://api.paystack.co/bank?country=kenya".to_string())
+    let res = client.get(format!("{}/bank?country=kenya", &payment_url))
         .bearer_auth(&access_key)
         .send().await?;
     let res_json: Value = res.json().await?;
@@ -169,7 +195,27 @@ pub async fn get_paystack_bank_lists() -> Result<Option<Vec<Value>>, Error> {
 
         return Ok(banks);
     }
-    return Ok(None)
+    Ok(None)
+}
+
+pub async fn upd_paystack_subaccnt(subaccnt_id: String, update_data: UpdateSubaccount) -> Result<Value, Error>{
+    let (payment_url, access_key) = paystack_integration().await;
+    let client = reqwest::Client::new();
+    let res = client.put(format!("{}/subaccount/{}", &payment_url, &subaccnt_id))
+        .bearer_auth(&access_key)
+        .send().await?;
+    let res_json: Value = res.json().await?;
+    Ok(res_json)
+}
+
+pub async fn get_paystack_subaccnt(subaccnt_id: String) -> Result<Value, Error>{
+    let (payment_url, access_key) = paystack_integration().await;
+    let client = reqwest::Client::new();
+    let res = client.get(format!("{}/subaccount/{}", &payment_url, &subaccnt_id))
+        .bearer_auth(&access_key)
+        .send().await?;
+    let res_json: Value = res.json().await?;
+    Ok(res_json)
 }
 
 #[cfg(test)]
@@ -237,5 +283,26 @@ mod tests {
     async fn verfying_payment_test() {
         let verification = verify_trans("8te15wq0x5".to_string()).await;
         println!("The payment url is result is {:#?}", verification);
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn update_paystack_subaccnt_test() {
+        let upd_data = UpdateSubaccount {
+            business_name: None,
+            settlement_bank: None,
+            account_number: None,
+            percentage_charge: Some(0.0),
+            description: Some("Subaccount wallet updated".to_string()),
+        };
+        let upd_val = upd_paystack_subaccnt("ACCT_78r6yma9pjolxpo".to_string(), upd_data).await;
+        println!("The subaccount wallet update is {:#?}", &upd_val);
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn get_paystack_details() {
+        let resp = get_paystack_subaccnt("ACCT_78r6yma9pjolxpo".to_string()).await;
+        println!("The subaccount details are {:#?}", &resp);
     }
 }

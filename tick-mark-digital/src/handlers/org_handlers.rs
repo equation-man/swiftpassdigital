@@ -12,7 +12,7 @@ use crate::helpers::{
     NotfoundErrorResponse,
     Claims, AuthResponse, generate_jwt,
     hash_password, verify_password,
-    load_secret_key,
+    load_secret_key, get_comm_percent,
     SubAccount, InitializeSplitPayment, PaystackWalletDetails,
     create_subaccnt, get_paystack_bank_lists,
 };
@@ -102,12 +102,13 @@ pub async fn new_mpesa_wallet(wallet_details: web::Json<NewUserWalletData>, org_
     HttpResponse::Ok().json(m_wallet)
 }
 
+// New paystack wallet creation
 pub async fn new_wallet(wallet_details: web::Json<NewUserWalletData>, org_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
     let details = SubAccount {
         business_name: wallet_details.business_name.clone(),
         settlement_bank: wallet_details.settlement_bank.clone(),
         account_number: wallet_details.account_number.clone(),
-        percentage_charge: Some(10),
+        percentage_charge: Some(get_comm_percent().await),
         description: Some("Subaccount wallet created".to_string()),
     };
     match create_subaccnt(details).await {
