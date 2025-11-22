@@ -35,7 +35,11 @@ export default auth(async function middleware(req) {
     pathname === "/manifest.json" ||
     PUBLIC_FILE.test(pathname)
   ) {
-    return;
+    return NextResponse.next();
+  }
+  // Skip all API routes.
+  if (pathname.startsWith("/api")) {
+    return NextResponse.next();
   }
 
   // Allow all /api/auth requests to pass

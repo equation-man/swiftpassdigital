@@ -54,7 +54,7 @@ const OrgLoginPage = () => {
       <form onSubmit={handleSubmit} className="max-w-xs md:max-w-sm">
         <div>
           <label className="font-medium text-gray-600">Email</label>
-          <input onChange={handleChange} name="email" className="input validator w-full" type="email" required placeholder="mail@gmail.com" autoComplete="current-password"/>
+          <input onChange={handleChange} name="email" className="input validator w-full" type="email" required placeholder="mail@gmail.com" autoComplete="email"/>
         </div>
         <div>
           <label className="font-medium text-gray-600">Password</label>
@@ -117,7 +117,7 @@ const DefaultOrgAccess = () => {
       });
       router.push(`/organizations/${session?.user?.user?.organization_id}`);
     },
-    onError: () => {
+    onError: (error) => {
       toast.dismiss();
       toast.error("Invalid credentials");
     },
@@ -134,7 +134,7 @@ const DefaultOrgAccess = () => {
       <form onSubmit={handleSubmit} className="max-w-xs md:max-w-sm">
         <div>
           <label className="font-medium text-gray-600">Access Name</label>
-          <input onChange={handleChange} name="access_username" className="input validator w-full" type="text" required placeholder="Enter access username" />
+          <input onChange={handleChange} name="access_username" className="input validator w-full" type="text" required placeholder="Enter access username" autoComplete="username"/>
         </div>
         <div>
           <label className="font-medium text-gray-600">Access Code</label>
