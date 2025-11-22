@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 // Application routes
 const DEFAULT_LOGOUT_REDIRECT = "/login";
 const DEFAULT_LOGIN_REDIRECT = "/login";
+const PUBLIC_FILE = /\.(.*)$/;
 const authRoutes = ["/login", "/register"];
 const publicRoutePatterns = [
   /^\/$/,                  // homepage
@@ -18,6 +19,7 @@ const isAuthPrefix = "/api/auth";
 
 export default auth(async function middleware(req) {
   const nextUrl = req.nextUrl;
+  const pathname = nextUrl.pathname;
   const user = req.auth?.user;
   const isLoggedIn = !!user?.token;
 
@@ -26,6 +28,15 @@ export default auth(async function middleware(req) {
   const isPublicRoute = publicRoutePatterns.some((pattern) =>
     pattern.test(nextUrl.pathname)
   );
+
+  // Skip static files (important!)
+  if (
+    pathname.startsWith("/icons") ||
+    pathname === "/manifest.json" ||
+    PUBLIC_FILE.test(pathname)
+  ) {
+    return;
+  }
 
   // Allow all /api/auth requests to pass
   if (isApiAuthRoute) {

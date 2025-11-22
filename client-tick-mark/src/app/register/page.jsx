@@ -81,11 +81,11 @@ const UserRegistrationPage = () => {
                     <div className="grid grid-cols-2 gap-x-1">
                         <div>
                             <label className="font-medium text-gray-600">Password</label>
-                            <input onChange={handleChange} name="password" className="input validator w-full" type="password" required placeholder="********" />
+                            <input onChange={handleChange} name="password" className="input validator w-full" type="password" required placeholder="********" autoComplete="current-password"/>
                         </div>
                         <div>
                             <label className="font-medium text-gray-600">Confirm password</label>
-                            <input onChange={handleChange} name="confirm_password" className="input validator w-full" type="password" required placeholder="********" />
+                            <input onChange={handleChange} name="confirm_password" className="input validator w-full" type="password" required placeholder="********" autoComplete="current-password"/>
                         </div>
                     </div>
 
@@ -194,6 +194,7 @@ const RegistrationPage = () => {
                                     className="input validator w-full"
                                     type={showPass ? "text" : "password"}
                                     required
+                                    autoComplete="current-password"
                                     placeholder="********" 
                                 />
                             </div>
@@ -208,6 +209,7 @@ const RegistrationPage = () => {
                                     className="input validator w-full"
                                     type={showPass ? "text" : "password"}
                                     required
+                                    autoComplete="current-password"
                                     placeholder="********" 
                                 />
                                 <button

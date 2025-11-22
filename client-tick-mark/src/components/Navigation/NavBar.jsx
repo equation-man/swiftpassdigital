@@ -49,6 +49,7 @@ const NavBar = () => {
                             </g>
                         </svg>
                     </Link>
+                    {/*Routing to the dashboard*/}
                     <button
                         onClick={handleRouteToDashboard}
                         className="rounded-sm text-emerald-800 hover:cursor-pointer"

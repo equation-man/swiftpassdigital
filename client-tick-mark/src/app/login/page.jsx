@@ -54,7 +54,7 @@ const OrgLoginPage = () => {
       <form onSubmit={handleSubmit} className="max-w-xs md:max-w-sm">
         <div>
           <label className="font-medium text-gray-600">Email</label>
-          <input onChange={handleChange} name="email" className="input validator w-full" type="email" required placeholder="mail@gmail.com" />
+          <input onChange={handleChange} name="email" className="input validator w-full" type="email" required placeholder="mail@gmail.com" autoComplete="current-password"/>
         </div>
         <div>
           <label className="font-medium text-gray-600">Password</label>
@@ -64,6 +64,7 @@ const OrgLoginPage = () => {
               name="password"
               className="input validator w-full"
               type={showPass ? "text" : "password"}
+              autoComplete="current-password"
               required
               placeholder="********"
             />
@@ -143,6 +144,7 @@ const DefaultOrgAccess = () => {
               name="access_code"
               className="input validator w-full"
               type={showPass ? "text" : "password"}
+              autoComplete="current-password"
               required
               placeholder="********"
             />
