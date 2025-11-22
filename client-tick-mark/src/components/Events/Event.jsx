@@ -58,7 +58,7 @@ const Event = ({ evnt }) => {
   };
 
   const dispAct =
-    session?.user?.user?.organization_id === evnt.owner_id;
+    session?.user?.user?.organization_id === evnt.owner_id && session?.user?.user?.org_email;
 
   return (
     <div className="carousel-item">
