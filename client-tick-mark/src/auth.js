@@ -33,20 +33,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
 
       authorize: async (credentials) => {
-        let user = null;
+        try {
+          let user;
 
-        if (credentials?.access_code && credentials?.access_username) {
-          // Login using access code & username
-          user = await defloginOrgFn(credentials);
-          return user;
-        } else {
-          // Regular organization login
-          user = await loginOrgFn(credentials);
-          return user;
-        }
+          if (credentials?.access_code && credentials?.access_username) {
+            // Login using access code & username
+            user = await defloginOrgFn(credentials);
+          } else {
+            // Regular organization login
+            user = await loginOrgFn(credentials);
+          }
 
-        if (!user) {
-          throw new Error("Invalid credentials.");
+          if (!user || !user.token) {
+            throw new Error("Invalid credentials.");
+          }
+
+          return user;
+        } catch (err) {
+          throw new Error("Invalid Credentials.");
         }
       },
     }),

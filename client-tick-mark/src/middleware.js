@@ -29,24 +29,6 @@ export default auth(async function middleware(req) {
     pattern.test(nextUrl.pathname)
   );
 
-  // Skip static files (important!)
-  if (
-    pathname.startsWith("/icons") ||
-    pathname === "/manifest.json" ||
-    PUBLIC_FILE.test(pathname)
-  ) {
-    return NextResponse.next();
-  }
-  // Skip all API routes.
-  if (pathname.startsWith("/api")) {
-    return NextResponse.next();
-  }
-
-  // Allow all /api/auth requests to pass
-  if (isApiAuthRoute) {
-    return NextResponse.next();
-  }
-
   // Logged in users visiting login or register
   if (isAuthRoute) {
     if (isLoggedIn) {
