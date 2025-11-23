@@ -78,13 +78,13 @@ export default auth(async function middleware(req) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|assets|icons|api/auth).*)",
+    //"/((?!_next/static|_next/image|favicon.ico|assets|icons|api/auth).*)",
     // Skip Next.js internals and static files
     //'/((?!_next/|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
     // Always run for API routes
     //'/(api|trpc)(.*)',
     // Prevents recursion on /api/auth/* in production
-    //'/((?!_next/|api/|.*\\..*).*)',
+    '/((?!_next/|api/auth|.*\\..*).*)',
   ],
 };
 
