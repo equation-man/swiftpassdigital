@@ -35,8 +35,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       authorize: async (credentials) => {
         let user = null;
 
-        // Login using access code & username
         if (credentials?.access_code && credentials?.access_username) {
+          // Login using access code & username
           user = await defloginOrgFn(credentials);
           return user;
         } else {

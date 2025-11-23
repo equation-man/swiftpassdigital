@@ -10,6 +10,7 @@ import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import PwaInstallPrompt from "@/components/PwaInstallPrompt";
 import { ReduxProvider } from "@/redux/ReduxProvider";
+import { auth } from "@/auth";
 
 const outfit = Outfit({
     subsets: ["latin"],
@@ -25,7 +26,7 @@ export const metadata = {
     },
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
     return (
         <html lang="en" data-theme="light">
             <head>
