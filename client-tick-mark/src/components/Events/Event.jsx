@@ -132,12 +132,13 @@ const Event = ({ evnt }) => {
                 </h3>
                 <h3 className="font-semibold text-teal-700">
                   <span className="text-green-800">Service &amp; trans fee:</span>{" "}
-                  {data?.service_fee + (data?.total_sales/100) * 0.029}
+                  {((data?.total_sales/100) * 0.029).toFixed(2)}
+                  {/*data?.service_fee*/}
                 </h3>
                 <h3 className="font-semibold">
                   <span className="text-green-800">Net Total:</span>{" "}
                   {/*data?.net_total*/}
-                  {(data?.total_sales/100) - (data?.total_sales/100) * 0.029}
+                  {((data?.total_sales/100) - (data?.total_sales/100) * 0.029).toFixed(2)}
                 </h3>
               </div>
             </div>
