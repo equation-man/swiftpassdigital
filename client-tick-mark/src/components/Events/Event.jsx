@@ -128,15 +128,16 @@ const Event = ({ evnt }) => {
                 </h3>
                 <h3 className="font-semibold">
                   <span className="text-green-800">Total sales:</span>{" "}
-                  {data?.total_sales}
+                  {data?.total_sales/100}
                 </h3>
                 <h3 className="font-semibold text-teal-700">
-                  <span className="text-green-800">Service fee:</span>{" "}
-                  {data?.service_fee}
+                  <span className="text-green-800">Service &amp; trans fee:</span>{" "}
+                  {data?.service_fee + (data?.total_sales/100) * 0.029}
                 </h3>
                 <h3 className="font-semibold">
                   <span className="text-green-800">Net Total:</span>{" "}
-                  {data?.net_total}
+                  {/*data?.net_total*/}
+                  {(data?.total_sales/100) - (data?.total_sales/100) * 0.029}
                 </h3>
               </div>
             </div>

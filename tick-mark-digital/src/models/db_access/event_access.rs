@@ -150,6 +150,7 @@ pub async fn fts_search_events(db_pool: &PgPool, search_payload: EventPayload) -
 
 pub async fn generate_report(db_pool: &PgPool, event_id: Uuid, org_id: Option<Uuid>) -> Option<Report> {
     //let evnt = get_event(db_pool, event_id).await;
+    //query wallet to get currency.
     let tickets = get_tickets(db_pool, event_id).await;
     let capacity = tickets.iter().try_fold(0i64, |acc, tk| acc.checked_add(tk.capacity)).unwrap();
     let ords = tickets.iter().map(|tk| async move {
