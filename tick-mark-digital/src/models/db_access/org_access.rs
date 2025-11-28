@@ -87,10 +87,16 @@ pub async fn get_orgs(db_pool: &PgPool, filters: OrgPayload) -> Vec<Organization
     orgs_lst.iter().map(|org| Organization {
         organization_id: org.get("organization_id"),
         organization_name: org.get("organization_name"),
-        organization_username: org.get("organization_username"),
+        organization_username: match org.get("organization_username") {
+            Some(uname) => uname,
+            None => "USERNAME_NOT_SET".to_string()
+        },
         org_email: org.get("org_email"),
         country: org.get("country"),
-        description: org.get("description")
+        description: match org.get("description") {
+            Some(des) => des,
+            None => "DESCRIPTION_NOT_SET".to_string(),
+        }
     }).collect()
 }
 

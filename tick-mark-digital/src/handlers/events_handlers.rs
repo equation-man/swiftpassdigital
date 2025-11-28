@@ -347,7 +347,7 @@ pub async fn mpesa_order_and_callback(payload: web::Json<OrderPayloadType>, tick
                     ticket_status: TickStatus::Pending,
                     order_limit: 0,
                     ticket_price: ticket_price,
-                    commission_amount: Decimal::from(0u64),//Decimal::from(my_comm),
+                    commission_amount: Decimal::from(my_comm),
                     order_currency: "KES".to_string(),
                     paystack_reference: callBack.CheckoutRequestID.clone(),
                 };
@@ -395,7 +395,7 @@ pub async fn mpesa_callback(payload: web::Json<DarajaCallback>, ticket_id: web::
             ticket_status: TickStatus::Pending,
             order_limit: 0,
             ticket_price: ticket_price,
-            commission_amount: Decimal::from(0u64),//Decimal::from(my_comm),
+            commission_amount: Decimal::from(my_comm),
             order_currency: "KES".to_string(),
             paystack_reference: callBack.CheckoutRequestID.clone(),
         };

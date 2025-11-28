@@ -81,6 +81,8 @@ pub async fn user_delete(params: web::Path<String>, app_state: web::Data<AppStat
     HttpResponse::Ok().json(del_user)
 }
 
+/// Fetch organizations for users here.
+
 #[cfg(test)]
 mod tests {
     use super::*;

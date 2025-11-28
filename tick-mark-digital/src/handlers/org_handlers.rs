@@ -18,6 +18,7 @@ use crate::helpers::{
 };
 use uuid::Uuid;
 use nanoid::nanoid;
+use serde::{Deserialize, Serialize};
 
 #[path="../state.rs"]
 mod state;
@@ -72,9 +73,21 @@ pub async fn org_login(org_payload: web::Json<OrgPayload>, app_state: web::Data<
     }
 }
 
+#[derive(Debug, Clone, Deserialize)]
+pub struct OrgsQueryFilters {
+    pub organization_id: Option<String>,
+    pub organization_name: Option<String>,
+    pub organization_username: Option<String>,
+    pub org_email: Option<String>,
+    pub country: Option<String>,
+}
+
 /// Organization listing handler
-pub async fn org_list(org_cred: web::Json<OrgPayload>, app_state: web::Data<AppState>) -> HttpResponse {
-    let lst_orgs = get_orgs(&app_state.db, org_cred.into()).await;
+pub async fn org_list(orgs_query: web::Query<OrgsQueryFilters>, app_state: web::Data<AppState>) -> HttpResponse {
+    let org_cred = OrgPayload {
+        ..Default::default()
+    };
+    let lst_orgs = get_orgs(&app_state.db, org_cred).await;
     HttpResponse::Ok().json(lst_orgs)
 }
 

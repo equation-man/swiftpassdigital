@@ -93,7 +93,7 @@ impl From<web::Json<CreateOrg>> for CreateOrg {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Default)]
 pub struct OrgPayload {
     pub organization_id: Option<Uuid>,
     pub organization_name: Option<String>,
