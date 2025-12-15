@@ -2,9 +2,44 @@
 /* @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
-  swcMinify: true,
-  compress: true
+  
+  images: {
+	  unoptimized: true,
+  },
+
+  compress: false,
 };
 
 module.exports = nextConfig;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
