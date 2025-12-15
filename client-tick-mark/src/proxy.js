@@ -17,12 +17,12 @@ const publicRoutePatterns = [
 ];
 const isAuthPrefix = "/api/auth";
 
-export default auth(async function middleware(req) {
-  const nextUrl = req.nextUrl;
-  const pathname = nextUrl.pathname;
-  const user = req.auth?.user;
-  const isLoggedIn = !!user?.token;
+export async function proxy(request) {
+  const session = await auth();
+  const isLoggedIn = !!session?.user;
 
+  const nextUrl = request.nextUrl;
+  const pathname = nextUrl.pathname;
   const isApiAuthRoute = nextUrl.pathname.startsWith(isAuthPrefix);
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
   const isPublicRoute = publicRoutePatterns.some((pattern) =>
@@ -44,29 +44,30 @@ export default auth(async function middleware(req) {
     const callbackUrl = encodeURIComponent(nextUrl.pathname);
     return NextResponse.redirect(new URL(`/login?callbackUrl=${callbackUrl}`, req.url));
   }
+  
+  if (isApiAuthRoute) return NextResponse.next();
 
   // Default: allow access
   return NextResponse.next();
-}, {
-  callbacks: {
-    authorized: async ({ auth }) => !!auth?.user?.token,
-  },
-  pages: {
-    signIn: "/login",
-    signOut: "/login",
-  },
-});
-
+}
 
 export const config = {
-  matcher: [
-    //"/((?!_next/static|_next/image|favicon.ico|assets|icons|api/auth).*)",
-    // Skip Next.js internals and static files
-    //'/((?!_next/|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always run for API routes
-    //'/(api|trpc)(.*)',
-    // Prevents recursion on /api/auth/* in production
-    '/((?!_next/|api/auth|.*\\..*).*)',
-  ],
-};
+	matcher: [
+		'/((?!_next/|api/auth|.*\\..*).*)',
+	],
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

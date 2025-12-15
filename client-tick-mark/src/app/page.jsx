@@ -15,7 +15,7 @@ export default function Home() {
                     </p>
                     <div className="my-6">
                         <h1 className="text-3xl md:text-6xl font-bold text-gray-900 text-center">
-                            Seamless <span className="text-emerald-600">events</span> that empowers <span className="text-emerald-500">organizers</span> and <span className="text-emerald-700">delights fans</span>
+                            Turning <span className="text-emerald-600">seamless experiences</span> into <span className="text-emerald-500">memorable moments</span> that excite
                         </h1>
                     </div>
                     <div className="w-full flex flex-col items-center justify-center gap-x-2 my-4">
