@@ -40,7 +40,9 @@ pub struct Event {
     pub finish_date: String, //DateTime<Utc>,
     pub added_at: String, //DateTime<Utc>,
     pub edited: bool,
-    pub event_tag: String
+    pub event_tag: String,
+    pub tickets: Option<Vec<Ticket>>,
+    pub orders_report: Option<OrdersReport>,
 }
 
 impl From<web::Json<Event>> for Event {
@@ -56,6 +58,43 @@ impl From<web::Json<Event>> for Event {
             added_at: event.added_at.clone(),
             edited: event.edited.clone(),
             event_tag: event.event_tag.clone(),
+            tickets: event.tickets.clone(),
+            orders_report: event.orders_report.clone(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct OrdersReport {
+    pub event_id: Uuid,
+    pub total_tickets: String,
+    pub discounted_tickets: String,
+    pub regular_tickets: String,
+    pub checked_tickets: String,
+    pub total_sales_amount: String,
+    pub discounted_sales_amount: String,
+    pub regular_sales_amount: String,
+    pub service_fees: String,
+    pub net_sales_amount: String,
+    pub net_expected_sales_amount: Option<String>,
+    pub orders_record: Option<Vec<Order>>,
+}
+
+impl From<web::Json<OrdersReport>> for OrdersReport {
+    fn from(orders_report: web::Json<OrdersReport>) -> Self {
+        OrdersReport {
+            event_id: orders_report.event_id.clone(),
+            total_tickets: orders_report.total_tickets.clone(),
+            discounted_tickets: orders_report.discounted_tickets.clone(),
+            regular_tickets: orders_report.regular_tickets.clone(),
+            checked_tickets: orders_report.checked_tickets.clone(),
+            total_sales_amount: orders_report.total_sales_amount.clone(),
+            discounted_sales_amount: orders_report.discounted_sales_amount.clone(),
+            regular_sales_amount: orders_report.regular_sales_amount.clone(),
+            service_fees: orders_report.service_fees.clone(),
+            net_sales_amount: orders_report.net_sales_amount.clone(),
+            net_expected_sales_amount: orders_report.net_expected_sales_amount.clone(),
+            orders_record: orders_report.orders_record.clone(),
         }
     }
 }
@@ -112,7 +151,7 @@ impl From<web::Json<EventPayload>> for EventPayload {
     }
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, Serialize, sqlx::Type)]
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize, sqlx::Type)]
 #[sqlx(type_name="ticket_market.tick_type", rename_all="lowercase")]
 pub enum TickType {
     Discount,
@@ -143,7 +182,7 @@ impl fmt::Display for TickType {
 }
 
 
-#[derive(Clone, Copy, Debug, Deserialize, Serialize, sqlx::Type)]
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize, sqlx::Type)]
 #[sqlx(type_name="ticket_market.tick_class", rename_all="lowercase")]
 pub enum TickClass {
     Individual,
@@ -233,6 +272,7 @@ pub struct TicketPayload {
     pub discount_time: Option<i64>,
     pub start_time: Option<String>,
     pub finish_time: Option<String>,
+    pub description: Option<String>,
 }
 
 impl From<web::Json<TicketPayload>> for TicketPayload {
@@ -247,11 +287,12 @@ impl From<web::Json<TicketPayload>> for TicketPayload {
             discount_time: ticket_payload.discount_time.clone(),
             start_time: ticket_payload.start_time.clone(),
             finish_time: ticket_payload.finish_time.clone(),
+            description: ticket_payload.description.clone(),
         }
     }
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, Serialize, sqlx::Type)]
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize, sqlx::Type)]
 #[sqlx(type_name="ticket_market.tick_status", rename_all="lowercase")]
 pub enum TickStatus {
     Pending,
@@ -440,7 +481,7 @@ impl From<web::Json<OrderPayload>> for OrderPayload {
     }
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, Serialize, sqlx::Type)]
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize, sqlx::Type)]
 #[sqlx(type_name="ticket_market.disc_type", rename_all="lowercase")]
 pub enum DiscType {
     Percentage,

@@ -2,7 +2,7 @@
 use crate::models::{
     Event, CreateEvent, EventPayload, Report,
     TickType, Ticket, AddTicket, TicketPayload, TickStatus, TickClass,
-    Order, CreateOrder, OrderPayload, OrderDetails,
+    Order, CreateOrder, OrderPayload, OrderDetails, OrdersReport,
     DiscType, Discount, AddDiscount, DiscountPayload,
     pg_interval_to_chrono_duration,
     pg_interval_to_seconds,
@@ -48,6 +48,8 @@ pub async fn add_event(db_pool: &PgPool, new_event: CreateEvent) -> Event {
         added_at: added_at_str,
         edited: n_event.edited.unwrap(),
         event_tag: n_event.event_tag.unwrap(),
+        tickets: None,
+        orders_report: None,
     }
 }
 
@@ -61,6 +63,8 @@ pub async fn get_event(db_pool: &PgPool, event_id: Uuid) -> Event {
         WHERE event_id=$1
     "#, event_id).fetch_one(db_pool).await.unwrap();
 
+    let evnt_tickets = get_tickets(db_pool, event.event_id).await;
+
     Event {
         event_id: event.event_id,
         owner_id: event.owner_id,
@@ -72,6 +76,8 @@ pub async fn get_event(db_pool: &PgPool, event_id: Uuid) -> Event {
         added_at: event.added_at.to_rfc3339(),
         edited: event.edited.unwrap(),
         event_tag: event.event_tag.unwrap(),
+        tickets: Some(evnt_tickets),
+        orders_report: None,
     }
 }
 
@@ -104,6 +110,7 @@ pub async fn get_events(db_pool: &PgPool, owner_id: Option<Uuid>, filters: Event
         let start_time_str = event.get::<DateTime<Utc>, &str>("start_time").to_rfc3339();
         let finish_time_str = event.get::<DateTime<Utc>, &str>("finish_time").to_rfc3339();
         let added_at_str = event.get::<DateTime<Utc>, &str>("added_at").to_rfc3339();
+
         Event {
             event_id: event.get("event_id"),
             owner_id: event.get("owner_id"),
@@ -115,6 +122,8 @@ pub async fn get_events(db_pool: &PgPool, owner_id: Option<Uuid>, filters: Event
             added_at: added_at_str,
             edited: event.get("edited"),
             event_tag: event.get("event_tag"),
+            tickets: None,
+            orders_report: None,
         }
     }).collect()
 }
@@ -142,40 +151,90 @@ pub async fn fts_search_events(db_pool: &PgPool, search_payload: EventPayload) -
             added_at: added_at_str,
             edited: event.get("edited"),
             event_tag: event.get("event_tag"),
+            tickets: None,
+            orders_report: None,
         }
     }).collect();
 
     Ok(events_res)
 }
 
-pub async fn generate_report(db_pool: &PgPool, event_id: Uuid, org_id: Option<Uuid>) -> Option<Report> {
+pub async fn generate_report(db_pool: &PgPool, event_id: Uuid, org_id: Option<Uuid>) -> Option<OrdersReport> {
     //let evnt = get_event(db_pool, event_id).await;
     //query wallet to get currency.
     let tickets = get_tickets(db_pool, event_id).await;
+    // Available tickets.
     let capacity = tickets.iter().try_fold(0i64, |acc, tk| acc.checked_add(tk.capacity)).unwrap();
+    // Getting all the orders for the event.
     let ords = tickets.iter().map(|tk| async move {
-        let order_payload = OrderPayload {
-            order_id: None, ticket_id: None, user_id: None,
-            user_email: None, user_contact: None, ticket_price: None,
-            promo_code: None, ticket_status: None, entrance_code: None,
-            order_limit: None, paystack_reference: None,
-            commission_amount: None, order_currency: None
-        };
+        let order_payload = OrderPayload { ..Default::default() };
         get_orders(db_pool, tk.ticket_id, order_payload).await
     });
     let orders: Vec<_> = futures::future::join_all(ords).await.into_iter().flatten().collect();
-    let t_sales = orders.iter().try_fold(Decimal::ZERO, |acc, tp| acc.checked_add(tp.ticket_price.parse().expect("Invalid decimal for total sales"))).unwrap();
-    let total_commission = orders.iter().try_fold(Decimal::ZERO, |acc, tp| acc.checked_add(tp.commission_amount.parse().expect("Invalid decimal total commission"))).unwrap();
-    let t_sold = orders.len();
+    // Filtering orders based on TickClass, i.e Regular or Discount.
+    let reg_orders = tickets.iter()
+        .filter(|reg_tk| reg_tk.ticket_type == TickType::Regular)
+        .map(|reg_tick| async move {
+            let order_payload = OrderPayload { ..Default::default() };
+            get_orders(db_pool, reg_tick.ticket_id, order_payload).await
+        });
+    let reg_ords: Vec<_> = futures::future::join_all(reg_orders).await.into_iter().flatten().collect();
+    let disc_orders = tickets.iter()
+        .filter(|disc_tk| disc_tk.ticket_type == TickType::Discount)
+        .map(|disc_tick| async move {
+            let order_payload = OrderPayload { ..Default::default() };
+            get_orders(db_pool, disc_tick.ticket_id, order_payload).await
+        });
+    let disc_ords: Vec<_> = futures::future::join_all(disc_orders).await.into_iter().flatten().collect();
+    // Getting total sales of orders.
+    let t_sales = orders.iter()
+        .try_fold(
+            Decimal::ZERO,
+            |acc, tp| acc.checked_add(
+                tp.ticket_price.parse().expect("Invalid decimal for total sales")
+                )
+            ).unwrap();
+    let reg_sales = reg_ords.iter()
+        .try_fold(
+            Decimal::ZERO,
+            |acc, tp| acc.checked_add(
+                tp.ticket_price.parse().expect("Invalid decimal for total regular sales")
+                )
+            ).unwrap();
+    let disc_sales = disc_ords.iter()
+        .try_fold(
+            Decimal::ZERO,
+            |acc, tp| acc.checked_add(
+                tp.ticket_price.parse().expect("Invalid decimal for total discounted sales")
+                )
+            ).unwrap();
+    let total_commission = orders.iter()
+        .try_fold(
+            Decimal::ZERO,
+            |acc, tp| acc.checked_add(
+                tp.commission_amount.parse().expect("Invalid decimal total commission")
+                )
+            ).unwrap();
+    // Filtering sales of orders based on Status, i.e Pending & Checked
+    let checked_orders: Vec<_> = orders.iter().filter(|order| order.ticket_status == TickStatus::Checked).collect();
     let n_total = t_sales.checked_sub(total_commission).unwrap();
 
-    Some(Report {
-        total_tickets: capacity.to_string(),
-        tickets_sold: t_sold.to_string(),
-        total_sales: t_sales.to_string(),
-        service_fee: total_commission.to_string(),
-        net_total: n_total.to_string(),
-    })
+    let orders_rpt = OrdersReport {
+        event_id: event_id,
+        total_tickets: orders.len().to_string(),
+        discounted_tickets: disc_ords.len().to_string(),
+        regular_tickets: reg_ords.len().to_string(),
+        checked_tickets: checked_orders.len().to_string(),
+        total_sales_amount: t_sales.to_string(),
+        discounted_sales_amount: disc_sales.to_string(),
+        regular_sales_amount: reg_sales.to_string(),
+        service_fees: total_commission.to_string(),
+        net_sales_amount: n_total.to_string(),
+        net_expected_sales_amount: None,
+        orders_record: Some(orders),
+    };
+
+    Some(orders_rpt)
 }
 
 pub async fn update_event(db_pool: &PgPool, event_id: Uuid, payload: EventPayload) -> Event {
@@ -209,7 +268,9 @@ pub async fn update_event(db_pool: &PgPool, event_id: Uuid, payload: EventPayloa
         finish_date: finish_time_str,
         added_at: added_at_str, 
         edited: upd_event.get("edited"),
-        event_tag: upd_event.get("event_tag")
+        event_tag: upd_event.get("event_tag"),
+        tickets: None,
+        orders_report: None,
     }
 }
 
@@ -238,6 +299,8 @@ pub async fn delete_event(db_pool: &PgPool, event_id: Uuid) -> Event {
         added_at: added_at_str,
         edited: del_event.edited.unwrap(),
         event_tag: del_event.event_tag.unwrap(),
+        tickets: None,
+        orders_report: None,
     }
 }
 
@@ -336,6 +399,52 @@ pub async fn get_single_ticket(db_pool: &PgPool, ticket_id: Uuid) -> Ticket {
         added_at: added_at_str,
         description: ticket.get("description"),
     }
+}
+
+// Updating ticket.
+pub async fn update_ticket(db_pool: &PgPool, ticket_id: Uuid, payload: TicketPayload) -> Result<Ticket, sqlx::Error> {
+    let upd_ticket = sqlx::query(r#"
+        UPDATE ticket_market.tickets
+            SET base_price = COALESCE($1, base_price),
+                capacity = COALESCE($2, capacity),
+                ticket_type = COALESCE($3, type_type),
+                ticket_class = COALESCE($4, ticket_class),
+                discount_time = COALESCE($5, discount_time),
+                start_time = COALESCE($7, start_time),
+                finish_time = COALESCE($8, finish_time),
+                description = COALESCE($9, description)
+            WHERE ticket_id = $10
+        RETURNING ticket_id, event_id, capacity,
+            ticket_type as "tick_type: TickType", 
+            ticket_class as "tick_class: TickClass",
+            discount_time, start_time, finish_time,
+            added_at, description, base_price
+    "#).bind(Some(payload.base_price)).bind(Some(payload.capacity))
+    .bind(Some(payload.ticket_type)).bind(Some(payload.ticket_class))
+    .bind(Some(payload.discount_time)).bind(Some(payload.start_time))
+    .bind(Some(payload.finish_time)).bind(Some(payload.description))
+    .bind(ticket_id)
+    .fetch_one(db_pool).await?;
+
+    let start_time_str = upd_ticket.get::<DateTime<Utc>, &str>("start_time").to_rfc3339();
+    let finish_time_str = upd_ticket.get::<DateTime<Utc>, &str>("finish_time").to_rfc3339();
+    let added_at_str = upd_ticket.get::<DateTime<Utc>, &str>("added_at").to_rfc3339();
+    let t_price = upd_ticket.get::<Decimal, &str>("base_price").to_string();
+
+    Ok(Ticket {
+        ticket_id: upd_ticket.get("ticket_id"),
+        event_id: upd_ticket.get("event_id"),
+        base_price: t_price,
+        capacity: upd_ticket.get("capacity"),
+        ticket_type: upd_ticket.get("ticket_type"),
+        ticket_class: upd_ticket.get("ticket_class"),
+        discount_time: pg_interval_to_seconds(upd_ticket.get("discount_time")),
+        start_time: start_time_str,
+        finish_time: finish_time_str,
+        added_at: added_at_str,
+        description: upd_ticket.get("description"),
+    })
+
 }
 
 pub async fn delete_ticket(db_pool: &PgPool, event_id: Uuid) -> Result<Option<Ticket>, sqlx::Error> {

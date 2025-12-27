@@ -1,4 +1,5 @@
 //! Our web API entry point.
+#![allow(warnings)]
 mod handlers;
 mod routes;
 mod models;
