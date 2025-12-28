@@ -21,12 +21,6 @@ export default function Home() {
                     <div className="w-full flex flex-col items-center justify-center gap-x-2 my-4">
                         <h2 className="font-bold text-xl">Available Events</h2>
                         {/*<button className="bg-emerald-800 rounded-full px-4 py-1 text-white">topics</button>*/}
-                        <p className="text-sm text-neutral-700 font-semibold">Trending topics</p>
-                        <ul className="inline-flex space-x-1 text-gray-600 text-sm">
-                            <li>#Sports</li>
-                            <li>#Tech</li>
-                            <li>#Concerts</li>
-                        </ul>
                     </div>
                 </div>
                 {/*<div className="order-1 md:order-2">

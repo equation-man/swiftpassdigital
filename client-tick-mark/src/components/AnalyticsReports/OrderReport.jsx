@@ -18,11 +18,11 @@ const OrderReport = ({ order }) => {
           <p className="text-xs">{order?.ticket_price}</p>
         </div>
         {/*Button goes here*/}
-        <button
+        {/*<button
           className="btn bg-emerald-600 text-white"
         >
           Check
-        </button>
+        </button>*/}
       </div>
     </main>
   )

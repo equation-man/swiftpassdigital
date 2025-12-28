@@ -52,7 +52,6 @@ export default async function RootLayout({ children }) {
                     <Provider>
                         <ReduxProvider>
                             <NavBar />
-                            <div className="h-4"></div>
                             {children}
                             <Footer />
                             {/*PWA and Service Worker*/}
