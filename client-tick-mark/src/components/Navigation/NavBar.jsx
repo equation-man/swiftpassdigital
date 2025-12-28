@@ -19,7 +19,7 @@ const NavBar = () => {
     }
 
     return (
-        <main>
+        <main className="sticky top-0 z-50 bg-white">
             {/*HEADER*/}
             <div className="flex flex-row items-center justify-between p-2">
                 <div>

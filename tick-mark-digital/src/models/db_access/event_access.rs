@@ -49,7 +49,6 @@ pub async fn add_event(db_pool: &PgPool, new_event: CreateEvent) -> Event {
         edited: n_event.edited.unwrap(),
         event_tag: n_event.event_tag.unwrap(),
         tickets: None,
-        orders_report: None,
     }
 }
 
@@ -77,7 +76,6 @@ pub async fn get_event(db_pool: &PgPool, event_id: Uuid) -> Event {
         edited: event.edited.unwrap(),
         event_tag: event.event_tag.unwrap(),
         tickets: Some(evnt_tickets),
-        orders_report: None,
     }
 }
 
@@ -123,7 +121,6 @@ pub async fn get_events(db_pool: &PgPool, owner_id: Option<Uuid>, filters: Event
             edited: event.get("edited"),
             event_tag: event.get("event_tag"),
             tickets: None,
-            orders_report: None,
         }
     }).collect()
 }
@@ -152,17 +149,16 @@ pub async fn fts_search_events(db_pool: &PgPool, search_payload: EventPayload) -
             edited: event.get("edited"),
             event_tag: event.get("event_tag"),
             tickets: None,
-            orders_report: None,
         }
     }).collect();
 
     Ok(events_res)
 }
 
-pub async fn generate_report(db_pool: &PgPool, event_id: Uuid, org_id: Option<Uuid>) -> Option<OrdersReport> {
+pub async fn generate_report(db_pool: &PgPool, event: Event, org_id: Option<Uuid>) -> Option<OrdersReport> {
     //let evnt = get_event(db_pool, event_id).await;
     //query wallet to get currency.
-    let tickets = get_tickets(db_pool, event_id).await;
+    let tickets = get_tickets(db_pool, event.event_id).await;
     // Available tickets.
     let capacity = tickets.iter().try_fold(0i64, |acc, tk| acc.checked_add(tk.capacity)).unwrap();
     // Getting all the orders for the event.
@@ -220,7 +216,7 @@ pub async fn generate_report(db_pool: &PgPool, event_id: Uuid, org_id: Option<Uu
     let n_total = t_sales.checked_sub(total_commission).unwrap();
 
     let orders_rpt = OrdersReport {
-        event_id: event_id,
+        event_id: event.event_id,
         total_tickets: orders.len().to_string(),
         discounted_tickets: disc_ords.len().to_string(),
         regular_tickets: reg_ords.len().to_string(),
@@ -230,6 +226,7 @@ pub async fn generate_report(db_pool: &PgPool, event_id: Uuid, org_id: Option<Uu
         regular_sales_amount: reg_sales.to_string(),
         service_fees: total_commission.to_string(),
         net_sales_amount: n_total.to_string(),
+        target_event: event,
         net_expected_sales_amount: None,
         orders_record: Some(orders),
     };
@@ -270,7 +267,6 @@ pub async fn update_event(db_pool: &PgPool, event_id: Uuid, payload: EventPayloa
         edited: upd_event.get("edited"),
         event_tag: upd_event.get("event_tag"),
         tickets: None,
-        orders_report: None,
     }
 }
 
@@ -300,7 +296,6 @@ pub async fn delete_event(db_pool: &PgPool, event_id: Uuid) -> Event {
         edited: del_event.edited.unwrap(),
         event_tag: del_event.event_tag.unwrap(),
         tickets: None,
-        orders_report: None,
     }
 }
 

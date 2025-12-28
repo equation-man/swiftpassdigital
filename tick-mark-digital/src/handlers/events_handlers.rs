@@ -738,7 +738,8 @@ pub async fn orders_list(params: web::Path<String>, query: web::Query<OrderQuery
 
 pub async fn events_report(evnt_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
     let event_id = Uuid::parse_str(&evnt_id.into_inner()).unwrap();
-    let ev_reps = generate_report(&app_state.db, event_id, None).await;
+    let event_obj = get_event(&app_state.db, event_id).await;
+    let ev_reps = generate_report(&app_state.db, event_obj, None).await;
     HttpResponse::Ok().json(ev_reps)
 }
 

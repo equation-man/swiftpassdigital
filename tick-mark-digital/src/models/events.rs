@@ -42,7 +42,6 @@ pub struct Event {
     pub edited: bool,
     pub event_tag: String,
     pub tickets: Option<Vec<Ticket>>,
-    pub orders_report: Option<OrdersReport>,
 }
 
 impl From<web::Json<Event>> for Event {
@@ -59,7 +58,6 @@ impl From<web::Json<Event>> for Event {
             edited: event.edited.clone(),
             event_tag: event.event_tag.clone(),
             tickets: event.tickets.clone(),
-            orders_report: event.orders_report.clone(),
         }
     }
 }
@@ -76,6 +74,7 @@ pub struct OrdersReport {
     pub regular_sales_amount: String,
     pub service_fees: String,
     pub net_sales_amount: String,
+    pub target_event: Event,
     pub net_expected_sales_amount: Option<String>,
     pub orders_record: Option<Vec<Order>>,
 }
@@ -93,6 +92,7 @@ impl From<web::Json<OrdersReport>> for OrdersReport {
             regular_sales_amount: orders_report.regular_sales_amount.clone(),
             service_fees: orders_report.service_fees.clone(),
             net_sales_amount: orders_report.net_sales_amount.clone(),
+            target_event: orders_report.target_event.clone(),
             net_expected_sales_amount: orders_report.net_expected_sales_amount.clone(),
             orders_record: orders_report.orders_record.clone(),
         }
