@@ -7,7 +7,7 @@ const EventsReport = ({report}) => {
         <div className="stats shadow-lg bg-white/40 border-white/10 backdrop-blur-lg w-full">
           <div className="stat">
             <div className="stat-title">Total tickets available</div>
-            <div className="stat-value">{report?.ticket_supply - report?.total_tickets}</div>
+            <div className="stat-value">{report?.tickets_available}</div>
             <div className="stat-desc">of {report?.ticket_supply}</div>
           </div>
           <div className="stat">

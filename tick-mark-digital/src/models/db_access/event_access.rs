@@ -232,6 +232,7 @@ pub async fn generate_report(db_pool: &PgPool, event: Event, org_id: Option<Uuid
     let service_fee_percent = get_comm_percent().await;
     let comm_amnt = commission_amnt_calc(service_fee_percent, expected_amnt.to_string()).await;
     let net_expected_payout = expected_amnt - comm_amnt as f64;
+    let t_available = capacity - orders.len() as i64;
 
     let orders_rpt = OrdersReport {
         event_id: event.event_id,
@@ -245,6 +246,7 @@ pub async fn generate_report(db_pool: &PgPool, event: Event, org_id: Option<Uuid
         service_fees: comm.to_string(),
         net_sales_amount: net_sales.to_string(),
         ticket_supply: capacity.to_string(),
+        tickets_available: t_available.to_string(),
         net_expected_sales_amount: net_expected_payout.to_string(),
         target_event: event,
         orders_record: Some(orders),
