@@ -6,6 +6,11 @@ const EventsReport = ({report}) => {
         <h3 className="text-xl font-bold text-emerald-800 pb-1">Earnings Summary</h3>
         <div className="stats shadow-lg bg-white/40 border-white/10 backdrop-blur-lg w-full">
           <div className="stat">
+            <div className="stat-title">Total tickets available</div>
+            <div className="stat-value">{report?.ticket_supply - report?.total_tickets}</div>
+            <div className="stat-desc">of {report?.ticket_supply}</div>
+          </div>
+          <div className="stat">
             <div className="stat-title">Net Earnings</div>
             <div className="stat-value">{report?.net_sales_amount}</div>
             <div className="stat-desc">{report?.service_fees} service fees</div>
@@ -15,24 +20,24 @@ const EventsReport = ({report}) => {
       <div className="grid grid-cols-2 items-center justify-center my-4">
         {/*TICKETS*/}
         <div>
-          <h3 className="text-xl font-bold text-emerald-800 pb-1">Tickets</h3>
+          <h3 className="text-xl font-bold text-emerald-800 pb-1">Tickets Sold</h3>
           <div className="stats stats-vertical lg:stats-horizontal shadow-xl bg-white/40 border-white/10 backdrop-blur-lg">
             <div className="stat">
               <div className="stat-title">Regular Tickets</div>
               <div className="stat-value">{report?.regular_tickets}</div>
-              <div className="stat-desc">Available</div>
+              <div className="stat-desc">Sold</div>
             </div>
 
             <div className="stat">
               <div className="stat-title">Discounted Tickets</div>
               <div className="stat-value">{report?.discounted_tickets}</div>
-              <div className="stat-desc">Available</div>
+              <div className="stat-desc">Sold</div>
             </div>
 
             <div className="stat">
               <div className="stat-title">Total Tickets</div>
               <div className="stat-value">{report?.total_tickets}</div>
-              <div className="stat-desc">Available</div>
+              <div className="stat-desc">Sold</div>
             </div>
           </div>
         </div>
