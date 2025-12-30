@@ -21,6 +21,10 @@ const Info = ({ ticketDetails, ticketIdViewFn }) => {
         dispatch(updatePaymentModalState(state));
     };
 
+    // Organizer account to view both scan and edit buttons.
+    // Accessor to view only the scan button.
+    // Other users to just see purchase ticket button
+
     return (
         <div className="card bg-base-100 image-full w-96 shadow-sm rounded-sm">
             <figure>
@@ -114,12 +118,15 @@ const EventInfo = () => {
                     </div>
                     <h3 className="text-gray-600 font-bold text-lg">tickets</h3>
                     {!!session && (
-                        <div>
+                        <div className="w-96">
                             {session?.user?.user?.organization_id === currentEvent?.owner_id && (
                                 <button
                                     onClick={() => router.push(`/qrscan/${currentEvent?.owner_id}/event/${currentEvent?.event_id}`)}
-                                    className="bg-emerald-700 text-emerald-50 p-1 hover:cursor-pointer rounded-xs text-sm"
+                                    className="btn btn-block flex flex-row items-center gap-x-2 bg-teal-700 text-white hover:cursor-pointer rounded-xs text-sm p-2 btn-block"
                                 >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24">
+                                        <path fill="currentColor" d="M17 22v-2h3v-3h2v3.5c0 .4-.2.7-.5 1s-.7.5-1 .5zM7 22H3.5c-.4 0-.7-.2-1-.5s-.5-.7-.5-1V17h2v3h3zM17 2h3.5c.4 0 .7.2 1 .5s.5.6.5 1V7h-2V4h-3zM7 2v2H4v3H2V3.5c0-.4.2-.7.5-1s.6-.5 1-.5zm12 9H5v2h14z"></path>
+                                    </svg>
                                     Scan ticket
                                 </button>
                             )}
