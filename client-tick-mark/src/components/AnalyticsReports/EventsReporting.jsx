@@ -11,7 +11,7 @@ const EventsReport = ({report}) => {
             <div className="stat-desc">of {report?.ticket_supply}</div>
           </div>
           <div className="stat">
-            <div className="stat-title">Net Earnings</div>
+            <div className="stat-title">Net Earnings in KES</div>
             <div className="stat-value">{report?.net_sales_amount}</div>
             <div className="stat-desc">{report?.service_fees} service fees</div>
           </div>
