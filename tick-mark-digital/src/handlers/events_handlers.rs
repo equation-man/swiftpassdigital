@@ -620,19 +620,8 @@ pub async fn verify_paystack_order(ticket_id: web::Path<String>, verif_query: we
     let q = verif_query.into_inner();
     let ticket_id: Uuid = Uuid::parse_str(&ticket_id.into_inner()).unwrap();
     let order_payload: OrderPayload = OrderPayload {
-        order_id: None,
-        ticket_id: None,
-        user_id: None,
-        user_email: None,
-        user_contact: None,
-        ticket_price: None,
-        promo_code: None,
-        ticket_status: None,
-        entrance_code: None,
-        order_limit: None,
-        commission_amount: None,
-        order_currency: None,
         paystack_reference: Some(q.reference.clone().unwrap()),
+        ..Default::default()
     };
     // Check if the referece exists.
     if get_orders(&app_state.db, ticket_id, order_payload).await.len() != 0{
@@ -676,7 +665,7 @@ pub async fn verify_paystack_order(ticket_id: web::Path<String>, verif_query: we
                 entrance_code: new_order.entrance_code.clone(),
                 organization_id: event.owner_id.clone().to_string(),
                 event_id: evnt_id.clone().to_string(),
-                ticket_type: "Regular".to_string(), // Fix ticket type enum conversion to string.
+                ticket_type: ticket.ticket_type.clone().to_string(), // Fix ticket type enum conversion to string.
                 ticket_status: new_order.ticket_status.clone().to_string(),
                 start_time: start.to_string(),
                 finish_time: event.finish_date.clone(),

@@ -1,5 +1,7 @@
-//! Beta payment processor interactions
+//! Beta payment processor interactions. Paystack Integration logic.
 use reqwest::Error;
+use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
 use serde::{Serialize, Deserialize};
 use serde_json::Value;
 use actix_web::{web};
@@ -137,6 +139,15 @@ pub async fn get_paystack_callback(ticket_id: String, event_id: String, email: S
     dotenv().ok();
     let url = env::var("PAYSTACK_PAYMENT_CALLBACK").expect("Provide callback url");
     format!("{}/verify/{}?event_id={}&email={}&phone={}", url, ticket_id, event_id, email, contact)
+}
+
+/// Converting currency from their smallest units. Return f64 or decimal.
+pub async fn currency_from_cents(num_unit_amount: Decimal, denom_val: Decimal) -> Option<Decimal> {
+    if denom_val == dec!(0) {
+        None
+    } else {
+        Some(num_unit_amount / denom_val)
+    }
 }
 
 /// Creating a subaccount where to deposit ticket sales funds after fees.

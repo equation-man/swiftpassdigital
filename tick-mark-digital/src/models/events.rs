@@ -74,8 +74,9 @@ pub struct OrdersReport {
     pub regular_sales_amount: String,
     pub service_fees: String,
     pub net_sales_amount: String,
+    pub ticket_supply: String,
+    pub net_expected_sales_amount: String,
     pub target_event: Event,
-    pub net_expected_sales_amount: Option<String>,
     pub orders_record: Option<Vec<Order>>,
 }
 
@@ -93,6 +94,7 @@ impl From<web::Json<OrdersReport>> for OrdersReport {
             service_fees: orders_report.service_fees.clone(),
             net_sales_amount: orders_report.net_sales_amount.clone(),
             target_event: orders_report.target_event.clone(),
+            ticket_supply: orders_report.ticket_supply.clone(),
             net_expected_sales_amount: orders_report.net_expected_sales_amount.clone(),
             orders_record: orders_report.orders_record.clone(),
         }

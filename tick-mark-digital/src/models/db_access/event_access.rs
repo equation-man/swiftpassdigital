@@ -7,12 +7,16 @@ use crate::models::{
     pg_interval_to_chrono_duration,
     pg_interval_to_seconds,
 };
+// currency_from_cents
+use crate::helpers::{
+    currency_from_cents, get_comm_percent, commission_amnt_calc
+};
 use chrono::{Duration, DateTime, Utc};
 use futures::future;
-use sqlx::postgres::PgPool;
+use sqlx::{Row, postgres::PgPool};
 use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
 use std::str::FromStr;
-use sqlx::Row;
 use uuid::Uuid;
 
 pub async fn add_event(db_pool: &PgPool, new_event: CreateEvent) -> Event {
@@ -161,6 +165,11 @@ pub async fn generate_report(db_pool: &PgPool, event: Event, org_id: Option<Uuid
     let tickets = get_tickets(db_pool, event.event_id).await;
     // Available tickets.
     let capacity = tickets.iter().try_fold(0i64, |acc, tk| acc.checked_add(tk.capacity)).unwrap();
+    // Expected ticket sales value.
+    let expected_amnt = tickets.iter().fold(
+        0f64,
+        |acc, tick| acc + ((tick.capacity as f64) * tick.base_price.parse::<f64>().expect("Failed to parse input string as i64"))
+        );
     // Getting all the orders for the event.
     let ords = tickets.iter().map(|tk| async move {
         let order_payload = OrderPayload { ..Default::default() };
@@ -214,6 +223,15 @@ pub async fn generate_report(db_pool: &PgPool, event: Event, org_id: Option<Uuid
     // Filtering sales of orders based on Status, i.e Pending & Checked
     let checked_orders: Vec<_> = orders.iter().filter(|order| order.ticket_status == TickStatus::Checked).collect();
     let n_total = t_sales.checked_sub(total_commission).unwrap();
+    let tot_sales = currency_from_cents(t_sales, dec!(100)).await.unwrap_or(dec!(0.0));
+    let de_sales = currency_from_cents(disc_sales, dec!(100)).await.unwrap_or(dec!(0.0));
+    let re_sales = currency_from_cents(reg_sales, dec!(100)).await.unwrap_or(dec!(0.0));
+    let comm = currency_from_cents(total_commission, dec!(100)).await.unwrap_or(dec!(0.0));
+    let net_sales = currency_from_cents(n_total, dec!(100)).await.unwrap_or(dec!(0.0));
+    // Computing net expected sales.
+    let service_fee_percent = get_comm_percent().await;
+    let comm_amnt = commission_amnt_calc(service_fee_percent, expected_amnt.to_string()).await;
+    let net_expected_payout = expected_amnt - comm_amnt as f64;
 
     let orders_rpt = OrdersReport {
         event_id: event.event_id,
@@ -221,16 +239,16 @@ pub async fn generate_report(db_pool: &PgPool, event: Event, org_id: Option<Uuid
         discounted_tickets: disc_ords.len().to_string(),
         regular_tickets: reg_ords.len().to_string(),
         checked_tickets: checked_orders.len().to_string(),
-        total_sales_amount: t_sales.to_string(),
-        discounted_sales_amount: disc_sales.to_string(),
-        regular_sales_amount: reg_sales.to_string(),
-        service_fees: total_commission.to_string(),
-        net_sales_amount: n_total.to_string(),
+        total_sales_amount: tot_sales.to_string(),
+        discounted_sales_amount: de_sales.to_string(),
+        regular_sales_amount: re_sales.to_string(),
+        service_fees: comm.to_string(),
+        net_sales_amount: net_sales.to_string(),
+        ticket_supply: capacity.to_string(),
+        net_expected_sales_amount: net_expected_payout.to_string(),
         target_event: event,
-        net_expected_sales_amount: None,
         orders_record: Some(orders),
     };
-
     Some(orders_rpt)
 }
 
