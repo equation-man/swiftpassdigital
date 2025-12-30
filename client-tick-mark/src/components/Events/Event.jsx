@@ -1,11 +1,10 @@
 // Event component.
 "use client";
-
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useRouter, useParams } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
-import { deleteModalState, updateEventModalState } from "@/redux/reducers/generalReducer";
+import { deleteModalState, updateEventModalState, updateEvDetails } from "@/redux/reducers/generalReducer";
 import { formatDateTime } from "@/lib/helpers";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
@@ -67,6 +66,12 @@ const Event = ({ evnt }) => {
   const dispatch = useDispatch();
   const handleUpdateEventOrTicket = (e, state) => {
     e.preventDefault();
+    dispatch(updateEvDetails({
+      event_id: evnt.event_id,
+      event_title: evnt.title,
+      start_time: evnt.start_date,
+      finish_time: evnt.finish_date,
+    }))
     dispatch(updateEventModalState(state));
   }
 
