@@ -30,7 +30,7 @@ pub async fn add_event(db_pool: &PgPool, new_event: CreateEvent) -> Event {
         RETURNING
             event_id, owner_id, title, description,
             venue, start_time, finish_time, added_at,
-            edited, event_tag
+            edited, is_published, event_tag
     "#, new_event.owner_id, new_event.title,
     new_event.description, new_event.venue,
     start_date, finish_date,
@@ -51,6 +51,7 @@ pub async fn add_event(db_pool: &PgPool, new_event: CreateEvent) -> Event {
         finish_date: finish_time_iso_str,
         added_at: added_at_str,
         edited: n_event.edited.unwrap(),
+        is_published: n_event.is_published,
         event_tag: n_event.event_tag.unwrap(),
         tickets: None,
     }
@@ -61,6 +62,7 @@ pub async fn get_event(db_pool: &PgPool, event_id: Uuid) -> Event {
         SELECT event_id, owner_id, title,
             description, venue, start_time,
             finish_time, added_at, edited,
+            is_published,
             event_tag
         FROM ticket_market.events
         WHERE event_id=$1
@@ -78,6 +80,7 @@ pub async fn get_event(db_pool: &PgPool, event_id: Uuid) -> Event {
         finish_date: event.finish_time.to_rfc3339(),
         added_at: event.added_at.to_rfc3339(),
         edited: event.edited.unwrap(),
+        is_published: event.is_published,
         event_tag: event.event_tag.unwrap(),
         tickets: Some(evnt_tickets),
     }
@@ -102,10 +105,11 @@ pub async fn get_events(db_pool: &PgPool, owner_id: Option<Uuid>, filters: Event
             AND ($5 IS NULL OR start_time=$5)
             AND ($6 IS NULL OR finish_time=$6)
             AND ($7 IS NULL OR event_tag=$7)
+            AND ($8 IS NULL OR is_published=$8)
     "#).bind(Some(filters.event_id)).bind(Some(owner_id))
         .bind(Some(filters.title)).bind(Some(filters.venue))
         .bind(Some(start_date)).bind(Some(finish_date))
-        .bind(Some(filters.event_tag))
+        .bind(Some(filters.event_tag)).bind(Some(filters.is_published))
     .fetch_all(db_pool).await.expect("Events fetch failed");
 
     event_list.iter().map(|event| {
@@ -123,6 +127,7 @@ pub async fn get_events(db_pool: &PgPool, owner_id: Option<Uuid>, filters: Event
             finish_date: finish_time_str,
             added_at: added_at_str,
             edited: event.get("edited"),
+            is_published: event.get("is_published"),
             event_tag: event.get("event_tag"),
             tickets: None,
         }
@@ -151,6 +156,7 @@ pub async fn fts_search_events(db_pool: &PgPool, search_payload: EventPayload) -
             finish_date: finish_time_str,
             added_at: added_at_str,
             edited: event.get("edited"),
+            is_published: event.get("is_published"),
             event_tag: event.get("event_tag"),
             tickets: None,
         }
@@ -262,13 +268,14 @@ pub async fn update_event(db_pool: &PgPool, event_id: Uuid, payload: EventPayloa
                 start_time = COALESCE($3, start_time),
                 finish_time = COALESCE($4, finish_time),
                 event_tag = COALESCE($5, event_tag),
+                is_published = COALESCE($6, is_published),
                 edited = true
-            WHERE event_id = $6
+            WHERE event_id = $7
         RETURNING event_id, owner_id, title, description, venue,
             start_time, finish_time, added_at, edited, event_tag
     "#).bind(Some(payload.title)).bind(Some(payload.venue))
     .bind(Some(payload.start_date)).bind(Some(payload.finish_date))
-    .bind(Some(payload.event_tag)).bind(event_id)
+    .bind(Some(payload.event_tag)).bind(Some(payload.is_published)).bind(event_id)
     .fetch_one(db_pool).await.expect("Failed updateing event");
 
     let start_time_str = upd_event.get::<DateTime<Utc>, &str>("start_time").to_rfc3339();
@@ -285,6 +292,7 @@ pub async fn update_event(db_pool: &PgPool, event_id: Uuid, payload: EventPayloa
         finish_date: finish_time_str,
         added_at: added_at_str, 
         edited: upd_event.get("edited"),
+        is_published: upd_event.get("is_published"),
         event_tag: upd_event.get("event_tag"),
         tickets: None,
     }
@@ -297,7 +305,7 @@ pub async fn delete_event(db_pool: &PgPool, event_id: Uuid) -> Event {
         DELETE FROM ticket_market.events
         WHERE event_id=$1
         RETURNING event_id, owner_id, title, description, venue,
-            start_time, finish_time, added_at, edited, event_tag
+            start_time, finish_time, added_at, edited, is_published, event_tag
     "#, event_id).fetch_one(db_pool).await.unwrap();
 
     let start_time_iso_str = del_event.start_time.to_rfc3339();
@@ -314,6 +322,7 @@ pub async fn delete_event(db_pool: &PgPool, event_id: Uuid) -> Event {
         finish_date: finish_time_iso_str,
         added_at: added_at_str,
         edited: del_event.edited.unwrap(),
+        is_published: del_event.is_published,
         event_tag: del_event.event_tag.unwrap(),
         tickets: None,
     }

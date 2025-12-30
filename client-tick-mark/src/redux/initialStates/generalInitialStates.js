@@ -14,6 +14,7 @@ export const initialState = {
     create_ticket: false,
     create_event: false,
     del_event: false,
+    upd_event: false,
     event_details: evDetails,
 };
 

@@ -51,16 +51,7 @@ pub async fn list_events(filter: Option<web::Json<EventPayload>>, app_state: web
             HttpResponse::Ok().json(events)
         },
         None => {
-            let event_payload = EventPayload {
-                event_id: None,
-                owner_id: None,
-                title: None,
-                venue: None,
-                start_date: None,
-                finish_date: None,
-                event_tag: None,
-                search_query: None,
-            };
+            let event_payload = EventPayload { ..Default::default() };
             let events = get_events(&app_state.db, None, event_payload).await;
             HttpResponse::Ok().json(events)
         }
@@ -76,16 +67,7 @@ pub async fn list_myevents(filter: Option<web::Json<EventPayload>>, owner_id: we
             HttpResponse::Ok().json(events)
         },
         None => {
-            let event_payload = EventPayload {
-                event_id: None,
-                owner_id: None,
-                title: None,
-                venue: None,
-                start_date: None,
-                finish_date: None,
-                event_tag: None,
-                search_query: None,
-            };
+            let event_payload = EventPayload { ..Default::default() };
             let events = get_events(&app_state.db, Some(owner_id), event_payload).await;
             HttpResponse::Ok().json(events)
         }
@@ -110,14 +92,8 @@ pub async fn search_available_events(fts_query: web::Query<EventSearchQuery>, ap
     match event_search_query.search_string {
         Some(filter_string) => {
             let fts_payload = EventPayload {
-                event_id: None,
-                owner_id: None,
-                title: None,
-                venue: None,
-                start_date: None,
-                finish_date: None,
-                event_tag: None,
                 search_query: Some(filter_string),
+                ..Default::default()
             };
             let events = fts_search_events(&app_state.db, fts_payload).await;
             match events {
@@ -127,14 +103,8 @@ pub async fn search_available_events(fts_query: web::Query<EventSearchQuery>, ap
         },
         None => {
             let fts_payload = EventPayload {
-                event_id: None,
-                owner_id: None,
-                title: None,
-                venue: None,
-                start_date: None,
-                finish_date: None,
-                event_tag: None,
                 search_query: Some("".to_string()),
+                ..Default::default()
             };
             let events = fts_search_events(&app_state.db, fts_payload).await;
             match events {
@@ -774,14 +744,8 @@ mod tests {
 
     fn event_payload_info() -> EventPayload {
         EventPayload {
-            event_id: None,
-            owner_id: None,
             title: Some("Pipsa Developmental gala".to_string()),
-            venue: None,
-            start_date: None,
-            finish_date: None,
-            event_tag: None,
-            search_query: None,
+            ..Default::default()
         }
     }
 

@@ -3,6 +3,7 @@ import OrgHeader from "@/components/OrgHeader/OrgHeader";
 import MyEvents from "@/components/Events/MyEvents";
 import EventCreationModal from "@/components/Events/CreateEventModal";
 import CreateTicketModal from "@/components/Events/CreateTicketModal";
+import UpdateEventOrTicketModal from "@/components/Events/UpdateEventModal";
 import { auth } from "@/auth";
 
 const OrganizationActivityPage = async () => {
@@ -19,6 +20,7 @@ const OrganizationActivityPage = async () => {
       {/* MODALS */}
       <EventCreationModal eventOwner={user} />
       <CreateTicketModal />
+      <UpdateEventOrTicketModal />
     </div>
   );
 };

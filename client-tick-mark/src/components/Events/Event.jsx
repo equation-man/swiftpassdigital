@@ -5,7 +5,7 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useRouter, useParams } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
-import { deleteModalState } from "@/redux/reducers/generalReducer";
+import { deleteModalState, updateEventModalState } from "@/redux/reducers/generalReducer";
 import { formatDateTime } from "@/lib/helpers";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
@@ -62,6 +62,13 @@ const Event = ({ evnt }) => {
 
   const dispAct =
     session?.user?.user?.organization_id === evnt.owner_id && session?.user?.user?.org_email;
+
+  // Handling update event or ticket modal.
+  const dispatch = useDispatch();
+  const handleUpdateEventOrTicket = (e, state) => {
+    e.preventDefault();
+    dispatch(updateEventModalState(state));
+  }
 
   return (
     <div className="carousel-item">
@@ -144,6 +151,7 @@ const Event = ({ evnt }) => {
               <div className="grid grid-cols-2 gap-x-1 w-full">
                 {/*Event editing*/}
                 <button
+                  onClick={(e) => handleUpdateEventOrTicket(e, true)}
                   className="btn px-4 py-1 bg-white-600 border border-emerald-800 rounded-sm hover:cursor-pointer text-emerald-800 flex flex-row items-center justify-center gap-x-2 hover:bg-emerald-800 hover:text-emerald-50"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width={28} height={28} viewBox="0 0 24 24">

@@ -3,7 +3,7 @@ const EventsReport = ({report}) => {
   return (
     <main className="my-4">
       <div className="mb-1">
-        <h3 className="text-xl font-bold text-emerald-800 pb-1">Earnings Summary</h3>
+        <h3 className="text-xl font-bold text-emerald-800 pb-1">Overview</h3>
         <div className="stats shadow-lg bg-white/40 border-white/10 backdrop-blur-lg w-full">
           <div className="stat">
             <div className="stat-title">Total tickets available</div>

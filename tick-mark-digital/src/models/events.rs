@@ -40,6 +40,7 @@ pub struct Event {
     pub finish_date: String, //DateTime<Utc>,
     pub added_at: String, //DateTime<Utc>,
     pub edited: bool,
+    pub is_published: bool,
     pub event_tag: String,
     pub tickets: Option<Vec<Ticket>>,
 }
@@ -56,6 +57,7 @@ impl From<web::Json<Event>> for Event {
             finish_date: event.finish_date.clone(),
             added_at: event.added_at.clone(),
             edited: event.edited.clone(),
+            is_published: event.is_published.clone(),
             event_tag: event.event_tag.clone(),
             tickets: event.tickets.clone(),
         }
@@ -128,7 +130,7 @@ impl From<web::Json<CreateEvent>> for CreateEvent {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Default)]
 pub struct EventPayload {
     pub event_id: Option<Uuid>,
     pub owner_id: Option<Uuid>,
@@ -137,6 +139,7 @@ pub struct EventPayload {
     pub start_date: Option<String>,
     pub finish_date: Option<String>,
     pub event_tag: Option<String>,
+    pub is_published: Option<bool>,
     pub search_query: Option<String>,
 }
 
@@ -150,6 +153,7 @@ impl From<web::Json<EventPayload>> for EventPayload {
             start_date: event_payload.start_date.clone(),
             finish_date: event_payload.finish_date.clone(),
             event_tag: event_payload.event_tag.clone(),
+            is_published: event_payload.is_published.clone(),
             search_query: event_payload.search_query.clone(),
         }
     }
