@@ -25,7 +25,19 @@ export const modalSlice = createSlice({
         },
         deleteModalState: (state, action) => {
             state.del_event = action.payload;
-        }
+        },
+        createEvDetails: (state, action) => {
+          state.create_event_details = action.payload;
+        },
+        addTicketDetails: (state, action) => {
+          state.add_ticket_details = action.payload;
+        },
+        addDiscountDetails: (state, action) => {
+          state.add_discount_details = action.payload;
+        },
+        addTicketItems: (state, action) => {
+          state.ticket_items.push(action.payload);
+        },
     }
 });
 
@@ -47,7 +59,11 @@ export const {
     createTicketModalState, 
     updateEvDetails, 
     deleteModalState,
-    updateEventModalState
+    updateEventModalState,
+    createEvDetails,
+    addTicketDetails,
+    addDiscountDetails,
+    addTicketItems,
 } = modalSlice.actions;
 
 export default modalSlice.reducer;

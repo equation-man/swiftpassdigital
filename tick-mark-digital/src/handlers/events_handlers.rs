@@ -115,14 +115,14 @@ pub async fn search_available_events(fts_query: web::Query<EventSearchQuery>, ap
     }
 }
 
-/// Editing the event.
+/// Editing or updating the event.
 pub async fn event_update(payload: web::Json<EventPayload>, params: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
     let event_id: Uuid = Uuid::parse_str(&params.into_inner()).unwrap();
     let updt_event = update_event(&app_state.db, event_id, payload.into()).await;
     HttpResponse::Ok().json(updt_event)
 }
 
-/// Deleting an event
+/// Deleting or removing an event
 pub async fn event_delete(params: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
     let event_id: Uuid = Uuid::parse_str(&params.into_inner()).unwrap();
     let del_event = delete_event(&app_state.db, event_id).await;
@@ -152,6 +152,11 @@ pub async fn ticket_info(ticket_id: web::Path<String>, app_state: web::Data<AppS
         },
         Err(_) => return HttpResponse::BadRequest().body("Invalid UUID")
     }
+}
+
+/// Editing or updating ticket
+pub async fn edit_ticket(ticket_id: web::Path<String>, app_state: web::Data<AppState>) -> HttpResponse {
+    return HttpResponse::Ok().json("Updated ticket details")
 }
 
 // ============================== ORDER TICKETS =========================
@@ -677,19 +682,8 @@ pub async fn orders_list(params: web::Path<String>, query: web::Query<OrderQuery
     let q = query.into_inner();
     let ticket_id = Uuid::parse_str(&params.into_inner()).unwrap();
     let filters: OrderPayload = OrderPayload {
-        order_id: None,
-        ticket_id: None,
-        user_id: None,
-        user_email: None,
-        user_contact: None,
-        ticket_price: None,
-        promo_code: None,
-        ticket_status: None,
         entrance_code: q.entrance_code,
-        order_limit: None,
-        commission_amount: None,
-        order_currency: None,
-        paystack_reference: None,
+        ..Default::default()
     };
     let orders_list = get_orders(&app_state.db, ticket_id, filters).await;
     HttpResponse::Ok().json(orders_list)
@@ -765,15 +759,7 @@ mod tests {
 
     fn ticket_filters_info() -> TicketPayload {
         TicketPayload {
-            ticket_id: None,
-            event_id: None,
-            base_price: None,
-            capacity: None,
-            ticket_type: None,
-            ticket_class: None,
-            discount_time: None,
-            start_time: None,
-            finish_time: None,
+            ..Default::default()
         }
     }
 
@@ -792,19 +778,7 @@ mod tests {
 
     fn order_filters_info() -> OrderPayload {
         OrderPayload {
-            order_id: None,
-            ticket_id: None,
-            user_id: None,
-            user_email: None,
-            user_contact: None,
-            ticket_price: None,
-            promo_code: None,
-            ticket_status: None,
-            entrance_code: None,
-            order_limit: None,
-            order_currency: None,
-            commission_amount: None,
-            paystack_reference: None
+            ..Default::default()
         }
     }
 

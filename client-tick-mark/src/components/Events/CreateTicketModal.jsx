@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useSelector, useDispatch } from "react-redux";
-import { createTicketModalState } from "@/redux/reducers/generalReducer";
+import { createTicketModalState, addTicketDetails, addDiscountDetails, addTicketItems } from "@/redux/reducers/generalReducer";
 import { createTicketFn } from "@/app/event/actions";
 import { useMutation } from "@tanstack/react-query";
 import { dateTimeToUtc } from "@/lib/helpers";
@@ -13,6 +13,7 @@ const CreateTicketModal = ({ eventDetails }) => {
     const fetch_states = useSelector((state) => state.generalModal.create_ticket);
     const fetch_ev_details = useSelector((state) => state.generalModal.event_details);
     const [inputs, setInputs] = useState({ ticket_type: "Regular", ticket_class: "Individual" });
+    const [discountState, setDiscountState] = useState(false);
 
     const handleChange = (event) => {
         const name = event.target.name;
@@ -55,8 +56,57 @@ const CreateTicketModal = ({ eventDetails }) => {
         updatedInputs.finish_time = dateTimeToUtc(fetch_ev_details.finish_time);
         updatedInputs.discount_time = 0;
 
-        mutation.mutate(updatedInputs);
+        //mutation.mutate(updatedInputs);
+        dispatch(addTicketItems(addTicketDetails({
+            event_id: fetch_ev_details.event_id,
+            base_price: updatedInputs.base_price,
+            capacity: updatedInputs.capacity,
+            ticket_type: updatedInputs.ticket_type,
+            ticket_class: updatedInputs.ticket_class,
+            discount_time: updatedInputs.discount_time,
+            start_time: updatedInputs.start_time,
+            finish_time: updatedInputs.finish_time,
+            description: updatedInputs.description,
+            discount_rules: {
+                name: updatedInputs.name,
+                discount_type: updatedInputs.discount_type,
+                value: updatedInputs.value,
+                start_date: updatedInputs.start_date,
+                end_date: updatedInputs.end_date,
+                max_users: updatedInputs.max_users,
+            } 
+        })))
     };
+
+    const handleAnotherTicketAdd = async (event) => {
+        event.preventDefault();
+        const updatedInputs = { ...inputs };
+        updatedInputs.capacity = Number(updatedInputs.capacity);
+        updatedInputs.event_id = fetch_ev_details.event_id;
+        updatedInputs.start_time = dateTimeToUtc(fetch_ev_details.start_time);
+        updatedInputs.discount_time = 0;
+        //mutation.mutate(updatedInputs);
+        dispatch(addTicketItems(addTicketDetails({
+            event_id: fetch_ev_details.event_id,
+            base_price: updatedInputs.base_price,
+            capacity: updatedInputs.capacity,
+            ticket_type: updatedInputs.ticket_type,
+            ticket_class: updatedInputs.ticket_class,
+            discount_time: updatedInputs.discount_time,
+            start_time: updatedInputs.start_time,
+            finish_time: updatedInputs.finish_time,
+            description: updatedInputs.description,
+            discount_rules: {
+                name: updatedInputs.name,
+                discount_type: updatedInputs.discount_type,
+                value: updatedInputs.value,
+                start_date: updatedInputs.start_date,
+                end_date: updatedInputs.end_date,
+                max_users: updatedInputs.max_users,
+            } 
+        })));
+        dispatch(createTicketModalState(false));
+    }
 
     return (
         <>
@@ -72,64 +122,126 @@ const CreateTicketModal = ({ eventDetails }) => {
 
                             <div className="px-2">
                                 <form id="createTicketForm" onSubmit={handleTicketSubmission}>
-                                    <div>
-                                        <label className="font-medium text-gray-600">
-                                            Ticket Price
-                                        </label>
-                                        <input
-                                            onChange={handleChange}
-                                            name="base_price"
-                                            min="0"
-                                            className="input validator w-full"
-                                            type="number"
-                                            required
-                                            placeholder="Ticket price"
-                                        />
+                                    <div className="flex flex-row justify-between w-full gap-x-2">
+                                        <div>
+                                            <label className="font-medium text-gray-600">
+                                                Ticket Price
+                                            </label>
+                                            <input
+                                                onChange={handleChange}
+                                                name="base_price"
+                                                min="0"
+                                                className="input validator w-full"
+                                                type="number"
+                                                required
+                                                placeholder="Ticket price"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="font-medium text-gray-600">
+                                                Number of Tickets
+                                            </label>
+                                            <input
+                                                onChange={handleChange}
+                                                name="capacity"
+                                                min="1"
+                                                className="input validator w-full"
+                                                type="number"
+                                                required
+                                                placeholder="No of tickets"
+                                            />
+                                        </div>
                                     </div>
 
-                                    <div>
-                                        <label className="font-medium text-gray-600">
-                                            Number of Tickets
-                                        </label>
-                                        <input
-                                            onChange={handleChange}
-                                            name="capacity"
-                                            min="1"
-                                            className="input validator w-full"
-                                            type="number"
-                                            required
-                                            placeholder="No of tickets"
-                                        />
+                                    <div className="flex flex-row items-center">
+                                        <div>
+                                            <label className="font-medium text-gray-600">
+                                                Type
+                                            </label>
+                                            <select
+                                                onChange={handleChange}
+                                                name="ticket_type"
+                                                className="px-2"
+                                                required
+                                            >
+                                                <option value="">Ticket type</option>
+                                                <option value="Regular">Regular</option>
+                                                <option vlaue="Discount">Discount</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="font-medium text-gray-600">
+                                                Class
+                                            </label>
+                                            <select
+                                                onChange={handleChange}
+                                                name="ticket_class"
+                                                className="px-2"
+                                                required
+                                            >
+                                                <option value="">Ticket class</option>
+                                                <option value="Individual">Individual</option>
+                                            </select>
+                                        </div>
                                     </div>
 
-                                    <div>
-                                        <label className="font-medium text-gray-600">
-                                            Select ticket type
-                                        </label>
-                                        <select
-                                            onChange={handleChange}
-                                            name="ticket_type"
-                                            className="px-2"
-                                            value={inputs.ticket_type}
-                                            required
-                                        >
-                                            <option value="Regular">Regular</option>
-                                        </select>
-                                    </div>
+                                    <div className="w-full">
+                                        {inputs.ticket_type == "Discount" && (
+                                            <div className="w-full mb-2">
+                                                <div>
+                                                    <label className="font-medium text-gray-600">
+                                                        Discount name
+                                                    </label>
+                                                    <input
+                                                        onChange={handleChange}
+                                                        className="input validator w-full h-10"
+                                                        name="name"
+                                                        type="text"
+                                                        placeholder="Discount name"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="font-medium text-gray-600">
+                                                        Percentage amount
+                                                    </label>
+                                                    <input
+                                                        onChange={handleChange}
+                                                        className="input validator w-full"
+                                                        name="value"
+                                                        type="number"
+                                                        min="0"
+                                                        max="100"
+                                                        placeholder="Value(0-100)"
+                                                    />
+                                                </div>
+                                                <div className="w-full">
+                                                    <div>
+                                                        <label className="font-medium text-gray-600">
+                                                            Discount start
+                                                        </label>
+                                                        <input
+                                                            onChange={handleChange}
+                                                            name="start_date"
+                                                            className="input validator w-full"
+                                                            type="datetime-local"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="font-medium text-gray-600">
+                                                            Discount end
+                                                        </label>
+                                                        <input
+                                                            onChange={handleChange}
+                                                            name="end_date"
+                                                            className="input validator w-full"
+                                                            type="datetime-local"
+                                                        />
+                                                    </div>
 
-                                    <div>
-                                        <label className="font-medium text-gray-600">
-                                            Select ticket class
-                                        </label>
-                                        <select
-                                            onChange={handleChange}
-                                            name="ticket_class"
-                                            className="px-2"
-                                            value={inputs.ticket_class}
-                                            required
-                                        >
-                                            <option value="Individual">Individual</option>
-                                        </select>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div>
@@ -146,20 +258,24 @@ const CreateTicketModal = ({ eventDetails }) => {
                             </div>
                         </div>
 
+                        <div className="w-full p-2">
+                            {/*Add modal to the react store and open a new ticket creation modal*/}
+                        </div>
                         <div className="text-white flex flex-row gap-x-3 w-full p-2">
                             <button
                                 onClick={(e) => handleCreateTicketModDisp(e, false)}
-                                className="bg-emerald-500 btn-block p-2 hover:cursor-pointer"
+                                className="bg-emerald-500 btn-block p-2 hover:cursor-pointer rounded-sm"
                             >
                                 Cancel
                             </button>
 
                             <button
+                                onClick={handleAnotherTicketAdd}
                                 type="submit"
                                 form="createTicketForm"
-                                className="bg-emerald-800 btn-block p-2 hover:cursor-pointer"
+                                className="bg-emerald-800 btn-block p-2 hover:cursor-pointer rounded-sm"
                             >
-                                Continue
+                                Complete
                             </button>
                         </div>
                     </dialog>

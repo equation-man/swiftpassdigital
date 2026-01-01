@@ -5,9 +5,8 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useSelector, useDispatch } from "react-redux";
 import {
-    createEventModalState,
-    createTicketModalState,
-    updateEvDetails
+    createEventModalState, createTicketModalState,
+    updateEvDetails, createEvDetails,
 } from "@/redux/reducers/generalReducer";
 
 import { createEventFn } from "@/app/event/actions";
@@ -17,6 +16,7 @@ import CreateTicketModal from "@/components/Events/CreateTicketModal";
 
 const EventCreationModal = ({ eventOwner }) => {
     const fetch_states = useSelector((state) => state.generalModal.create_event);
+    const fetch_tick_itms = useSelector((state) => state.generalModal.ticket_items);
     const [inputs, setInputs] = useState({});
 
     const handleChange = (event) => {
@@ -70,7 +70,8 @@ const EventCreationModal = ({ eventOwner }) => {
         updatedInputs.start_date = dateTimeToUtc(updatedInputs.start_date);
         updatedInputs.finish_date = dateTimeToUtc(updatedInputs.finish_date);
 
-        mutation.mutate(updatedInputs);
+        // mutation.mutate(updatedInputs);
+        dispatch(createEvDetails(updatedInputs));
         dispatch(createTicketModalState(true));
     };
 
@@ -174,19 +175,32 @@ const EventCreationModal = ({ eventOwner }) => {
                             </div>
                         </div>
 
+                        {fetch_tick_itms.length == 0 && (<p className="text-xs text-teal-600 pt-1">Create ticket to publish the event</p>)}
                         <div className="text-white flex flex-row gap-x-3 w-full p-2">
-                            <button
-                                onClick={(e) => handleCreateEventModDisp(e, false)}
-                                className="bg-emerald-500 btn-block p-2 hover:cursor-pointer"
-                            >
-                                Cancel
-                            </button>
                             <button
                                 type="submit"
                                 form="eventForm"
                                 className="bg-emerald-800 btn-block p-2 hover:cursor-pointer"
                             >
-                                Generate ticket
+                                {fetch_tick_itms.length > 0 ? (
+                                    <p>Add another ticket</p>
+                                ):(
+                                    <p>Generate ticket</p>
+                                )}
+                            </button>
+                            <button
+                                onClick={(e) => handleCreateEventModDisp(e, false)}
+                                className="bg-emerald-500 btn-block p-2 hover:cursor-pointer"
+                            >
+                                Publish
+                            </button>
+                        </div>
+                        <div className="text-white w-full p-2">
+                            <button
+                                onClick={(e) => handleCreateEventModDisp(e, false)}
+                                className="bg-emerald-500 btn-block p-2 hover:cursor-pointer"
+                            >
+                                Cancel
                             </button>
                         </div>
                     </dialog>
