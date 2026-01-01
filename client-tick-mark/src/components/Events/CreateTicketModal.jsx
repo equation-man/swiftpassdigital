@@ -199,6 +199,7 @@ const CreateTicketModal = ({ eventDetails }) => {
                                                         name="name"
                                                         type="text"
                                                         placeholder="Discount name"
+                                                        required
                                                     />
                                                 </div>
                                                 <div>
@@ -213,6 +214,7 @@ const CreateTicketModal = ({ eventDetails }) => {
                                                         min="0"
                                                         max="100"
                                                         placeholder="Value(0-100)"
+                                                        required
                                                     />
                                                 </div>
                                                 <div className="w-full">
@@ -225,6 +227,7 @@ const CreateTicketModal = ({ eventDetails }) => {
                                                             name="start_date"
                                                             className="input validator w-full"
                                                             type="datetime-local"
+                                                            required
                                                         />
                                                     </div>
                                                     <div>
@@ -236,6 +239,7 @@ const CreateTicketModal = ({ eventDetails }) => {
                                                             name="end_date"
                                                             className="input validator w-full"
                                                             type="datetime-local"
+                                                            required
                                                         />
                                                     </div>
 

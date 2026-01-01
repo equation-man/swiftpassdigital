@@ -6,7 +6,7 @@ import { toast } from "react-hot-toast";
 import { useSelector, useDispatch } from "react-redux";
 import {
     createEventModalState, createTicketModalState,
-    updateEvDetails, createEvDetails,
+    updateEvDetails, createEvDetails, clearTicketItems
 } from "@/redux/reducers/generalReducer";
 
 import { createEventFn } from "@/app/event/actions";
@@ -16,7 +16,6 @@ import CreateTicketModal from "@/components/Events/CreateTicketModal";
 
 const EventCreationModal = ({ eventOwner }) => {
     const fetch_states = useSelector((state) => state.generalModal.create_event);
-    const fetch_tick_itms = useSelector((state) => state.generalModal.ticket_items);
     const [inputs, setInputs] = useState({});
 
     const handleChange = (event) => {
@@ -26,11 +25,15 @@ const EventCreationModal = ({ eventOwner }) => {
     };
 
     const dispatch = useDispatch();
-
     const handleCreateEventModDisp = (e, state) => {
         e.preventDefault();
         dispatch(createEventModalState(state));
+        dispatch(clearTicketItems());
     };
+
+    // Fetching event details and ticket details.
+    const fetch_tick_itms = useSelector((state) => state.generalModal.ticket_items);
+    const fetch_ev_payload = useSelector((state) => state.generalModal.create_event_details);
 
     const queryClient = useQueryClient();
     const mutation = useMutation({
@@ -61,6 +64,11 @@ const EventCreationModal = ({ eventOwner }) => {
         }
     });
 
+    const handleTicketCreation = async (event) => {
+        event.preventDefault();
+        dispatch(createTicketModalState(true));
+    };
+
     const handleCreateEventSubmission = async (event) => {
         event.preventDefault();
 
@@ -72,7 +80,10 @@ const EventCreationModal = ({ eventOwner }) => {
 
         // mutation.mutate(updatedInputs);
         dispatch(createEvDetails(updatedInputs));
+        console.log("The ticket items are {} and event is {}", fetch_tick_itms, fetch_ev_payload);
         dispatch(createTicketModalState(true));
+        dispatch(clearTicketItems());
+
     };
 
     return (
@@ -175,11 +186,10 @@ const EventCreationModal = ({ eventOwner }) => {
                             </div>
                         </div>
 
-                        {fetch_tick_itms.length == 0 && (<p className="text-xs text-teal-600 pt-1">Create ticket to publish the event</p>)}
+                        {fetch_tick_itms.length == 0 && (<p className="text-xs text-teal-600 pt-1 px-2">Create ticket to publish the event. You can create tickets of different types e.g reqular, discount</p>)}
                         <div className="text-white flex flex-row gap-x-3 w-full p-2">
                             <button
-                                type="submit"
-                                form="eventForm"
+                                onClick={handleTicketCreation}
                                 className="bg-emerald-800 btn-block p-2 hover:cursor-pointer"
                             >
                                 {fetch_tick_itms.length > 0 ? (
@@ -189,8 +199,10 @@ const EventCreationModal = ({ eventOwner }) => {
                                 )}
                             </button>
                             <button
-                                onClick={(e) => handleCreateEventModDisp(e, false)}
-                                className="bg-emerald-500 btn-block p-2 hover:cursor-pointer"
+                                type="submit"
+                                form="eventForm"
+                                disabled={fetch_tick_itms == 0}
+                                className={`bg-emerald-500 btn-block p-2 ${fetch_tick_itms == 0 ? "hover:cursor-not-allowed" : "hover:cursor-pointer" }`}
                             >
                                 Publish
                             </button>

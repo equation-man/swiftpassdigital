@@ -38,6 +38,9 @@ export const modalSlice = createSlice({
         addTicketItems: (state, action) => {
           state.ticket_items.push(action.payload);
         },
+        clearTicketItems: (state) => {
+          state.ticket_items = [];
+        },
     }
 });
 
@@ -64,6 +67,7 @@ export const {
     addTicketDetails,
     addDiscountDetails,
     addTicketItems,
+    clearTicketItems,
 } = modalSlice.actions;
 
 export default modalSlice.reducer;
