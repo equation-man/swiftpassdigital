@@ -78,6 +78,7 @@ const Events = ({ owner }) => {
                         alt="Easter bunny no event image"
                         width={200}
                         height={200}
+                        className="h-auto w-32"
                     />
                     <p className="font-semibold text-emerald-800 text-center py-2">
                         No data available. Refresh

@@ -124,7 +124,7 @@ const CreateTicketModal = ({ eventDetails }) => {
                             <h1 className="font-bold text-lg">{eventDetails?.title}</h1>
 
                             <div className="px-2">
-                                <form id="createTicketForm" onSubmit={handleTicketSubmission}>
+                                <form id="createTicketForm" onSubmit={handleTicketSubmission} onReset={(e) => handleCreateTicketModDisp(e, false)}>
                                     <div className="flex flex-row justify-between w-full gap-x-2">
                                         <div>
                                             <label className="font-medium text-gray-600">
@@ -136,8 +136,8 @@ const CreateTicketModal = ({ eventDetails }) => {
                                                 min="0"
                                                 className="input validator w-full"
                                                 type="number"
-                                                required
                                                 placeholder="Ticket price"
+                                                required
                                             />
                                         </div>
                                         <div>
@@ -150,8 +150,8 @@ const CreateTicketModal = ({ eventDetails }) => {
                                                 min="1"
                                                 className="input validator w-full"
                                                 type="number"
-                                                required
                                                 placeholder="No of tickets"
+                                                required
                                             />
                                         </div>
                                     </div>
@@ -270,14 +270,14 @@ const CreateTicketModal = ({ eventDetails }) => {
                         </div>
                         <div className="text-white flex flex-row gap-x-3 w-full p-2">
                             <button
-                                onClick={(e) => handleCreateTicketModDisp(e, false)}
+                                type="reset"
+                                form="createTicketForm"
                                 className="bg-emerald-500 btn-block p-2 hover:cursor-pointer rounded-sm"
                             >
                                 Cancel
                             </button>
 
                             <button
-                                onClick={handleTicketSubmission}
                                 type="submit"
                                 form="createTicketForm"
                                 className="bg-emerald-800 btn-block p-2 hover:cursor-pointer rounded-sm"

@@ -66,12 +66,6 @@ const EventCreationModal = ({ eventOwner }) => {
 
     const handleTicketCreation = async (event) => {
         event.preventDefault();
-        dispatch(createTicketModalState(true));
-    };
-
-    const handleCreateEventSubmission = async (event) => {
-        event.preventDefault();
-
         const updatedInputs = { ...inputs };
 
         updatedInputs.owner_id = eventOwner.organization_id;
@@ -80,6 +74,12 @@ const EventCreationModal = ({ eventOwner }) => {
 
         // mutation.mutate(updatedInputs);
         dispatch(createEvDetails(updatedInputs));
+        dispatch(createTicketModalState(true));
+    };
+
+    const handleCreateEventSubmission = async (event) => {
+        event.preventDefault();
+
         const eventUpdate = { event_details: fetch_ev_payload, ticket_details: fetch_tick_itms };
         console.log("The ticket items are and event is ", eventUpdate);
         dispatch(createTicketModalState(false));
@@ -101,6 +101,7 @@ const EventCreationModal = ({ eventOwner }) => {
                                 <form
                                     id="eventForm"
                                     onSubmit={handleCreateEventSubmission}
+                                    onReset={(e) => handleCreateEventModDisp(e, false)}
                                     className="w-90"
                                 >
                                     <div>
@@ -188,7 +189,15 @@ const EventCreationModal = ({ eventOwner }) => {
                             </div>
                         </div>
 
-                        {fetch_tick_itms.length == 0 && (<p className="text-xs text-teal-600 pt-1 px-2">Create ticket to publish the event. You can create tickets of different types e.g reqular, discount</p>)}
+                        {fetch_tick_itms.length == 0 ? (
+                            <p className="text-xs text-rose-600 pt-1 px-2">
+                                Create ticket to publish the event. You can create tickets of different types e.g reqular, discount
+                            </p>
+                        ):(
+                            <p className="text-xs text-green-600 pt-1 px-2">
+                                Your event is ready for publishing
+                            </p>
+                        )}
                         <div className="text-white flex flex-row gap-x-3 w-full p-2">
                             <button
                                 onClick={handleTicketCreation}
@@ -211,7 +220,8 @@ const EventCreationModal = ({ eventOwner }) => {
                         </div>
                         <div className="text-white w-full p-2">
                             <button
-                                onClick={(e) => handleCreateEventModDisp(e, false)}
+                                type="reset"
+                                form="eventForm"
                                 className="bg-emerald-500 btn-block p-2 hover:cursor-pointer"
                             >
                                 Cancel
