@@ -48,13 +48,15 @@ const CreateTicketModal = ({ eventDetails }) => {
     const handleTicketSubmission = async (event) => {
         event.preventDefault();
 
-        const updatedInputs = { ...inputs };
+        const updatedInputs = { discount_type: "Percentage", max_users: 0, ...inputs };
 
         updatedInputs.capacity = Number(updatedInputs.capacity);
         updatedInputs.event_id = fetch_ev_details.event_id;
         updatedInputs.start_time = dateTimeToUtc(fetch_ev_details.start_time);
         updatedInputs.finish_time = dateTimeToUtc(fetch_ev_details.finish_time);
         updatedInputs.discount_time = 0;
+        updatedInputs.discount_type = "Percentage"
+        updatedInputs.max_users = 0
 
         //mutation.mutate(updatedInputs);
         dispatch(addTicketItems(addTicketDetails({
@@ -81,7 +83,7 @@ const CreateTicketModal = ({ eventDetails }) => {
 
     const handleAnotherTicketAdd = async (event) => {
         event.preventDefault();
-        const updatedInputs = { ...inputs };
+        const updatedInputs = { discount_type: "Percentage", max_users: 0, ...inputs };
         updatedInputs.capacity = Number(updatedInputs.capacity);
         updatedInputs.event_id = fetch_ev_details.event_id;
         updatedInputs.start_time = dateTimeToUtc(fetch_ev_details.start_time);
@@ -275,7 +277,7 @@ const CreateTicketModal = ({ eventDetails }) => {
                             </button>
 
                             <button
-                                onClick={handleAnotherTicketAdd}
+                                onClick={handleTicketSubmission}
                                 type="submit"
                                 form="createTicketForm"
                                 className="bg-emerald-800 btn-block p-2 hover:cursor-pointer rounded-sm"
