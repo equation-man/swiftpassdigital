@@ -51,16 +51,14 @@ const CreateTicketModal = ({ eventDetails }) => {
         const updatedInputs = { discount_type: "Percentage", max_users: 0, ...inputs };
 
         updatedInputs.capacity = Number(updatedInputs.capacity);
-        updatedInputs.event_id = fetch_ev_details.event_id;
+        //updatedInputs.event_id = fetch_ev_details.event_id;
         updatedInputs.start_time = dateTimeToUtc(fetch_ev_details.start_time);
         updatedInputs.finish_time = dateTimeToUtc(fetch_ev_details.finish_time);
         updatedInputs.discount_time = 0;
-        updatedInputs.discount_type = "Percentage"
-        updatedInputs.max_users = 0
 
         //mutation.mutate(updatedInputs);
         dispatch(addTicketItems(addTicketDetails({
-            event_id: fetch_ev_details.event_id,
+            //event_id: fetch_ev_details.event_id,
             base_price: updatedInputs.base_price,
             capacity: updatedInputs.capacity,
             ticket_type: updatedInputs.ticket_type,
@@ -78,38 +76,14 @@ const CreateTicketModal = ({ eventDetails }) => {
                 max_users: updatedInputs.max_users,
             } 
         })))
+        toast.success("Ticket added successfully. Event ready for publishing.", {
+            iconTheme: {
+                primary: "#ecfdf5",
+                secondary: "#047857",
+            },
+        });
         dispatch(createTicketModalState(false));
     };
-
-    const handleAnotherTicketAdd = async (event) => {
-        event.preventDefault();
-        const updatedInputs = { discount_type: "Percentage", max_users: 0, ...inputs };
-        updatedInputs.capacity = Number(updatedInputs.capacity);
-        updatedInputs.event_id = fetch_ev_details.event_id;
-        updatedInputs.start_time = dateTimeToUtc(fetch_ev_details.start_time);
-        updatedInputs.discount_time = 0;
-        //mutation.mutate(updatedInputs);
-        dispatch(addTicketItems(addTicketDetails({
-            event_id: fetch_ev_details.event_id,
-            base_price: updatedInputs.base_price,
-            capacity: updatedInputs.capacity,
-            ticket_type: updatedInputs.ticket_type,
-            ticket_class: updatedInputs.ticket_class,
-            discount_time: updatedInputs.discount_time,
-            start_time: updatedInputs.start_time,
-            finish_time: updatedInputs.finish_time,
-            description: updatedInputs.description,
-            discount_rules: {
-                name: updatedInputs.name,
-                discount_type: updatedInputs.discount_type,
-                value: updatedInputs.value,
-                start_date: updatedInputs.start_date,
-                end_date: updatedInputs.end_date,
-                max_users: updatedInputs.max_users,
-            } 
-        })));
-        dispatch(createTicketModalState(false));
-    }
 
     return (
         <>

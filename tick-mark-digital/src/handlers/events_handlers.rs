@@ -1,7 +1,7 @@
 //! Event actions handler functions
 use actix_web::{web, HttpResponse};
 use crate::models::{
-    Event, CreateEvent, EventPayload,
+    Event, CreateEvent, EventPayload, CreateEventPayload,
     Discount, AddDiscount, DiscountPayload,
     Order, CreateOrder, OrderPayload, OrderDetails,
     Ticket, AddTicket, TicketPayload, TickStatus,
@@ -31,9 +31,11 @@ mod state;
 use crate::state::AppState;
 
 /// Adding an event.
-pub async fn create_event(new_event: web::Json<CreateEvent>, app_state: web::Data<AppState>) -> HttpResponse {
-    let n_event = add_event(&app_state.db, new_event.into()).await;
-    HttpResponse::Ok().json(n_event)
+pub async fn create_event(new_event: web::Json<CreateEventPayload>, app_state: web::Data<AppState>) -> HttpResponse {
+    println!("The event to be created is {:#?}", &new_event);
+    //let n_event = add_event(&app_state.db, new_event.into()).await;
+    //HttpResponse::Ok().json(n_event)
+    HttpResponse::Ok().json("New event created")
 }
 
 /// Getting the details of an event.

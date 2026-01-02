@@ -57,6 +57,8 @@ const EventCreationModal = ({ eventOwner }) => {
                     finish_time: data.finish_date,
                 })
             );
+            dispatch(createTicketModalState(false));
+            dispatch(clearTicketItems());
             dispatch(createEventModalState(false));
         },
         onError: () => {
@@ -81,10 +83,10 @@ const EventCreationModal = ({ eventOwner }) => {
         event.preventDefault();
         const eventUpdate = { event_details: fetch_ev_payload, ticket_details: fetch_tick_itms };
         console.log("The ticket items are and event is ", eventUpdate);
-        // Call mutation here to add the event
+        // Mutation to add the event
+        mutation.mutate(eventUpdate);
         dispatch(createTicketModalState(false));
         dispatch(clearTicketItems());
-        // Temporary event modal disable func
         dispatch(createEventModalState(false));
     };
 
