@@ -76,6 +76,7 @@ const CreateTicketModal = ({ eventDetails }) => {
                 max_users: updatedInputs.max_users,
             } 
         })))
+        dispatch(createTicketModalState(false));
     };
 
     const handleAnotherTicketAdd = async (event) => {

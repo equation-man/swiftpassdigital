@@ -81,9 +81,10 @@ const EventCreationModal = ({ eventOwner }) => {
         // mutation.mutate(updatedInputs);
         dispatch(createEvDetails(updatedInputs));
         console.log("The ticket items are {} and event is {}", fetch_tick_itms, fetch_ev_payload);
-        dispatch(createTicketModalState(true));
+        dispatch(createTicketModalState(false));
         dispatch(clearTicketItems());
-
+        // Temporary event modal disable func
+        dispatch(createEventModalState(false));
     };
 
     return (

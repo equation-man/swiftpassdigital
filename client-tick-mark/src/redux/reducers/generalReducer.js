@@ -36,7 +36,7 @@ export const modalSlice = createSlice({
           state.add_discount_details = action.payload;
         },
         addTicketItems: (state, action) => {
-          state.ticket_items.push(action.payload);
+          state.ticket_items.push(action.payload.payload);
         },
         clearTicketItems: (state) => {
           state.ticket_items = [];
