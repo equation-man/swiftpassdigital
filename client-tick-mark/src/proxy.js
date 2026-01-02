@@ -32,9 +32,9 @@ export async function proxy(request) {
   // Logged in users visiting login or register
   if (isAuthRoute) {
     if (isLoggedIn) {
-      const userId = user?.organization_id;
+      const userId = session.user?.user?.organization_id;
       const dashboardUrl = `/organizations/${userId}`;
-      return NextResponse.redirect(new URL(dashboardUrl, req.url));
+      return NextResponse.redirect(new URL(dashboardUrl, request.url));
     }
     return NextResponse.next();
   }
@@ -42,7 +42,7 @@ export async function proxy(request) {
   // Unauthenticated users visiting protected routes
   if (!isLoggedIn && !isPublicRoute) {
     const callbackUrl = encodeURIComponent(nextUrl.pathname);
-    return NextResponse.redirect(new URL(`/login?callbackUrl=${callbackUrl}`, req.url));
+    return NextResponse.redirect(new URL(`/login?callbackUrl=${callbackUrl}`, request.url));
   }
   
   if (isApiAuthRoute) return NextResponse.next();
@@ -56,18 +56,3 @@ export const config = {
 		'/((?!_next/|api/auth|.*\\..*).*)',
 	],
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -79,9 +79,9 @@ const EventCreationModal = ({ eventOwner }) => {
 
     const handleCreateEventSubmission = async (event) => {
         event.preventDefault();
-
         const eventUpdate = { event_details: fetch_ev_payload, ticket_details: fetch_tick_itms };
         console.log("The ticket items are and event is ", eventUpdate);
+        // Call mutation here to add the event
         dispatch(createTicketModalState(false));
         dispatch(clearTicketItems());
         // Temporary event modal disable func
