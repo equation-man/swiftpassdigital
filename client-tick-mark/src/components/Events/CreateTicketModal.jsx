@@ -11,8 +11,8 @@ import { dateTimeToUtc } from "@/lib/helpers";
 
 const CreateTicketModal = ({ eventDetails }) => {
     const fetch_states = useSelector((state) => state.generalModal.create_ticket);
-    const fetch_ev_details = useSelector((state) => state.generalModal.event_details);
-    const [inputs, setInputs] = useState({ ticket_type: "Regular", ticket_class: "Individual" });
+    const fetch_ev_details = useSelector((state) => state.generalModal.create_event_details);
+    const [inputs, setInputs] = useState();
     const [discountState, setDiscountState] = useState(false);
 
     const handleChange = (event) => {
@@ -48,12 +48,24 @@ const CreateTicketModal = ({ eventDetails }) => {
     const handleTicketSubmission = async (event) => {
         event.preventDefault();
 
-        const updatedInputs = { discount_type: "Percentage", max_users: 0, ...inputs };
-
+        let discnt_rules = null;
+        let updatedInputs = {...inputs }
+        if (inputs.ticket_type && inputs.ticket_type === "Discount") {
+            updatedInputs.discount_type = "Percentage";
+            updatedInputs.max_users = 0;
+            discnt_rules = {
+                name: updatedInputs.name,
+                discount_type: updatedInputs.discount_type,
+                value: updatedInputs.value,
+                start_date: updatedInputs.start_date,
+                end_date: updatedInputs.end_date,
+                max_users: updatedInputs.max_users,
+            }
+        }
         updatedInputs.capacity = Number(updatedInputs.capacity);
         //updatedInputs.event_id = fetch_ev_details.event_id;
-        updatedInputs.start_time = dateTimeToUtc(fetch_ev_details.start_time);
-        updatedInputs.finish_time = dateTimeToUtc(fetch_ev_details.finish_time);
+        updatedInputs.start_time = dateTimeToUtc(fetch_ev_details.start_date);
+        updatedInputs.finish_time = dateTimeToUtc(fetch_ev_details.finish_date);
         updatedInputs.discount_time = 0;
 
         //mutation.mutate(updatedInputs);
@@ -67,14 +79,7 @@ const CreateTicketModal = ({ eventDetails }) => {
             start_time: updatedInputs.start_time,
             finish_time: updatedInputs.finish_time,
             description: updatedInputs.description,
-            discount_rules: {
-                name: updatedInputs.name,
-                discount_type: updatedInputs.discount_type,
-                value: updatedInputs.value,
-                start_date: updatedInputs.start_date,
-                end_date: updatedInputs.end_date,
-                max_users: updatedInputs.max_users,
-            } 
+            discount_rules: discnt_rules,
         })))
         toast.success("Ticket added successfully. Event ready for publishing.", {
             iconTheme: {
@@ -164,7 +169,7 @@ const CreateTicketModal = ({ eventDetails }) => {
                                     </div>
 
                                     <div className="w-full">
-                                        {inputs.ticket_type == "Discount" && (
+                                        {inputs?.ticket_type && inputs?.ticket_type === "Discount" && (
                                             <div className="w-full mb-2">
                                                 <div>
                                                     <label className="font-medium text-gray-600">

@@ -34,6 +34,7 @@ const EventCreationModal = ({ eventOwner }) => {
     // Fetching event details and ticket details.
     const fetch_tick_itms = useSelector((state) => state.generalModal.ticket_items);
     const fetch_ev_payload = useSelector((state) => state.generalModal.create_event_details);
+    console.log("Fetch ticket Items", !!fetch_tick_itms)
 
     const queryClient = useQueryClient();
     const mutation = useMutation({
@@ -71,6 +72,7 @@ const EventCreationModal = ({ eventOwner }) => {
         const updatedInputs = { ...inputs };
 
         updatedInputs.owner_id = eventOwner.organization_id;
+        console.log("The inputs are", updatedInputs)
         updatedInputs.start_date = dateTimeToUtc(updatedInputs.start_date);
         updatedInputs.finish_date = dateTimeToUtc(updatedInputs.finish_date);
 
@@ -191,31 +193,28 @@ const EventCreationModal = ({ eventOwner }) => {
                             </div>
                         </div>
 
-                        {fetch_tick_itms.length == 0 ? (
-                            <p className="text-xs text-rose-600 pt-1 px-2">
-                                Create ticket to publish the event. You can create tickets of different types e.g reqular, discount
-                            </p>
-                        ):(
+                        {!!fetch_tick_itms ? (
                             <p className="text-xs text-green-600 pt-1 px-2">
                                 Your event is ready for publishing
+                            </p>
+                        ):(
+                            <p className="text-xs text-rose-600 pt-1 px-2">
+                                Create ticket to publish the event. You can create tickets of different types e.g reqular, discount
                             </p>
                         )}
                         <div className="text-white flex flex-row gap-x-3 w-full p-2">
                             <button
                                 onClick={handleTicketCreation}
-                                className="bg-emerald-800 btn-block p-2 hover:cursor-pointer"
+                                disabled={!!fetch_tick_itms}
+                                className={`bg-emerald-800 btn-block p-2 ${!!fetch_tick_itms ? "hover:cursor-not-allowed" : "hover:cursor-pointer"}`}
                             >
-                                {fetch_tick_itms.length > 0 ? (
-                                    <p>Add another ticket</p>
-                                ):(
-                                    <p>Generate ticket</p>
-                                )}
+                                Generate ticket
                             </button>
                             <button
                                 type="submit"
                                 form="eventForm"
-                                disabled={fetch_tick_itms == 0}
-                                className={`bg-emerald-500 btn-block p-2 ${fetch_tick_itms == 0 ? "hover:cursor-not-allowed" : "hover:cursor-pointer" }`}
+                                disabled={!!!fetch_tick_itms}
+                                className={`bg-emerald-500 btn-block p-2 ${!!!fetch_tick_itms ? "hover:cursor-not-allowed" : "hover:cursor-pointer" }`}
                             >
                                 Publish
                             </button>

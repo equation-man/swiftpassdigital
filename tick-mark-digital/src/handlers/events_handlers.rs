@@ -32,7 +32,9 @@ use crate::state::AppState;
 
 /// Adding an event.
 pub async fn create_event(new_event: web::Json<CreateEventPayload>, app_state: web::Data<AppState>) -> HttpResponse {
-    println!("The event to be created is {:#?}", &new_event);
+    let payload_obj: CreateEventPayload = new_event.into();
+    println!("The event to be created is {:#?}", &payload_obj.event_details);
+    println!("The ticket details are {:#?}", &payload_obj.ticket_details);
     //let n_event = add_event(&app_state.db, new_event.into()).await;
     //HttpResponse::Ok().json(n_event)
     HttpResponse::Ok().json("New event created")

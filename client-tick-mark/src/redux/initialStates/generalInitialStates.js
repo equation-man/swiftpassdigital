@@ -39,6 +39,7 @@ export const initialState = {
     create_event_details: null,
     add_ticket_details: null,
     add_discount_details: null,
-    ticket_items: [],
+    //ticket_items: [],
+    ticket_items: null,
 };
 

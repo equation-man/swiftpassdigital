@@ -106,96 +106,6 @@ impl From<web::Json<OrdersReport>> for OrdersReport {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct EventDetails {
-    pub owner_id: Uuid,
-    pub title: String,
-    pub description: String,
-    pub venue: String,
-    pub start_date: String, //DateTime<Utc>,
-    pub finish_date: String, //DateTime<Utc>,
-    pub event_tag: String,
-}
-
-impl From<web::Json<EventDetails>> for EventDetails {
-    fn from(ev_details: web::Json<EventDetails>) -> Self {
-        EventDetails {
-            owner_id: ev_details.owner_id.clone(),
-            title: ev_details.title.clone(),
-            description: ev_details.description.clone(),
-            venue: ev_details.venue.clone(),
-            start_date: ev_details.start_date.clone(),
-            finish_date: ev_details.finish_date.clone(),
-            event_tag: ev_details.event_tag.clone(),
-        }
-    }
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct DiscountRules {
-    discount_type: DiscType,
-    end_date: String,
-    max_users: i64,
-    name: String,
-    start_date: String,
-    value: String,
-}
-
-impl From<web::Json<DiscountRules>> for DiscountRules {
-    fn from(disc_details: web::Json<DiscountRules>) -> Self {
-        DiscountRules {
-            discount_type: disc_details.discount_type.clone(),
-            end_date: disc_details.end_date.clone(),
-            max_users: disc_details.max_users.clone(),
-            name: disc_details.name.clone(),
-            start_date: disc_details.start_date.clone(),
-            value: disc_details.value.clone(),
-        }
-    }
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct TicketDetails {
-    base_price: String,
-    capacity: i64,
-    discount_time: i64,
-    finish_time: String,
-    start_time: String,
-    ticket_class: TickClass,
-    ticket_type: TickType,
-    discount_rules: DiscountRules,
-}
-
-impl From<web::Json<TicketDetails>> for TicketDetails {
-    fn from(tick_details: web::Json<TicketDetails>) -> Self {
-        TicketDetails {
-            base_price: tick_details.base_price.clone(),
-            capacity: tick_details.capacity.clone(),
-            discount_time: tick_details.discount_time.clone(),
-            finish_time: tick_details.finish_time.clone(),
-            start_time: tick_details.start_time.clone(),
-            ticket_class: tick_details.ticket_class.clone(),
-            ticket_type: tick_details.ticket_type.clone(),
-            discount_rules: tick_details.discount_rules.clone(),
-        }
-    }
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct CreateEventPayload {
-    event_details: EventDetails,
-    ticket_details: Vec<TicketDetails>,
-}
-
-impl From<web::Json<CreateEventPayload>> for CreateEventPayload {
-    fn from(create_event: web::Json<CreateEventPayload>) -> Self {
-        CreateEventPayload {
-            event_details: create_event.event_details.clone(),
-            ticket_details: create_event.ticket_details.clone(),
-        }
-    }
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CreateEvent {
     pub owner_id: Uuid,
     pub title: String,
@@ -219,6 +129,72 @@ impl From<web::Json<CreateEvent>> for CreateEvent {
         }
     }
 }
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct DiscountRules {
+    pub discount_type: DiscType,
+    pub end_date: String,
+    pub max_users: i64,
+    pub name: String,
+    pub start_date: String,
+    pub value: String,
+}
+
+impl From<web::Json<DiscountRules>> for DiscountRules {
+    fn from(disc_details: web::Json<DiscountRules>) -> Self {
+        DiscountRules {
+            discount_type: disc_details.discount_type.clone(),
+            end_date: disc_details.end_date.clone(),
+            max_users: disc_details.max_users.clone(),
+            name: disc_details.name.clone(),
+            start_date: disc_details.start_date.clone(),
+            value: disc_details.value.clone(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct TicketDetails {
+    pub base_price: String,
+    pub capacity: i64,
+    pub discount_time: i64,
+    pub finish_time: String,
+    pub start_time: String,
+    pub ticket_class: TickClass,
+    pub ticket_type: TickType,
+    pub discount_rules: Option<DiscountRules>,
+}
+
+impl From<web::Json<TicketDetails>> for TicketDetails {
+    fn from(tick_details: web::Json<TicketDetails>) -> Self {
+        TicketDetails {
+            base_price: tick_details.base_price.clone(),
+            capacity: tick_details.capacity.clone(),
+            discount_time: tick_details.discount_time.clone(),
+            finish_time: tick_details.finish_time.clone(),
+            start_time: tick_details.start_time.clone(),
+            ticket_class: tick_details.ticket_class.clone(),
+            ticket_type: tick_details.ticket_type.clone(),
+            discount_rules: tick_details.discount_rules.clone(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct CreateEventPayload {
+    pub event_details: CreateEvent,
+    pub ticket_details: TicketDetails,
+}
+
+impl From<web::Json<CreateEventPayload>> for CreateEventPayload {
+    fn from(create_event: web::Json<CreateEventPayload>) -> Self {
+        CreateEventPayload {
+            event_details: create_event.event_details.clone(),
+            ticket_details: create_event.ticket_details.clone(),
+        }
+    }
+}
+
 
 #[derive(Clone, Debug, Deserialize, Serialize, Default)]
 pub struct EventPayload {
