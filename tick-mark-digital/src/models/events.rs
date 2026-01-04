@@ -162,6 +162,7 @@ pub struct TicketDetails {
     pub start_time: String,
     pub ticket_class: TickClass,
     pub ticket_type: TickType,
+    pub description: String,
     pub discount_rules: Option<DiscountRules>,
 }
 
@@ -175,6 +176,7 @@ impl From<web::Json<TicketDetails>> for TicketDetails {
             start_time: tick_details.start_time.clone(),
             ticket_class: tick_details.ticket_class.clone(),
             ticket_type: tick_details.ticket_type.clone(),
+            description: tick_details.description.clone(),
             discount_rules: tick_details.discount_rules.clone(),
         }
     }
@@ -608,9 +610,9 @@ pub struct AddDiscount {
     pub ticket_id: Uuid,
     pub name: String,
     pub discount_type: DiscType,
-    pub value: Decimal,
-    pub start_date: DateTime<Utc>,
-    pub end_date: DateTime<Utc>,
+    pub value: String, //Decimal,
+    pub start_date: String, //DateTime<Utc>,
+    pub end_date: String, //DateTime<Utc>,
     pub max_users: i64,
 }
 

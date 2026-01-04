@@ -33,11 +33,38 @@ use crate::state::AppState;
 /// Adding an event.
 pub async fn create_event(new_event: web::Json<CreateEventPayload>, app_state: web::Data<AppState>) -> HttpResponse {
     let payload_obj: CreateEventPayload = new_event.into();
-    println!("The event to be created is {:#?}", &payload_obj.event_details);
-    println!("The ticket details are {:#?}", &payload_obj.ticket_details);
-    //let n_event = add_event(&app_state.db, new_event.into()).await;
-    //HttpResponse::Ok().json(n_event)
-    HttpResponse::Ok().json("New event created")
+    let new_event = add_event(&app_state.db, payload_obj.event_details.clone()).await;
+    let t_payload = payload_obj.ticket_details;
+    let ticket_det = AddTicket {
+        event_id: new_event.event_id.clone(),
+        base_price: t_payload.base_price.clone(),
+        capacity: t_payload.capacity.clone(),
+        ticket_type: t_payload.ticket_type.clone(),
+        ticket_class: t_payload.ticket_class.clone(),
+        discount_time: t_payload.discount_time.clone(),
+        start_time: t_payload.start_time.clone(),
+        finish_time: t_payload.finish_time.clone(),
+        description: t_payload.description.clone(),
+    };
+    let new_ticket = add_ticket(&app_state.db, ticket_det).await;
+    match t_payload.discount_rules {
+        Some(discount_rules) => {
+            let disc_details = AddDiscount {
+                ticket_id: new_ticket.ticket_id.clone(),
+                name: discount_rules.name.clone(),
+                discount_type: discount_rules.discount_type.clone(),
+                value: discount_rules.value.clone(),
+                start_date: discount_rules.start_date.clone(),
+                end_date: discount_rules.end_date.clone(),
+                max_users: discount_rules.max_users.clone(),
+            };
+            let _ = add_discount(&app_state.db, disc_details).await;
+            HttpResponse::Ok().json(new_event)
+        },
+        None => {
+            HttpResponse::Ok().json(new_event)
+        }
+    }
 }
 
 /// Getting the details of an event.

@@ -11,13 +11,15 @@ use crate::models::{
 use crate::helpers::{
     currency_from_cents, get_comm_percent, commission_amnt_calc
 };
-use chrono::{Duration, DateTime, Utc};
+use chrono::{Duration, DateTime, Utc, NaiveDateTime, TimeZone};
+use chrono_tz::Tz;
 use futures::future;
 use sqlx::{Row, postgres::PgPool};
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use std::str::FromStr;
 use uuid::Uuid;
+use actix_web::error::ErrorBadRequest;
 
 pub async fn add_event(db_pool: &PgPool, new_event: CreateEvent) -> Event {
     let start_date: DateTime<Utc> = new_event.start_date.parse().unwrap();
@@ -713,8 +715,34 @@ pub async fn update_order(db_pool: &PgPool, payment_reference: String, payload: 
     }
 }
 
+pub fn datetime_local_to_utc(datetime_local: &str, timezone: &str) -> Result<DateTime<Utc>, String> {
+    // 1️⃣ Parse datetime-local (NO timezone, NO seconds)
+    let naive = NaiveDateTime::parse_from_str(
+        datetime_local,
+        "%Y-%m-%dT%H:%M",
+    ).map_err(|_| "Invalid datetime format".to_string())?;
+
+    // 2️⃣ Parse timezone name
+    let tz: Tz = timezone
+        .parse()
+        .map_err(|_| "Invalid timezone".to_string())?;
+
+    // 3️⃣ Assign timezone (handles DST safely)
+    let local_dt = tz
+        .from_local_datetime(&naive)
+        .single()
+        .ok_or_else(|| "Ambiguous or invalid local datetime".to_string())?;
+
+    // 4️⃣ Convert to UTC
+    Ok(local_dt.with_timezone(&Utc))
+}
+
 // ======================== DISCOUNT =====================
 pub async fn add_discount(db_pool: &PgPool, new_discount: AddDiscount) -> Discount {
+    let disc_start_date: DateTime<Utc> = datetime_local_to_utc(&new_discount.start_date, "UTC").map_err(ErrorBadRequest).unwrap();
+    let disc_end_date: DateTime<Utc> = datetime_local_to_utc(&new_discount.end_date, "UTC").map_err(ErrorBadRequest).unwrap();
+    let disc_value = Decimal::from_str(&new_discount.value).unwrap();
+
     let n_discount = sqlx::query!(r#"
         INSERT INTO ticket_market.discount_rules
             (ticket_id, name, discount_type, value, start_date, end_date, max_users)
@@ -724,7 +752,7 @@ pub async fn add_discount(db_pool: &PgPool, new_discount: AddDiscount) -> Discou
             discount_type as "disc_type: DiscType", value, start_date,
             end_date, added_at, max_users, active
     "#, new_discount.ticket_id, new_discount.name, new_discount.discount_type as DiscType,
-    new_discount.value, new_discount.start_date, new_discount.end_date,
+    disc_value, disc_start_date, disc_end_date,
     new_discount.max_users
     ).fetch_one(db_pool).await.unwrap();
 

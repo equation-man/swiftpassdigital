@@ -34,7 +34,6 @@ const EventCreationModal = ({ eventOwner }) => {
     // Fetching event details and ticket details.
     const fetch_tick_itms = useSelector((state) => state.generalModal.ticket_items);
     const fetch_ev_payload = useSelector((state) => state.generalModal.create_event_details);
-    console.log("Fetch ticket Items", !!fetch_tick_itms)
 
     const queryClient = useQueryClient();
     const mutation = useMutation({
@@ -72,7 +71,6 @@ const EventCreationModal = ({ eventOwner }) => {
         const updatedInputs = { ...inputs };
 
         updatedInputs.owner_id = eventOwner.organization_id;
-        console.log("The inputs are", updatedInputs)
         updatedInputs.start_date = dateTimeToUtc(updatedInputs.start_date);
         updatedInputs.finish_date = dateTimeToUtc(updatedInputs.finish_date);
 
@@ -84,7 +82,6 @@ const EventCreationModal = ({ eventOwner }) => {
     const handleCreateEventSubmission = async (event) => {
         event.preventDefault();
         const eventUpdate = { event_details: fetch_ev_payload, ticket_details: fetch_tick_itms };
-        console.log("The ticket items are and event is ", eventUpdate);
         // Mutation to add the event
         mutation.mutate(eventUpdate);
         dispatch(createTicketModalState(false));
