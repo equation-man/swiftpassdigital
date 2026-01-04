@@ -368,6 +368,7 @@ pub async fn add_ticket(db_pool: &PgPool, new_ticket: AddTicket) -> Ticket {
         finish_time: finish_time_iso_str, 
         added_at: added_at_str,
         description: ticket.description.unwrap(),
+        discount_rules: None,
     }
 }
 
@@ -378,7 +379,15 @@ pub async fn get_tickets(db_pool: &PgPool, event_id: Uuid) -> Vec<Ticket> {
     "#).bind(event_id)
     .fetch_all(db_pool).await.expect("Tickets fetch failed");
 
-    tickets.iter().map(|ticket| {
+    let tickets_fut = tickets.iter().map(|ticket| async move{
+        // Checking discounts if available.
+        let disc_avail = match get_discounts(
+            db_pool, ticket.get("ticket_id"), DiscountPayload { ..Default::default() }
+            ).await {
+                Ok(discnt_val) => Some(discnt_val),
+                Err(_) => None
+        };
+
         let start_time_str = ticket.get::<DateTime<Utc>, &str>("start_time").to_rfc3339();
         let finish_time_str = ticket.get::<DateTime<Utc>, &str>("finish_time").to_rfc3339();
         let added_at_str = ticket.get::<DateTime<Utc>, &str>("added_at").to_rfc3339();
@@ -396,8 +405,12 @@ pub async fn get_tickets(db_pool: &PgPool, event_id: Uuid) -> Vec<Ticket> {
             finish_time: finish_time_str,
             added_at: added_at_str,
             description: ticket.get("description"),
+            discount_rules: disc_avail,
         }
-    }).collect()
+    });
+
+    let tkts: Vec<_> = futures::future::join_all(tickets_fut).await;
+    tkts
 }
 
 pub async fn get_single_ticket(db_pool: &PgPool, ticket_id: Uuid) -> Ticket {
@@ -412,6 +425,14 @@ pub async fn get_single_ticket(db_pool: &PgPool, ticket_id: Uuid) -> Ticket {
     let added_at_str = ticket.get::<DateTime<Utc>, &str>("added_at").to_rfc3339();
     let t_price = ticket.get::<Decimal, &str>("base_price").to_string();
 
+    // Checking discounts if available.
+    let disc_avail = match get_discounts(
+        db_pool, ticket.get("ticket_id"), DiscountPayload { ..Default::default() }
+        ).await {
+            Ok(discnt_val) => Some(discnt_val),
+            Err(_) => None
+    };
+
     Ticket {
         ticket_id: ticket.get("ticket_id"),
         event_id: ticket.get("event_id"),
@@ -424,6 +445,7 @@ pub async fn get_single_ticket(db_pool: &PgPool, ticket_id: Uuid) -> Ticket {
         finish_time: finish_time_str,
         added_at: added_at_str,
         description: ticket.get("description"),
+        discount_rules: disc_avail,
     }
 }
 
@@ -469,6 +491,7 @@ pub async fn update_ticket(db_pool: &PgPool, ticket_id: Uuid, payload: TicketPay
         finish_time: finish_time_str,
         added_at: added_at_str,
         description: upd_ticket.get("description"),
+        discount_rules: None,
     })
 
 }
@@ -506,6 +529,7 @@ pub async fn delete_ticket(db_pool: &PgPool, event_id: Uuid) -> Result<Option<Ti
         finish_time: finish_time_iso_str, 
         added_at: added_at_str,
         description: del_ticket.description.unwrap(),
+        discount_rules: None,
     }))
 
 }
@@ -755,50 +779,60 @@ pub async fn add_discount(db_pool: &PgPool, new_discount: AddDiscount) -> Discou
     disc_value, disc_start_date, disc_end_date,
     new_discount.max_users
     ).fetch_one(db_pool).await.unwrap();
+    let added_at_str = n_discount.added_at.to_rfc3339();
+    let start_d = n_discount.start_date.to_rfc3339();
+    let end_d = n_discount.end_date.to_rfc3339();
+    let disc_val = n_discount.value.to_string();
 
     Discount {
         discount_id: n_discount.discount_id,
         ticket_id: n_discount.ticket_id,
         name: n_discount.name,
         discount_type: n_discount.disc_type,
-        value: n_discount.value,
-        start_date: n_discount.start_date,
-        end_date: n_discount.end_date,
-        added_at: n_discount.added_at,
+        value: disc_val,
+        start_date: start_d,
+        end_date: end_d,
+        added_at: added_at_str,
         max_users: n_discount.max_users.unwrap(),
         active: n_discount.active.unwrap(),
     }
 }
 
-pub async fn get_discounts(db_pool: &PgPool, ticket_id: Uuid, filters: DiscountPayload) -> Vec<Discount> {
+pub async fn get_discounts(db_pool: &PgPool, ticket_id: Uuid, filters: DiscountPayload) -> Result<Vec<Discount>, sqlx::Error> {
     let discounts = sqlx::query(r#"
         SELECT * FROM ticket_market.discount_rules
         WHERE ticket_id=$1
             AND ($2 IS NULL OR discount_id=$2)
             AND ($3 IS NULL OR name=$3)
             AND ($4 IS NULL OR discount_type=$4)
-            AND ($5 IS NULL OR value=$6)
-            AND ($7 IS NULL OR start_date=$7)
-            AND ($8 IS NULL OR end_date=$8)
-            AND ($9 IS NULL OR max_users=$9)
-            AND ($10 IS NULL OR active=$10)
+            AND ($5 IS NULL OR value=$5)
+            AND ($6 IS NULL OR start_date=$6)
+            AND ($7 IS NULL OR end_date=$7)
+            AND ($8 IS NULL OR max_users=$8)
+            AND ($9 IS NULL OR active=$9)
     "#).bind(ticket_id).bind(Some(filters.discount_id)).bind(Some(filters.name))
     .bind(Some(filters.discount_type)).bind(Some(filters.value)).bind(Some(filters.start_date))
     .bind(Some(filters.end_date)).bind(Some(filters.max_users)).bind(Some(filters.active))
-    .fetch_all(db_pool).await.unwrap();
+    .fetch_all(db_pool).await?;
 
-    discounts.iter().map(|disc| Discount {
-        discount_id: disc.get("discount_id"),
-        ticket_id: disc.get("ticket_id"),
-        name: disc.get("name"),
-        discount_type: disc.get("discount_type"),
-        value: disc.get("value"),
-        start_date: disc.get("start_date"),
-        end_date: disc.get("end_date"),
-        added_at: disc.get("added_at"),
-        max_users: disc.get("max_users"),
-        active: disc.get("active"),
-    }).collect()
+    Ok(discounts.iter().map(|disc| {
+        let added_at_str = disc.get::<DateTime<Utc>, &str>("added_at").to_rfc3339();
+        let start_d = disc.get::<DateTime<Utc>, &str>("start_date").to_rfc3339();
+        let end_d = disc.get::<DateTime<Utc>, &str>("end_date").to_rfc3339();
+        let val = disc.get::<Decimal, &str>("value").to_string();
+        Discount {
+            discount_id: disc.get("discount_id"),
+            ticket_id: disc.get("ticket_id"),
+            name: disc.get("name"),
+            discount_type: disc.get("discount_type"),
+            value: val,
+            start_date: start_d,
+            end_date: end_d, 
+            added_at: added_at_str,
+            max_users: disc.get("max_users"),
+            active: disc.get("active"),
+        }
+    }).collect())
 }
 
 pub async fn update_discount(db_pool: &PgPool, discount_id: Uuid, payload: DiscountPayload) -> Discount {
@@ -819,15 +853,20 @@ pub async fn update_discount(db_pool: &PgPool, discount_id: Uuid, payload: Disco
     .bind(Some(payload.max_users)).bind(Some(payload.active))
     .fetch_one(db_pool).await.expect("Updating discount rules failed");
 
+    let added_at_str = upd_disc.get::<DateTime<Utc>, &str>("added_at").to_rfc3339();
+    let start_d = upd_disc.get::<DateTime<Utc>, &str>("start_date").to_rfc3339();
+    let end_d = upd_disc.get::<DateTime<Utc>, &str>("end_date").to_rfc3339();
+    let val = upd_disc.get::<Decimal, &str>("value").to_string();
+
     Discount {
         discount_id: upd_disc.get("discount_id"),
         ticket_id: upd_disc.get("ticket_id"),
         name: upd_disc.get("name"),
         discount_type: upd_disc.get("discount_type"),
-        value: upd_disc.get("value"),
-        start_date: upd_disc.get("start_date"),
-        end_date: upd_disc.get("end_date"),
-        added_at: upd_disc.get("added_at"),
+        value: val, 
+        start_date: start_d,
+        end_date: end_d,
+        added_at: added_at_str,
         max_users: upd_disc.get("max_users"),
         active: upd_disc.get("active"),
     }
@@ -841,16 +880,20 @@ pub async fn del_discount(db_pool: &PgPool, discount_id: Uuid, ticket_id: Uuid) 
             discount_type as "disc_type: DiscType", value,
             start_date, end_date, added_at, max_users, active
     "#, discount_id, ticket_id).fetch_one(db_pool).await.unwrap();
+    let added_at_str = del_disc.added_at.to_rfc3339();
+    let start_d = del_disc.start_date.to_rfc3339();
+    let end_d = del_disc.end_date.to_rfc3339();
+    let disc_val = del_disc.value.to_string();
 
     Discount {
         discount_id: del_disc.discount_id,
         ticket_id: del_disc.ticket_id,
         name: del_disc.name,
         discount_type: del_disc.disc_type,
-        value: del_disc.value,
-        start_date: del_disc.start_date,
-        end_date: del_disc.end_date,
-        added_at: del_disc.added_at,
+        value: disc_val,
+        start_date: start_d, 
+        end_date: end_d,
+        added_at: added_at_str,
         max_users: del_disc.max_users.unwrap(),
         active: del_disc.active.unwrap(),
     }

@@ -288,6 +288,7 @@ pub struct Ticket {
     pub discount_time: i64, //Duration,
     pub added_at: String, //DateTime<Utc>,
     pub description: String,
+    pub discount_rules: Option<Vec<Discount>>,
 }
 
 impl From<web::Json<Ticket>> for Ticket {
@@ -304,6 +305,7 @@ impl From<web::Json<Ticket>> for Ticket {
             finish_time: ticket.finish_time.clone(),
             added_at: ticket.added_at.clone(),
             description: ticket.description.clone(),
+            discount_rules: ticket.discount_rules.clone(),
         }
     }
 }
@@ -580,10 +582,10 @@ pub struct Discount {
     pub ticket_id: Uuid,
     pub name: String,
     pub discount_type: DiscType,
-    pub value: Decimal,
-    pub start_date: DateTime<Utc>,
-    pub end_date: DateTime<Utc>,
-    pub added_at: DateTime<Utc>,
+    pub value: String, //Decimal,
+    pub start_date: String, //DateTime<Utc>,
+    pub end_date: String, //DateTime<Utc>,
+    pub added_at: String, //DateTime<Utc>,
     pub max_users: i64,
     pub active: bool,
 }
@@ -630,7 +632,7 @@ impl From<web::Json<AddDiscount>> for AddDiscount {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct DiscountPayload {
     pub discount_id: Option<Uuid>,
     pub ticket_id: Option<Uuid>,
