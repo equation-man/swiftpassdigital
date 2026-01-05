@@ -94,8 +94,6 @@ const UpdateEventModalForm = ({ eventOwner }) => {
                                             className="input validator w-full"
                                             type="text"
                                             placeholder={`${fetch_ev_payload.venue}`}
-
-                                            placeholder="Event venue"
                                         />
                                     </div>
 

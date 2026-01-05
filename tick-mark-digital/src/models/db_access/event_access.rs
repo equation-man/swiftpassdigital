@@ -263,6 +263,15 @@ pub async fn generate_report(db_pool: &PgPool, event: Event, org_id: Option<Uuid
 }
 
 pub async fn update_event(db_pool: &PgPool, event_id: Uuid, payload: EventPayload) -> Event {
+    let start_date = match payload.start_date {
+        Some(s_date) => Some(s_date.parse::<DateTime<Utc>>().unwrap()),
+        None => None
+    };
+    let finish_date = match payload.finish_date {
+        Some(f_date) => Some(f_date.parse::<DateTime<Utc>>().unwrap()),
+        None => None
+    };
+
     let upd_event = sqlx::query(r#"
         UPDATE ticket_market.events
             SET title = COALESCE($1, title),
@@ -271,13 +280,14 @@ pub async fn update_event(db_pool: &PgPool, event_id: Uuid, payload: EventPayloa
                 finish_time = COALESCE($4, finish_time),
                 event_tag = COALESCE($5, event_tag),
                 is_published = COALESCE($6, is_published),
+                description = COALESCE($7, description),
                 edited = true
-            WHERE event_id = $7
-        RETURNING event_id, owner_id, title, description, venue,
-            start_time, finish_time, added_at, edited, event_tag
+            WHERE event_id = $8
+        RETURNING *
     "#).bind(Some(payload.title)).bind(Some(payload.venue))
-    .bind(Some(payload.start_date)).bind(Some(payload.finish_date))
-    .bind(Some(payload.event_tag)).bind(Some(payload.is_published)).bind(event_id)
+    .bind(Some(start_date)).bind(Some(finish_date))
+    .bind(Some(payload.event_tag)).bind(Some(payload.is_published))
+    .bind(Some(payload.description)).bind(event_id)
     .fetch_one(db_pool).await.expect("Failed updateing event");
 
     let start_time_str = upd_event.get::<DateTime<Utc>, &str>("start_time").to_rfc3339();
