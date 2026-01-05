@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useSelector, useDispatch } from "react-redux";
-import { updateEventFormState } from "@/redux/reducers/generalReducer";
+import { updateEventFormState, updateEventModalState } from "@/redux/reducers/generalReducer";
 import { editEventFn } from "@/app/event/actions";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { dateTimeToUtc } from "@/lib/helpers";
@@ -12,7 +12,7 @@ import CreateTicketModal from "@/components/Events/CreateTicketModal";
 
 const UpdateEventModalForm = ({ eventOwner }) => {
     // Fetching data from redux store.
-    const fetch_states = useSelector((state) => state.generalModal.upd_event);
+    const fetch_states = useSelector((state) => state.generalModal.upd_form);
     const fetch_ev_payload = useSelector((state) => state.generalModal.event_details);
 
     const [inputs, setInputs] = useState({});
@@ -25,7 +25,7 @@ const UpdateEventModalForm = ({ eventOwner }) => {
     const dispatch = useDispatch();
     const handleEditEventModDisp = (e) => {
         e.preventDefault();
-        console.log("Edit event cancel handler")
+        dispatch(updateEventModalState(false));
         dispatch(updateEventFormState(false));
     };
 
@@ -55,7 +55,7 @@ const UpdateEventModalForm = ({ eventOwner }) => {
             //dispatch(clearTicketItems());
             dispatch(updateEventFormState(false));
         },
-        onError: () => {
+        onError: (error) => {
             toast.error("Failed editing the event, try again!");
         }
     });
@@ -67,7 +67,6 @@ const UpdateEventModalForm = ({ eventOwner }) => {
         mutation.mutate(eventUpdate);
         //dispatch(createTicketModalState(false));
         //dispatch(clearTicketItems());
-        dispatch(updateEventFormState(false));
     };
 
     return (
@@ -83,7 +82,6 @@ const UpdateEventModalForm = ({ eventOwner }) => {
                                 <form
                                     id="eventUpdateForm"
                                     onSubmit={handleEditEventSubmission}
-                                    onReset={handleEditEventModDisp}
                                     className="w-90"
                                 >
                                     <div>
