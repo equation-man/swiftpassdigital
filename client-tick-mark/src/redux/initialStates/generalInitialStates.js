@@ -6,6 +6,12 @@ const evDetails = {
     start_time: null,
     finish_time: null,
     del_event: null,
+    owner_id: null,
+    venue: null,
+    edited: null,
+    is_published: null,
+    event_tag: null,
+    description: null,
 };
 
 // Event addition details.
@@ -35,11 +41,11 @@ export const initialState = {
     create_event: false,
     del_event: false,
     upd_event: false,
+    upd_form: false,
     event_details: evDetails,
     create_event_details: null,
     add_ticket_details: null,
     add_discount_details: null,
-    //ticket_items: [],
     ticket_items: null,
 };
 

@@ -71,6 +71,12 @@ const Event = ({ evnt }) => {
       event_title: evnt.title,
       start_time: evnt.start_date,
       finish_time: evnt.finish_date,
+      owner_id: evnt.owner_id,
+      venue: evnt.venue,
+      edited: evnt.edited,
+      is_published: evnt.is_published,
+      event_tag: evnt.event_tag,
+      description: evnt.description,
     }))
     dispatch(updateEventModalState(state));
   }

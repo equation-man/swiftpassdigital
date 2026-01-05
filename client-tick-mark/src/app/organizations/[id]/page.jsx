@@ -4,6 +4,7 @@ import MyEvents from "@/components/Events/MyEvents";
 import EventCreationModal from "@/components/Events/CreateEventModal";
 import CreateTicketModal from "@/components/Events/CreateTicketModal";
 import UpdateEventOrTicketModal from "@/components/Events/UpdateEventModal";
+import UpdateEventModalForm from "@/components/Events/UpdateEventModalForm";
 import { auth } from "@/auth";
 
 const OrganizationActivityPage = async () => {
@@ -21,6 +22,7 @@ const OrganizationActivityPage = async () => {
       <EventCreationModal eventOwner={user} />
       <CreateTicketModal />
       <UpdateEventOrTicketModal />
+      <UpdateEventModalForm eventOwner={user}/>
     </div>
   );
 };

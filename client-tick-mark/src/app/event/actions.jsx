@@ -47,3 +47,6 @@ export async function createEventFn(evntDetails) {
     return response.data;
 }
 
+export async function editEventFn(updDetails) {
+    console.log("The edit event payload is", updDetails);
+}

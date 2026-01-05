@@ -23,6 +23,9 @@ export const modalSlice = createSlice({
         updateEventModalState: (state, action) => {
           state.upd_event = action.payload;
         },
+        updateEventFormState: (state, action) => {
+          state.upd_form = action.payload;
+        },
         deleteModalState: (state, action) => {
             state.del_event = action.payload;
         },
@@ -69,6 +72,7 @@ export const {
     addDiscountDetails,
     addTicketItems,
     clearTicketItems,
+    updateEventFormState,
 } = modalSlice.actions;
 
 export default modalSlice.reducer;

@@ -18,3 +18,22 @@ export function formatCurrency(value, currency = "en-KE", style = { style: "curr
     return new Intl.NumberFormat(currency, style).format(value);
 }
 
+export function toDateTimeLocal(isoString) {
+    if (!isoString) return "";
+
+    const date = new Date(isoString);
+
+    const pad = (n) => String(n).padStart(2, "0");
+
+    return (
+        date.getFullYear() +
+        "-" +
+        pad(date.getMonth() + 1) +
+        "-" +
+        pad(date.getDate()) +
+        "T" +
+        pad(date.getHours()) +
+        ":" +
+        pad(date.getMinutes())
+    );
+};
