@@ -52,10 +52,9 @@ const UpdateEventModalForm = ({ eventOwner }) => {
 
     const handleEditEventSubmission = async (event) => {
         event.preventDefault();
-        const eventUpdate = {...inputs};
-        console.log("The inputs are", inputs);
         // Mutation to add the event
-        mutation.mutate(eventUpdate);
+        const updPayload = { updDetails: {...inputs}, eventId: fetch_ev_payload.event_id}
+        mutation.mutate(updPayload);
     };
 
     return (

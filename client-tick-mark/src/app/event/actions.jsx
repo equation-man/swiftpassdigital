@@ -47,7 +47,9 @@ export async function createEventFn(evntDetails) {
     return response.data;
 }
 
-export async function editEventFn(updDetails) {
-    console.log("The edit event payload is", updDetails);
-    return;
+export async function editEventFn({ updDetails, eventId}) {
+    const resp = await axios.patch(
+    `${API_URL}/events/update/${eventId}`, updDetails
+    );
+    return resp.data;
 }
