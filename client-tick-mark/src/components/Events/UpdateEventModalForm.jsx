@@ -4,20 +4,18 @@
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useSelector, useDispatch } from "react-redux";
-import {
-    createEventModalState, createTicketModalState,
-    updateEvDetails, createEvDetails, clearTicketItems
-} from "@/redux/reducers/generalReducer";
-
-import { createEventFn } from "@/app/event/actions";
+import { updateEventFormState } from "@/redux/reducers/generalReducer";
+import { editEventFn } from "@/app/event/actions";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { dateTimeToUtc } from "@/lib/helpers";
 import CreateTicketModal from "@/components/Events/CreateTicketModal";
 
 const UpdateEventModalForm = ({ eventOwner }) => {
+    // Fetching data from redux store.
     const fetch_states = useSelector((state) => state.generalModal.upd_event);
-    const [inputs, setInputs] = useState({});
+    const fetch_ev_payload = useSelector((state) => state.generalModal.event_details);
 
+    const [inputs, setInputs] = useState({});
     const handleChange = (event) => {
         const name = event.target.name;
         const value = event.target.value;
@@ -25,24 +23,20 @@ const UpdateEventModalForm = ({ eventOwner }) => {
     };
 
     const dispatch = useDispatch();
-    const handleCreateEventModDisp = (e, state) => {
+    const handleEditEventModDisp = (e) => {
         e.preventDefault();
-        dispatch(createEventModalState(state));
-        dispatch(clearTicketItems());
+        console.log("Edit event cancel handler")
+        dispatch(updateEventFormState(false));
     };
-
-    // Fetching event details and ticket details.
-    const fetch_tick_itms = useSelector((state) => state.generalModal.ticket_items);
-    const fetch_ev_payload = useSelector((state) => state.generalModal.create_event_details);
 
     const queryClient = useQueryClient();
     const mutation = useMutation({
-        mutationKey: ["createEvent"],
-        mutationFn: (inputs) => createEventFn(inputs),
+        mutationKey: ["editEvent"],
+        mutationFn: (inputs) => editEventFn(inputs),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["MyEvents"] });
 
-            toast.success("Congratulations! Your event has been created!", {
+            toast.success("Event has been edited successfully", {
                 iconTheme: {
                     primary: "#ecfdf5",
                     secondary: "#047857",
@@ -57,36 +51,23 @@ const UpdateEventModalForm = ({ eventOwner }) => {
                     finish_time: data.finish_date,
                 })
             );
-            dispatch(createTicketModalState(false));
-            dispatch(clearTicketItems());
-            dispatch(createEventModalState(false));
+            //dispatch(createTicketModalState(false));
+            //dispatch(clearTicketItems());
+            dispatch(updateEventFormState(false));
         },
         onError: () => {
-            toast.error("Failed creating event, try again!");
+            toast.error("Failed editing the event, try again!");
         }
     });
 
-    const handleTicketCreation = async (event) => {
+    const handleEditEventSubmission = async (event) => {
         event.preventDefault();
-        const updatedInputs = { ...inputs };
-
-        updatedInputs.owner_id = eventOwner.organization_id;
-        updatedInputs.start_date = dateTimeToUtc(updatedInputs.start_date);
-        updatedInputs.finish_date = dateTimeToUtc(updatedInputs.finish_date);
-
-        // mutation.mutate(updatedInputs);
-        dispatch(createEvDetails(updatedInputs));
-        dispatch(createTicketModalState(true));
-    };
-
-    const handleCreateEventSubmission = async (event) => {
-        event.preventDefault();
-        const eventUpdate = { event_details: fetch_ev_payload, ticket_details: fetch_tick_itms };
+        const eventUpdate = {...inputs};
         // Mutation to add the event
         mutation.mutate(eventUpdate);
-        dispatch(createTicketModalState(false));
-        dispatch(clearTicketItems());
-        dispatch(createEventModalState(false));
+        //dispatch(createTicketModalState(false));
+        //dispatch(clearTicketItems());
+        dispatch(updateEventFormState(false));
     };
 
     return (
@@ -100,9 +81,9 @@ const UpdateEventModalForm = ({ eventOwner }) => {
                             </h3>
                             <div className="px-2">
                                 <form
-                                    id="eventForm"
-                                    onSubmit={handleCreateEventSubmission}
-                                    onReset={(e) => handleCreateEventModDisp(e, false)}
+                                    id="eventUpdateForm"
+                                    onSubmit={handleEditEventSubmission}
+                                    onReset={handleEditEventModDisp}
                                     className="w-90"
                                 >
                                     <div>
@@ -114,7 +95,6 @@ const UpdateEventModalForm = ({ eventOwner }) => {
                                             name="title"
                                             className="input validator w-full"
                                             type="text"
-                                            required
                                             placeholder="Event title"
                                         />
                                     </div>
@@ -128,7 +108,6 @@ const UpdateEventModalForm = ({ eventOwner }) => {
                                             name="venue"
                                             className="input validator w-full"
                                             type="text"
-                                            required
                                             placeholder="Event venue"
                                         />
                                     </div>
@@ -142,7 +121,6 @@ const UpdateEventModalForm = ({ eventOwner }) => {
                                             name="event_tag"
                                             className="input validator w-full"
                                             type="text"
-                                            required
                                             placeholder="e.g. Swimming, Athletics"
                                         />
                                     </div>
@@ -156,7 +134,6 @@ const UpdateEventModalForm = ({ eventOwner }) => {
                                             name="start_date"
                                             className="input validator w-full"
                                             type="datetime-local"
-                                            required
                                         />
                                     </div>
 
@@ -169,7 +146,6 @@ const UpdateEventModalForm = ({ eventOwner }) => {
                                             name="finish_date"
                                             className="input validator w-full"
                                             type="datetime-local"
-                                            required
                                         />
                                     </div>
 
@@ -182,47 +158,26 @@ const UpdateEventModalForm = ({ eventOwner }) => {
                                             name="description"
                                             rows="7"
                                             className="input validator w-full"
-                                            required
                                             placeholder="Tell people about the event."
                                         ></textarea>
                                     </div>
                                 </form>
                             </div>
                         </div>
-
-                        {!!fetch_tick_itms ? (
-                            <p className="text-xs text-green-600 pt-1 px-2">
-                                Your event is ready for publishing
-                            </p>
-                        ):(
-                            <p className="text-xs text-rose-600 pt-1 px-2">
-                                Create ticket to publish the event. You can create tickets of different types e.g reqular, discount
-                            </p>
-                        )}
                         <div className="text-white flex flex-row gap-x-3 w-full p-2">
                             <button
-                                onClick={handleTicketCreation}
-                                disabled={!!fetch_tick_itms}
-                                className={`bg-emerald-800 btn-block p-2 ${!!fetch_tick_itms ? "hover:cursor-not-allowed" : "hover:cursor-pointer"}`}
+                                type="button"
+                                onClick={handleEditEventModDisp}
+                                className="bg-emerald-800 btn-block p-2 hover:cursor-pointer"
                             >
-                                Generate ticket
+                                Cancel
                             </button>
                             <button
                                 type="submit"
-                                form="eventForm"
-                                disabled={!!!fetch_tick_itms}
-                                className={`bg-emerald-500 btn-block p-2 ${!!!fetch_tick_itms ? "hover:cursor-not-allowed" : "hover:cursor-pointer" }`}
-                            >
-                                Publish
-                            </button>
-                        </div>
-                        <div className="text-white w-full p-2">
-                            <button
-                                type="reset"
-                                form="eventForm"
+                                form="eventUpdateForm"
                                 className="bg-emerald-500 btn-block p-2 hover:cursor-pointer"
                             >
-                                Cancel
+                                Complete
                             </button>
                         </div>
                     </dialog>
