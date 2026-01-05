@@ -25,6 +25,7 @@ const Event = ({ evnt }) => {
   const showEvent = (event) => {
     event.preventDefault();
     router.push(`/event/${evnt.event_id}`);
+    router.refresh();
   };
 
 

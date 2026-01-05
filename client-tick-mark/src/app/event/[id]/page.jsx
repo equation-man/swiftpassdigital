@@ -67,7 +67,7 @@ const Info = ({ ticketDetails, ticketIdViewFn }) => {
 
 const EventInfo = () => {
     const [currentTicketId, setCurrentTicketId] = useState();
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
     const params = useParams();
     const router = useRouter();
     const ev_id = params.id;
@@ -117,7 +117,7 @@ const EventInfo = () => {
                         </p>
                     </div>
                     <h3 className="text-gray-600 font-bold text-lg">tickets</h3>
-                    {!!session && (
+                    {status == "authenticated" && (
                         <div className="w-96">
                             {session?.user?.user?.organization_id === currentEvent?.owner_id && (
                                 <button

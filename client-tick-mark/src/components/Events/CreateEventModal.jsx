@@ -68,6 +68,10 @@ const EventCreationModal = ({ eventOwner }) => {
 
     const handleTicketCreation = async (event) => {
         event.preventDefault();
+        if (Object.keys(inputs).length === 0) {
+            toast.error("Failed! Enter event details and try again!");
+            return;
+        }
         const updatedInputs = { ...inputs };
 
         updatedInputs.owner_id = eventOwner.organization_id;

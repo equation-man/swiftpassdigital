@@ -90,6 +90,7 @@ const OrgLoginPage = () => {
 
 const DefaultOrgAccess = () => {
   const router = useRouter();
+  const { update } = useSession();
   const [inputs, setInputs] = useState({});
   const [showPass, setShowPass] = useState(false);
 
@@ -103,8 +104,7 @@ const DefaultOrgAccess = () => {
       const res = await signIn("credentials", { redirect: false, access_username, access_code });
       if (!res?.ok) throw new Error(res?.error || "Invalid credentials");
 
-      const sessionRes = await fetch("/api/auth/session", { cache: "no-store", credentials: "include" });
-      const session = await sessionRes.json();
+      const session = await update();
 
       if (!session?.user?.user?.organization_id) throw new Error("Session missing user id");
 
