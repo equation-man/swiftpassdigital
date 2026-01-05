@@ -51,8 +51,6 @@ const UpdateEventModalForm = ({ eventOwner }) => {
                     finish_time: data.finish_date,
                 })
             );
-            //dispatch(createTicketModalState(false));
-            //dispatch(clearTicketItems());
             dispatch(updateEventFormState(false));
         },
         onError: (error) => {
@@ -65,9 +63,8 @@ const UpdateEventModalForm = ({ eventOwner }) => {
         const eventUpdate = {...inputs};
         // Mutation to add the event
         mutation.mutate(eventUpdate);
-        //dispatch(createTicketModalState(false));
-        //dispatch(clearTicketItems());
     };
+    console.log("Event payload is", fetch_ev_payload)
 
     return (
         <>
@@ -76,8 +73,9 @@ const UpdateEventModalForm = ({ eventOwner }) => {
                     <dialog className="relative bg-neutral-50 w-96 py-6 mx-2 flex flex-col items-center shadow-lg rounded-sm">
                         <div className="flex flex-col items-center justify-center">
                             <h3 className="font-bold text-gray-700 text-md">
-                                {eventOwner.organization_name} Event
+                                Edit event
                             </h3>
+                            <h4 className="font-semibold text-gray-600 text-sm">{fetch_ev_payload.event_title}</h4>
                             <div className="px-2">
                                 <form
                                     id="eventUpdateForm"
