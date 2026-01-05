@@ -35,22 +35,12 @@ const UpdateEventModalForm = ({ eventOwner }) => {
         mutationFn: (inputs) => editEventFn(inputs),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["MyEvents"] });
-
             toast.success("Event has been edited successfully", {
                 iconTheme: {
                     primary: "#ecfdf5",
                     secondary: "#047857",
                 },
             });
-
-            dispatch(
-                updateEvDetails({
-                    event_id: data.event_id,
-                    event_title: data.title,
-                    start_time: data.start_date,
-                    finish_time: data.finish_date,
-                })
-            );
             dispatch(updateEventFormState(false));
         },
         onError: (error) => {
@@ -61,10 +51,10 @@ const UpdateEventModalForm = ({ eventOwner }) => {
     const handleEditEventSubmission = async (event) => {
         event.preventDefault();
         const eventUpdate = {...inputs};
+        console.log("The inputs are", inputs);
         // Mutation to add the event
         mutation.mutate(eventUpdate);
     };
-    console.log("Event payload is", fetch_ev_payload)
 
     return (
         <>
@@ -91,7 +81,7 @@ const UpdateEventModalForm = ({ eventOwner }) => {
                                             name="title"
                                             className="input validator w-full"
                                             type="text"
-                                            placeholder="Event title"
+                                            placeholder={`${fetch_ev_payload.event_title}`}
                                         />
                                     </div>
 
@@ -104,6 +94,8 @@ const UpdateEventModalForm = ({ eventOwner }) => {
                                             name="venue"
                                             className="input validator w-full"
                                             type="text"
+                                            placeholder={`${fetch_ev_payload.venue}`}
+
                                             placeholder="Event venue"
                                         />
                                     </div>
@@ -117,25 +109,26 @@ const UpdateEventModalForm = ({ eventOwner }) => {
                                             name="event_tag"
                                             className="input validator w-full"
                                             type="text"
-                                            placeholder="e.g. Swimming, Athletics"
+                                            placeholder={`${fetch_ev_payload.event_tag}`}
                                         />
                                     </div>
 
                                     <div>
                                         <label className="font-medium text-gray-600">
-                                            Start date
+                                            New start date
                                         </label>
                                         <input
                                             onChange={handleChange}
                                             name="start_date"
                                             className="input validator w-full"
                                             type="datetime-local"
+                                            palceholder="Start date"
                                         />
                                     </div>
 
                                     <div>
                                         <label className="font-medium text-gray-600">
-                                            End date
+                                            New end date
                                         </label>
                                         <input
                                             onChange={handleChange}
@@ -154,7 +147,7 @@ const UpdateEventModalForm = ({ eventOwner }) => {
                                             name="description"
                                             rows="7"
                                             className="input validator w-full"
-                                            placeholder="Tell people about the event."
+                                            placeholder={`${fetch_ev_payload.description}`}
                                         ></textarea>
                                     </div>
                                 </form>
