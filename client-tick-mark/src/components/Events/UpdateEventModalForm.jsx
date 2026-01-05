@@ -25,6 +25,7 @@ const UpdateEventModalForm = ({ eventOwner }) => {
     const dispatch = useDispatch();
     const handleEditEventModDisp = (e) => {
         e.preventDefault();
+        setInputs({});
         dispatch(updateEventModalState(false));
         dispatch(updateEventFormState(false));
     };
@@ -42,6 +43,7 @@ const UpdateEventModalForm = ({ eventOwner }) => {
                 },
             });
             dispatch(updateEventFormState(false));
+            setInputs({});
         },
         onError: (error) => {
             toast.error("Failed editing the event, try again!");
@@ -62,10 +64,8 @@ const UpdateEventModalForm = ({ eventOwner }) => {
                 <div className="flex justify-center items-center fixed z-50 inset-0 backdrop-blur-sm">
                     <dialog className="relative bg-neutral-50 w-96 py-6 mx-2 flex flex-col items-center shadow-lg rounded-sm">
                         <div className="flex flex-col items-center justify-center">
-                            <h3 className="font-bold text-gray-700 text-md">
-                                Edit event
-                            </h3>
                             <h4 className="font-semibold text-gray-600 text-sm">{fetch_ev_payload.event_title}</h4>
+                            <p className="text-base/6 text-emerald-600">Enter the fields you want to edit</p>
                             <div className="px-2">
                                 <form
                                     id="eventUpdateForm"
