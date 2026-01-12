@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { eventInfoFn, ticketInfoFn } from "../actions";
 import { EventDate, ClientOnly } from "@/components/Events/EventDateTime";
 import { updatePaymentModalState } from "@/redux/reducers/generalReducer";
-import { formatCurrency } from "@/lib/helpers";
+import { formatCurrency, discountCalc } from "@/lib/helpers";
 import { useSession } from "next-auth/react";
 import TicketPaymentModal from "@/components/Events/EventModals";
 
@@ -26,29 +26,39 @@ const Info = ({ ticketDetails, ticketIdViewFn }) => {
     // Other users to just see purchase ticket button
 
     return (
-        <div className="card bg-base-100 image-full w-96 shadow-sm rounded-sm">
-            <figure>
+        <div className="card bg-base-100 image-full w-96 shadow-sm rounded-sm shadow-xl border border-teal-600">
+            {/*<figure>
                 <img
                     className="w-full h-full"
                     src="/logo-files/swiftpass-logo-only-svg.svg"
                     alt="Swiftpass logo"
                 />
-            </figure>
-            <div className="card-body">
-                <h2 className="card-title">{formatCurrency(Number(ticketDetails.base_price))}</h2>
-                <p className="text-xs text-emerald-200 font-medium">
-                    {ticketDetails.ticket_class} {ticketDetails.ticket_type}
+            </figure>*/}
+            <div className="card-body text-teal-800">
+                {ticketDetails.discount_rules.length > 0 && ticketDetails.ticket_type === "Discount" ? (
+                    <>
+                        <p><span className="line-through text-sm font-semibold">{formatCurrency(ticketDetails.base_price)}</span></p>
+                        <h2 className="card-title">{formatCurrency(discountCalc(ticketDetails.discount_rules[0].value, ticketDetails.base_price))}</h2>
+                        <p><span className="bg-green-100 px-2 py-0.55 text-xs font-medium text-green-700">{ticketDetails.discount_rules[0].value}% OFF</span></p>
+                    </>
+                ):(
+                    <>
+                        <h2 className="card-title">{formatCurrency(Number(ticketDetails.base_price))}</h2>
+                    </>
+                )}
+                <p className="text-xs font-medium">
+                    {ticketDetails.ticket_class} {ticketDetails.ticket_type} pass
                 </p>
                 <p>{ticketDetails.description}</p>
                 <div>
                     <p className="text-xs">
-                        <span className="text-gray-100 font-bold text-emerald-200">From</span>{" "}
+                        <span className="font-bold text-emerald-800">From</span>{" "}
                         <ClientOnly>
                             <EventDate iso={ticketDetails.start_time} />
                         </ClientOnly>
                     </p>
                     <p className="text-xs">
-                        <span className="text-gray-100 font-bold text-emerald-200">To</span>{" "}
+                        <span className="font-bold text-emerald-800">To</span>{" "}
                         <ClientOnly>
                             <EventDate iso={ticketDetails.finish_time} />
                         </ClientOnly>
@@ -56,7 +66,7 @@ const Info = ({ ticketDetails, ticketIdViewFn }) => {
                 </div>
                 <button
                     onClick={(e) => handleTicketPurchase(e, true)}
-                    className="px-4 py-2 bg-emerald-600 font-semibold rounded-sm hover:cursor-pointer text-white"
+                    className="px-4 py-2 bg-emerald-600 font-semibold rounded-sm hover:cursor-pointer hover:bg-teal-600 text-white"
                 >
                     Purchase Ticket
                 </button>

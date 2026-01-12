@@ -20,11 +20,8 @@ export function formatCurrency(value, currency = "en-KE", style = { style: "curr
 
 export function toDateTimeLocal(isoString) {
     if (!isoString) return "";
-
     const date = new Date(isoString);
-
     const pad = (n) => String(n).padStart(2, "0");
-
     return (
         date.getFullYear() +
         "-" +
@@ -37,3 +34,13 @@ export function toDateTimeLocal(isoString) {
         pad(date.getMinutes())
     );
 };
+
+export function amountDivideBy100(value) {
+  // Converting the currency number from its smallest unit to normal units
+  return (value / 100).toFixed(2)
+}
+
+export function discountCalc(percentage_amount, total_amount) {
+  const percent_price = (100 - +percentage_amount).toFixed(2);
+  return ((percent_price * +total_amount) / 100).toFixed(2);
+}
