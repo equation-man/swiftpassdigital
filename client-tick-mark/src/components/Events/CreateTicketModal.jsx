@@ -148,7 +148,7 @@ const CreateTicketModal = ({ eventDetails }) => {
                                             >
                                                 <option value="">Ticket type</option>
                                                 <option value="Regular">Regular</option>
-                                                {/*<option vlaue="Discount">Discount</option>*/}
+                                                <option vlaue="Discount">Discount</option>
                                             </select>
                                         </div>
 

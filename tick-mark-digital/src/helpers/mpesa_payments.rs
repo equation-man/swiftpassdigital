@@ -200,6 +200,11 @@ pub async fn commission_amnt_calc(percent: u8, total_amount: String) -> u64 {
     (percent as u64*total)/100
 }
 
+pub async fn discount_calc(percent_amount: f64, amount_in_cents: f64) -> f64 {
+    let percent_price = 100.0 - percent_amount;
+    ((percent_price * amount_in_cents) / 100.0 * 100.0).round() / 100.0
+}
+
 /// Mpesa STK push payment.
 pub async fn mpesa_stk_push(payment_request: StkPushRequest) -> Result<StkPushResponse, Error> {
     let (url, bearer_token) = mpesa_auth_details().await;

@@ -14,7 +14,7 @@ use crate::helpers::{
     ConfirmStkTransaction, StkPushRequest,
     mpesa_stk_push, stk_push_status, generate_daraja_password,
     DarajaCallback, commission_amnt_calc, get_comm_percent,
-    StkDarajaResponse,
+    discount_calc, StkDarajaResponse,
     TicketQRData, qr_code_gen,
     mail_config, get_daraja_callback, get_paystack_callback
 };
@@ -535,15 +535,29 @@ pub async fn create_order(payload: web::Json<CreateOrder>, ticket_id: web::Path<
     let ticket_det = get_single_ticket(&app_state.db, t_id).await;
     let target_event = get_event(&app_state.db, ticket_det.event_id.clone()).await;
     let target_wallet = get_org_wallet(&app_state.db, target_event.owner_id.clone()).await;
+    // Calculating the payment. Check for regular and discounted tickets.
     let amount_number: f64 = ticket_det.base_price.parse().expect("Invalid base price number");
-    let amount_in_subunits = (amount_number * 100.0).round() as u64;
+    let disc_rules = &ticket_det.discount_rules.clone().unwrap();
+    let mut pymnt_amnt;
+    if disc_rules.len() > 0 {
+        // Discounted ticket.
+        let the_disc = &disc_rules[0];
+        let perc_val = the_disc.value.parse::<f64>().expect("Invalid number format");
+        let amnt_in_cents = amount_number * 100.0;
+        pymnt_amnt = discount_calc(perc_val, amnt_in_cents).await;
+    } else {
+        // No discount
+        let amount_in_subunits = (amount_number * 100.0).round() as u64; // Cents.
+        pymnt_amnt = amount_in_subunits as f64;
+    }
     let initSplitPymt = InitializeSplitPayment {
         email: order_payload.user_email.clone(),
-        amount: amount_in_subunits.to_string(),
+        amount: (pymnt_amnt as u64).to_string(),
 
         subaccount: target_wallet.subaccount_code,
         callback_url: get_paystack_callback(
-            ticket_det.ticket_id.to_string(), ticket_det.event_id.to_string().clone(),
+            ticket_det.ticket_id.to_string(),
+            ticket_det.event_id.to_string().clone(),
             order_payload.user_email.clone(),
             order_payload.user_contact.clone()).await,
     };
