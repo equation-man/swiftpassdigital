@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { eventInfoFn, ticketInfoFn } from "../actions";
 import { EventDate, ClientOnly } from "@/components/Events/EventDateTime";
 import { updatePaymentModalState } from "@/redux/reducers/generalReducer";
-import { formatCurrency, discountCalc } from "@/lib/helpers";
+import { formatCurrency, discountCalc, discountDurationRemaining } from "@/lib/helpers";
 import { useSession } from "next-auth/react";
 import TicketPaymentModal from "@/components/Events/EventModals";
 
@@ -24,6 +24,12 @@ const Info = ({ ticketDetails, ticketIdViewFn }) => {
     // Organizer account to view both scan and edit buttons.
     // Accessor to view only the scan button.
     // Other users to just see purchase ticket button
+    
+    // Checking discount duration rem
+    let discount_dur = 0;
+    if (ticketDetails.discount_rules.length > 0 && ticketDetails.ticket_type === "Discount") {
+        discount_dur = discountDurationRemaining(ticketDetails.discount_rules[0].end_date)
+    }
 
     return (
         <div className="card bg-base-100 image-full w-96 shadow-sm rounded-sm shadow-xl border border-teal-600">
@@ -35,11 +41,16 @@ const Info = ({ ticketDetails, ticketIdViewFn }) => {
                 />
             </figure>*/}
             <div className="card-body text-teal-800">
-                {ticketDetails.discount_rules.length > 0 && ticketDetails.ticket_type === "Discount" ? (
+                {discount_dur > 0 ? (
                     <>
                         <p><span className="line-through text-sm font-semibold">{formatCurrency(ticketDetails.base_price)}</span></p>
                         <h2 className="card-title">{formatCurrency(discountCalc(ticketDetails.discount_rules[0].value, ticketDetails.base_price))}</h2>
-                        <p><span className="bg-green-100 px-2 py-0.55 text-xs font-medium text-green-700">{ticketDetails.discount_rules[0].value}% OFF</span></p>
+                        <p>
+                            <span className="bg-green-100 px-2 py-0.55 text-xs font-medium text-green-700">
+                                {ticketDetails.discount_rules[0].value}% OFF
+                            </span>
+                            ends in <span className="font-medium">{discount_dur}</span> day{discount_dur > 1 && (<>s</>)}
+                        </p>
                     </>
                 ):(
                     <>
@@ -47,7 +58,7 @@ const Info = ({ ticketDetails, ticketIdViewFn }) => {
                     </>
                 )}
                 <p className="text-xs font-medium">
-                    {ticketDetails.ticket_class} {ticketDetails.ticket_type} pass
+                    {ticketDetails.ticket_class} pass
                 </p>
                 <p>{ticketDetails.description}</p>
                 <div>

@@ -1,11 +1,11 @@
 //! Mpesa payments processing.
 use reqwest::header::{ HeaderMap, HeaderValue, AUTHORIZATION };
 use serde::{ Serialize, Deserialize };
+use chrono::{Local, DateTime, Utc};
 use serde_json::json;
 use reqwest::Error;
 use dotenvy::dotenv;
 use std::env;
-use chrono::Local;
 use base64;
 
 // =============== MPESA EXPRESS ==================
@@ -203,6 +203,11 @@ pub async fn commission_amnt_calc(percent: u8, total_amount: String) -> u64 {
 pub async fn discount_calc(percent_amount: f64, amount_in_cents: f64) -> f64 {
     let percent_price = 100.0 - percent_amount;
     ((percent_price * amount_in_cents) / 100.0 * 100.0).round() / 100.0
+}
+
+pub async fn discount_is_active(end_date: String) -> bool {
+    let utc_end_date: DateTime<Utc> = end_date.parse().unwrap();
+    Utc::now() < utc_end_date
 }
 
 /// Mpesa STK push payment.

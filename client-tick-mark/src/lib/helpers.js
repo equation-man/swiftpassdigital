@@ -35,6 +35,16 @@ export function toDateTimeLocal(isoString) {
     );
 };
 
+export function discountDurationRemaining(end_date) {
+  const now = new Date();
+  const end = new Date(end_date);
+  // Difference in milliseconds
+  const diffMs = end - now;
+  if (diffMs <= 0) return 0;
+  // Convert ms to days.
+  return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+}
+
 export function amountDivideBy100(value) {
   // Converting the currency number from its smallest unit to normal units
   return (value / 100).toFixed(2)

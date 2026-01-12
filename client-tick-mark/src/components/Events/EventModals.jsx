@@ -8,7 +8,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { updatePaymentModalState } from "@/redux/reducers/generalReducer";
 import { singleTicketInfoFn, mpesaTicketPurchaseFn } from "@/app/event/actions";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { formatCurrency, discountCalc } from "@/lib/helpers";
+import { formatCurrency, discountCalc, discountDurationRemaining } from "@/lib/helpers";
 
 const TicketPaymentModal = ({ ticketId, eventDetails }) => {
     const fetchStates = useSelector((state) => state.generalModal.payment);
@@ -63,6 +63,12 @@ const TicketPaymentModal = ({ ticketId, eventDetails }) => {
         mutation.mutate(payload);
     };
 
+    // Checking disoucnt duration remaining.
+    let discount_dur = 0;
+    if (data?.discount_rules.length > 0 && data?.ticket_type === "Discount") {
+        discount_dur = discountDurationRemaining(data?.discount_rules[0].end_date)
+    }
+
     return (
         <>
             {fetchStates && (
@@ -74,7 +80,7 @@ const TicketPaymentModal = ({ ticketId, eventDetails }) => {
                             </h3>
                             <h1 className="font-bold text-lg text-center">{eventDetails?.title}</h1>
                             <p className="text-emerald-800 font-bold text-xl text-center">
-                                {data?.discount_rules.length > 0 && data?.ticket_type === "Discount" ? (
+                                {discount_dur ? (
                                     <>
                                         <p><span className="line-through text-sm font-semibold">{formatCurrency(data?.base_price)}</span></p>
                                         <h2 className="card-title">{formatCurrency(discountCalc(data?.discount_rules[0].value, data.base_price))}</h2>
@@ -87,7 +93,7 @@ const TicketPaymentModal = ({ ticketId, eventDetails }) => {
                                 )}
                             </p>
                             <p className="text-emerald-600 font-medium text-center">
-                                {data?.ticket_class} {data?.ticket_type} pass
+                                {data?.ticket_class} pass
                             </p>
                             <div className="px-2">
                                 <form id="contactForm" onSubmit={handleContactSubmission}>

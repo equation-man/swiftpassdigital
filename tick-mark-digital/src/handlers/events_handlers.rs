@@ -14,7 +14,7 @@ use crate::helpers::{
     ConfirmStkTransaction, StkPushRequest,
     mpesa_stk_push, stk_push_status, generate_daraja_password,
     DarajaCallback, commission_amnt_calc, get_comm_percent,
-    discount_calc, StkDarajaResponse,
+    discount_calc, discount_is_active, StkDarajaResponse,
     TicketQRData, qr_code_gen,
     mail_config, get_daraja_callback, get_paystack_callback
 };
@@ -539,7 +539,9 @@ pub async fn create_order(payload: web::Json<CreateOrder>, ticket_id: web::Path<
     let amount_number: f64 = ticket_det.base_price.parse().expect("Invalid base price number");
     let disc_rules = &ticket_det.discount_rules.clone().unwrap();
     let mut pymnt_amnt;
-    if disc_rules.len() > 0 {
+    // Check if discount rules exist and check if discount is active
+    // discount_is_active.
+    if disc_rules.len() > 0 && discount_is_active(disc_rules[0].clone().end_date.to_string()).await {
         // Discounted ticket.
         let the_disc = &disc_rules[0];
         let perc_val = the_disc.value.parse::<f64>().expect("Invalid number format");
