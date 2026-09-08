@@ -43,7 +43,7 @@ pub async fn parse_email_html_content(entrance_code: String, ticket_status: Stri
                       <h2 style="color: #333;">SwiftPassDigital Ticket Confirmation</h2>
                       <h3 style="color: #333;">{}</h3>
                       <p>Event date: <time ditetime="{}">{}</time></p>
-                      <p>Your can download or screenshot the QR code file to be presented at the gate has been attached in this email</p>
+                      <p>Download or screenshot the QR code attached in this email to be presented at the gate.</p>
                       <p style="font-size: 18px; color: #333; margin-top: 20px;">Ticket Code:</p>
                       <div style="font-family: 'Courier New', monospace; font-size: 28px; letter-spacing: 2px; font-weight: bold; color: #0078d4; background: #f0f0f0; display: inline-block; padding: 12px 24px; border-radius: 6px; margin: 10px 0;">
                       {}
